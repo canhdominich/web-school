@@ -1,0 +1,28 @@
+export enum UserRole {
+  Student = "Student",
+  Lecturer = "Lecturer", 
+  DepartmentHead = "DepartmentHead",
+  FacultyDean = "FacultyDean",
+  Council = "Council",
+  Admin = "Admin",
+}
+
+export enum UserStatus {
+  Active = "Active",
+  Inactive = "Inactive",
+}
+
+export const UserStatusOptions = [
+  { value: UserStatus.Active, label: "Active" },
+  { value: UserStatus.Inactive, label: "Inactive" },
+];
+
+export const UserRoleOptions = [
+  { value: UserRole.Student, label: "Sinh viên" },
+  { value: UserRole.Lecturer, label: "Giảng viên hướng dẫn" },
+  { value: UserRole.DepartmentHead, label: "Chủ nhiệm bộ môn" },
+  { value: UserRole.FacultyDean, label: "Trưởng khoa" },
+  { value: UserRole.Council, label: "Hội đồng" },
+  { value: UserRole.Admin, label: "Quản trị viên" },
+];
+
