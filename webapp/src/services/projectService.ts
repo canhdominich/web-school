@@ -55,6 +55,20 @@ export interface ProjectEntity {
 	createdByUser?: Pick<User, "id" | "name" | "email">;
 	supervisorUser?: Pick<User, "id" | "name" | "email">;
 	members?: ProjectMemberEntity[];
+	projectMilestones?: ProjectMilestoneEntity[];
+}
+
+export interface ProjectMilestoneEntity {
+	id: string;
+	projectId: string;
+	title: string;
+	dueDate: string;
+	description: string;
+	orderIndex: number;
+	isRequired: boolean;
+	status: "active" | "inactive" | string;
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface CreateProjectDto {

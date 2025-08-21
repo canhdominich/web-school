@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
@@ -51,4 +52,13 @@ export class CreateProjectMilestoneDto {
   @IsEnum(ProjectMilestoneStatus)
   @IsOptional()
   status?: ProjectMilestoneStatus;
+
+  @ApiProperty({
+    example: true,
+    description: 'Bắt buộc',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isRequired?: boolean;
 }

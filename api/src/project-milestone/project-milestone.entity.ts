@@ -38,6 +38,9 @@ export class ProjectMilestone {
   @Column({ type: 'int', default: 0 })
   orderIndex: number;
 
+  @Column({ type: 'boolean', default: false })
+  isRequired: boolean;
+
   @Column({
     type: 'enum',
     enum: ProjectMilestoneStatus,

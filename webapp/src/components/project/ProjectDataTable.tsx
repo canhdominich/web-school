@@ -104,7 +104,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   useEffect(() => {
     if (!isOpen) {
       setSelectedProject(null);
-      setFormData((prev) => ({
+      setFormData(() => ({
         code: "",
         title: "",
         abstract: "",
@@ -288,11 +288,6 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     return statusMap[status] ?? "Không xác định";
   };
   
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("vi-VN");
-  };
-
   const studentOptions = users
     .filter(u =>
       u.userRoles?.some(ur => ur.role.name === UserRole.Student) &&
@@ -349,30 +344,72 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {items.map((item: ProjectEntity) => (
                 <TableRow key={item.id}>
-                  <TableCell className="px-5 py-4 sm:px-6 text-start">
-                    <span className="font-mono text-sm bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                      {item.code}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.term?.name}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.major?.name}
-                  </TableCell>
                   <TableCell className="px-4 py-3 text-gray-700 text-start text-theme-sm dark:text-gray-200">
-                    {item.title}
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="font-medium">
+                        {item.title}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge size="sm" color="success">
+                        {item.code}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge size="sm" color="warning">
+                        {item.term?.name}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge size="sm" color="info">
+                        {item.faculty?.name}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge size="sm" color="primary">
+                        {item.department?.name}
+                      </Badge>
+                      <Badge size="sm" color="light">
+                        {item.major?.name}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {item.supervisorUser?.name}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {getEducationLevelLabel(item.level)}
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Milestones ({item.projectMilestones?.length || 0})</div>
+                      {item.projectMilestones && item.projectMilestones.length > 0 && (
+                        <div className="space-y-1">
+                          {item.projectMilestones
+                            .sort((a, b) => a.orderIndex - b.orderIndex)
+                            .map((milestone) => (
+                              <div key={milestone.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                <div className="flex items-center gap-2">
+                                  <span>{milestone.title}</span>
+                                  {milestone.isRequired && (
+                                    <Badge size="sm" color="error">Bắt buộc</Badge>
+                                  )}
+                                  <Badge
+                                    size="sm"
+                                    color={milestone.status === 'active' ? "success" : "light"}
+                                  >
+                                    {milestone.status === 'active' ? "Đang áp dụng" : "Chưa áp dụng"}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <Badge size="sm" color={item.status === "in_progress" ? "success" : item.status === "completed" ? "primary" : item.status === "cancelled" ? "error" : item.status === "approved" ? "info" : item.status === "pending" ? "warning" : "light"}>
-                      {getStatusLabel(item.status)}
-                    </Badge>
+                    {getEducationLevelLabel(item.level)}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="space-y-1">
@@ -383,6 +420,11 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                         </div>
                       ))}
                     </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <Badge size="sm" color={item.status === "in_progress" ? "success" : item.status === "completed" ? "primary" : item.status === "cancelled" ? "error" : item.status === "approved" ? "info" : item.status === "pending" ? "warning" : "light"}>
+                      {getStatusLabel(item.status)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">

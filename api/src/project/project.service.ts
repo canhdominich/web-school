@@ -98,6 +98,7 @@ export class ProjectService {
               dueDate: tm.dueDate as unknown as Date,
               description: tm.description ?? null,
               orderIndex: tm.orderIndex ?? 0,
+              isRequired: tm.isRequired ?? false,
               status:
                 tm.status === TermMilestoneStatus.INACTIVE
                   ? ProjectMilestoneStatus.INACTIVE
@@ -112,6 +113,7 @@ export class ProjectService {
           where: { id: savedProject.id },
           relations: [
             'faculty',
+            'department',
             'major',
             'term',
             'createdByUser',
@@ -133,6 +135,7 @@ export class ProjectService {
     return this.projectRepository.find({
       relations: [
         'faculty',
+        'department',
         'major',
         'term',
         'createdByUser',
@@ -149,6 +152,7 @@ export class ProjectService {
       where: { id },
       relations: [
         'faculty',
+        'department',
         'major',
         'term',
         'createdByUser',
@@ -252,6 +256,7 @@ export class ProjectService {
           where: { id: savedProject.id },
           relations: [
             'faculty',
+            'department',
             'major',
             'term',
             'createdByUser',

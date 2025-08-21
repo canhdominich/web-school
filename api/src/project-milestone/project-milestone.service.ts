@@ -97,6 +97,7 @@ export class ProjectMilestoneService {
         dueDate: tm.dueDate as unknown as Date,
         description: tm.description ?? null,
         orderIndex: tm.orderIndex ?? 0,
+        isRequired: tm.isRequired ?? false,
         status:
           tm.status === TermMilestoneStatus.INACTIVE
             ? ProjectMilestoneStatus.INACTIVE

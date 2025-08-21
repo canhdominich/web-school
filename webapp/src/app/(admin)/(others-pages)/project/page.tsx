@@ -2,24 +2,22 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ProjectDataTable from "@/components/project/ProjectDataTable";
-import { getProjects } from "@/services/projectService";
+import { getProjects, ProjectEntity } from "@/services/projectService";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
 export default function ProjectPage() {
   const headers = [
-    { key: "code", title: "Mã dự án" },
-    { key: "term", title: "Sự kiện" },
-    { key: "major", title: "Ngành" },
     { key: "title", title: "Tên dự án" },
-    { key: "lecturer", title: "Giảng viên hướng dẫn" },
+    { key: "lecturer", title: "Hướng dẫn" },
+    { key: "milestone", title: "Cột mốc" },
     { key: "level", title: "Cấp độ" },
-    { key: "status", title: "Trạng thái" },
     { key: "members", title: "Thành viên" },
+    { key: "status", title: "Trạng thái" },
     { key: "action", title: "Hành động" },
   ];
 
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<ProjectEntity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProjects = async () => {
