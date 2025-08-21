@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { Header, User } from "@/types/common";
+import { Header, IUserRole, User } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { ParkingLot } from "@/services/parkingLotService";
@@ -58,7 +58,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      if (parsedUser.userRoles?.some(ur => ur.role.name === UserRole.Student)) {
+      if (parsedUser.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Student)) {
         setFormData(prev => ({
           ...prev,
           userId: parsedUser.id.toString()
@@ -305,7 +305,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
   return (
     <div className="overflow-hidden rounded-xl bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       {
-        user?.userRoles?.some(ur => ur.role.name !== UserRole.Student) && (
+        user?.userRoles?.some((ur: IUserRole) => ur.role.name !== UserRole.Student) && (
           <div className="mb-6 px-5 flex items-center gap-3 modal-footer sm:justify-start">
             <button
               onClick={openModal}
@@ -324,7 +324,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
-                {(user?.userRoles?.some(ur => ur.role.name === UserRole.Student) ? headers.slice(0, -1) : headers).map((header, index) => (
+                {(user?.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Student) ? headers.slice(0, -1) : headers).map((header, index) => (
                   <TableCell
                     key={header.key}
                     isHeader
@@ -396,7 +396,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-end text-theme-sm dark:text-gray-400">
-                    {user?.userRoles?.some(ur => ur.role.name !== UserRole.Student) && (
+                    {user?.userRoles?.some((ur: IUserRole) => ur.role.name !== UserRole.Student) && (
                       <div className="flex items-center gap-3">
                         {item.paymentStatus === BookingPaymentStatus.Unpaid && item.status !== BookingStatus.Cancelled && (
                           <button
@@ -505,7 +505,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                             value: "0",
                             label: "Tên người gửi",
                           },
-                          ...(user?.userRoles?.some(ur => ur.role.name === UserRole.Student)
+                          ...(user?.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Student)
                             ? users
                               .filter(u => u.id === user?.id)
                               .map(u => ({
@@ -513,7 +513,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                                 label: u.name,
                               }))
                             : users
-                              .filter(u => u.userRoles?.some(ur => ur.role.name === UserRole.Student))
+                              .filter(u => u.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Student))
                               .map(u => ({
                                 value: u.id.toString(),
                                 label: u.name,
@@ -582,7 +582,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                     </div>
                   </div>
                   {
-                    user?.userRoles?.some(ur => ur.role.name !== UserRole.Student) && (
+                    user?.userRoles?.some((ur: IUserRole) => ur.role.name !== UserRole.Student) && (
                       <div className="mb-8">
                         <div className="relative">
                           <Select
@@ -605,7 +605,7 @@ export default function BookingStatusDataTable({ onRefresh, headers, bookings, u
                     )
                   }
                   {
-                    user?.userRoles?.some(ur => ur.role.name !== UserRole.Student) && (
+                    user?.userRoles?.some((ur: IUserRole) => ur.role.name !== UserRole.Student) && (
                       <div className="mb-8">
                         <div className="relative">
                           <Select

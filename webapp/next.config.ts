@@ -5,13 +5,14 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**", // Cho phép tất cả https
+        hostname: "**",
       },
       {
         protocol: "http",
-        hostname: "**", // Cho phép tất cả http
+        hostname: "**", 
       },
     ],
+    domains: ["static.vecteezy.com"]
   },
   
   /* config options here */

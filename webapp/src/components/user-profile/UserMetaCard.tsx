@@ -62,7 +62,7 @@ const UserMetaCard = () => {
       if (formData.name && formData.name !== user.name) payload.name = formData.name.trim();
       if (formData.email && formData.email !== user.email) payload.email = formData.email.trim();
       if (formData.phone && formData.phone !== user.phone) payload.phone = formData.phone.trim();
-      if (formData.avatar && formData.avatar !== (user as any).avatar) payload.avatar = formData.avatar.trim();
+      if (formData.avatar && formData.avatar !== (user as User).avatar) payload.avatar = formData.avatar.trim();
       if (formData.password) payload.password = formData.password;
 
       if (Object.keys(payload).length === 0) {
@@ -70,7 +70,7 @@ const UserMetaCard = () => {
         return;
       }
 
-      const updatedUser = await updateUser(user.id.toString(), payload as any);
+      const updatedUser = await updateUser(user.id.toString(), payload as unknown as User);
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
       closeModal();

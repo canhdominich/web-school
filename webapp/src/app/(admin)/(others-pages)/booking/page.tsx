@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import BookingDataTable from "@/components/booking/Booking";
 import { getUsers } from "@/services/userService";
-import { User } from "@/services/userService";
+import { User } from "@/types/common";
 import { getBookings } from "@/services/bookingService";
 import { Booking } from "@/services/bookingService";
 

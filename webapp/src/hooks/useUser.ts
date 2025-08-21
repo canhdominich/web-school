@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import { createUser, deleteUser, getUsers, updateUser } from '@/services/userService';
-
+import { User } from '@/types/common';
 export function useUsers() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getUsers()
-      .then((data) => setUsers(data))
+      .then((data) => setUsers(data as User[]))
       .finally(() => setLoading(false));
   }, []);
 

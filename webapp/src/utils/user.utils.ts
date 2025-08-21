@@ -1,4 +1,4 @@
-import { User } from '@/types/common';
+import { IUserRole, User } from '@/types/common';
 import { UserRole } from '@/constants/user.constant';
 
 /**
@@ -14,7 +14,7 @@ export const getUserPrimaryRole = (user: User | null): string => {
  */
 export const hasRole = (user: User | null, role: UserRole): boolean => {
   if (!user?.userRoles?.length) return false;
-  return user.userRoles.some(ur => ur.role.name === role);
+  return user.userRoles.some((ur: IUserRole) => ur.role.name === role);
 };
 
 /**
@@ -22,5 +22,15 @@ export const hasRole = (user: User | null, role: UserRole): boolean => {
  */
 export const hasAnyRole = (user: User | null, roles: UserRole[]): boolean => {
   if (!user?.userRoles?.length) return false;
-  return user.userRoles.some(ur => roles.includes(ur.role.name as UserRole));
+  return user.userRoles.some((ur: IUserRole) => roles.includes(ur.role.name as UserRole));
 }; 
+
+export const getRolesObject = (roles: IUserRole[]): Record<string, boolean> => {
+  const rolesObject: Record<string, boolean> = {};
+  roles.forEach(role => {
+    rolesObject[role.role.name] = true;
+  });
+  console.log(rolesObject);
+  return rolesObject;
+}
+  

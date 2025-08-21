@@ -72,7 +72,7 @@ export default function SignUpForm() {
       localStorage.setItem("user", JSON.stringify(response.user));
       
       toast.success("Đăng nhập thành công!");
-      router.push("/booking");
+      router.push("/project");
     } catch (error) {
       if (error instanceof Error) {
         // Handle specific error messages from API

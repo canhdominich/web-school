@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${roboto.className} dark:bg-gray-900`}>
+      <body suppressHydrationWarning className={`${roboto.className} dark:bg-gray-900`}>
         <ThemeProvider>
           <SidebarProvider>
             <ToasterProvider />

@@ -105,3 +105,20 @@ export interface Term {
 }
 
 export type TermMilestoneStatus = 'active' | 'inactive';
+
+export interface IRole {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+  }
+  
+export interface IUserRole {
+    id: string;
+    userId: string;
+    roleId: string;
+    createdAt: string;
+    updatedAt: string;
+    role: IRole;
+  }
+  

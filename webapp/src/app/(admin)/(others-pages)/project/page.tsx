@@ -48,7 +48,7 @@ export default function ProjectPage() {
           ) : (
             <ProjectDataTable
               headers={headers}
-              items={projects as any}
+              items={projects as unknown as ProjectEntity[]}
               onRefresh={fetchProjects}
             />
           )}

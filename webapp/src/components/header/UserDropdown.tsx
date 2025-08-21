@@ -5,7 +5,6 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { User } from "@/types/common";
 import { useRouter } from "next/navigation";
-import { getUserPrimaryRole } from '@/utils/user.utils';
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,12 +50,21 @@ export default function UserDropdown() {
           className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
         >
           <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-            <Image
-              width={44}
-              height={44}
-              src={user?.avatar || ""}
-              alt="User"
-            />
+            {user?.avatar ? (
+              <Image
+                src={user.avatar}
+                alt="User"
+                width={44}
+                height={44}
+              />
+            ) : (
+              <Image
+                src="/images/user/Client.jpg"
+                alt="User"
+                width={44}
+                height={44}
+              />
+            )}
           </span>
 
           <span className="block mr-1 font-medium text-theme-sm">{user?.name}</span>

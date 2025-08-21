@@ -82,7 +82,7 @@ export default function SignUpForm() {
     try {
       await createUser({
         ...formData,
-        role: UserRole.Student, // Default role for new users
+        roles: [UserRole.Student], // Default role for new users
       });
       
       toast.success("Đăng ký thành công!");

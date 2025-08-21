@@ -11,13 +11,14 @@ import {
   GridIcon,
   HorizontaLDots,
   ListIcon,
-  PageIcon,
   TableIcon,
   UserCircleIcon,
+  GroupIcon,
+  PaperPlaneIcon,
 } from "../icons/index";
 import { UserRole } from "@/constants/user.constant";
 import { hasRole } from '@/utils/user.utils';
-import { User } from '@/types/common';
+import { IUserRole, User } from '@/types/common';
 
 type NavItem = {
   name: string;
@@ -54,37 +55,37 @@ const AppSidebar: React.FC = () => {
     requiredRole: [UserRole.Admin],
   },
   {
-    icon: <PageIcon />,
+    icon: <TableIcon />,
     name: "Quản lý khoa",
     path: "/faculty",
     requiredRole: [UserRole.Admin],
   },
   {
-    icon: <PageIcon />,
+    icon: <TableIcon />,
     name: "Quản lý bộ môn",
     path: "/department",
     requiredRole: [UserRole.Admin, UserRole.FacultyDean],
   },
   {
-    icon: <PageIcon />,
+    icon: <TableIcon />,
     name: "Quản lý ngành học",
     path: "/major",
     requiredRole: [UserRole.Admin, UserRole.FacultyDean, UserRole.DepartmentHead],
   },
   {
-    icon: <PageIcon />,
+    icon: <PaperPlaneIcon />,
     name: "Quản lý sự kiện",
     path: "/term",
     requiredRole: [UserRole.Admin],
   },
   {
-    icon: <PageIcon />,
+    icon: <CalenderIcon />,
     name: "Quản lý dự án",
     path: "/project",
     requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council],
   },
   {
-    icon: <PageIcon />,
+    icon: <GroupIcon />,
     name: "Quản lý tài khoản",
     path: "/user",
     requiredRole: [UserRole.Admin],
@@ -172,7 +173,7 @@ const AppSidebar: React.FC = () => {
     }
 
     // For single role check, check if user has any of the required roles
-    return user.userRoles.some((userRole) => userRole.role.name === requiredRole);
+    return user.userRoles.some((userRole: IUserRole) => userRole.role.name === requiredRole);
   };
 
   const renderMenuItems = (

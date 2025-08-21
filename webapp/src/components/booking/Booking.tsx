@@ -17,7 +17,7 @@ import { ParkingLot } from "@/services/parkingLotService";
 import { ChevronDownIcon } from "@/icons";
 import { getParkingSlotByParkingLotId, ParkingSlot } from "@/services/parkingSlotService";
 import DatePicker from "../form/date-picker";
-import { User } from "@/services/userService";
+import { IUserRole, User } from "@/types/common";
 import { Vehicle } from "@/services/vehicleService";
 import { getVehiclesByUser } from "@/services/vehicleService";
 import { Booking } from "@/services/bookingService";
@@ -105,7 +105,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      if (parsedUser.userRoles?.some(ur => ur.role.name === UserRole.Student)) {
+      if (parsedUser.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Student)) {
         setFormData(prev => ({
           ...prev,
           userId: parsedUser.id.toString()
@@ -435,7 +435,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
                       value: "0",
                       label: "Tên người gửi",
                     },
-                    ...(user?.userRoles?.some(ur => ur.role.name === UserRole.Student)
+                    ...(user?.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Student)
                       ? users
                         .filter(u => u.id === user?.id)
                         .map(u => ({
@@ -443,7 +443,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
                           label: u.name,
                         }))
                       : users
-                        .filter(u => u.userRoles?.some(ur => ur.role.name === UserRole.Student))
+                        .filter(u => u.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Student))
                         .map(u => ({
                           value: u.id.toString(),
                           label: u.name,
@@ -512,7 +512,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               </div>
             </div>
             {
-              user?.userRoles?.some(ur => ur.role.name === UserRole.Admin) && (
+              user?.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Admin) && (
                 <div className="mb-8">
                   <div className="relative">
                     <Select
@@ -535,7 +535,7 @@ export default function BookingDataTable({ onRefresh, bookings, users, vehicles:
               )
             }
             {
-              user?.userRoles?.some(ur => ur.role.name === UserRole.Admin) && (
+              user?.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Admin) && (
                 <div className="mb-8">
                   <div className="relative">
                     <Select
