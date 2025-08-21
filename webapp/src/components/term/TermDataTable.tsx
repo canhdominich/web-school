@@ -14,7 +14,6 @@ import { CreateTermDto, createTerm, deleteTerm, updateTerm, UpdateTermDto } from
 import { createTermMilestone, updateTermMilestone, deleteTermMilestone, CreateTermMilestoneDto, UpdateTermMilestoneDto } from "@/services/termMilestoneService";
 import { toast } from "react-hot-toast";
 import Badge from "../ui/badge/Badge";
-import { PlusIcon } from "@/icons";
 
 interface TermDataTableProps extends BasicTableProps {
   onRefresh: () => void;

@@ -109,6 +109,12 @@ const AppSidebar: React.FC = () => {
   },
   {
     icon: <PageIcon />,
+    name: "Quản lý dự án",
+    path: "/project",
+    requiredRole: [UserRole.Admin, UserRole.Student],
+  },
+  {
+    icon: <PageIcon />,
     name: "Quản lý tài khoản",
     path: "/user",
     requiredRole: [UserRole.Admin, UserRole.Student],

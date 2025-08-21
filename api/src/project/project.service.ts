@@ -43,7 +43,8 @@ export class ProjectService {
       const students = await this.userRepository!.find({
         where: { id: In(studentIds) },
       });
-      const foundIds = new Set(students.map((s) => s.id));
+      console.log('students =', students);
+      const foundIds = new Set(students.map((s) => +s.id));
       const missing = studentIds.filter((id) => !foundIds.has(id));
       if (missing.length > 0) {
         throw new BadRequestException(
@@ -121,6 +122,7 @@ export class ProjectService {
     id: number,
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
+    console.log('updateProjectDto =', updateProjectDto);
     const project = await this.projectRepository.findOne({ where: { id } });
 
     if (!project) {
@@ -142,20 +144,22 @@ export class ProjectService {
         const projectRepo = manager.getRepository(Project);
         const projectMemberRepo = manager.getRepository(ProjectMember);
 
-        Object.assign(project, updateProjectDto);
+        const { members, ...rest } = updateProjectDto;
+        Object.assign(project, rest);
+
         const savedProject = await projectRepo.save(project);
 
         // Update project members if members is provided
-        if (updateProjectDto.members) {
+        if (members) {
           // Remove existing members
-          await projectMemberRepo.delete({ projectId: savedProject.id });
+          await projectMemberRepo.delete({ projectId: +savedProject.id });
 
           // Add new members
-          if (updateProjectDto.members.length > 0) {
-            const projectMembers = updateProjectDto.members.map((member) =>
+          if (members.length > 0) {
+            const projectMembers = members.map((member) =>
               projectMemberRepo.create({
-                projectId: savedProject.id,
-                studentId: member.studentId,
+                projectId: +savedProject.id,
+                studentId: +member.studentId,
                 roleInTeam: member.roleInTeam,
               }),
             );

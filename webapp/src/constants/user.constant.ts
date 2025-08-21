@@ -19,7 +19,7 @@ export const UserStatusOptions = [
 
 export const UserRoleOptions = [
   { value: UserRole.Student, label: "Sinh viên" },
-  { value: UserRole.Lecturer, label: "Giảng viên hướng dẫn" },
+  { value: UserRole.Lecturer, label: "Giảng viên" },
   { value: UserRole.DepartmentHead, label: "Chủ nhiệm bộ môn" },
   { value: UserRole.FacultyDean, label: "Trưởng khoa" },
   { value: UserRole.Council, label: "Hội đồng" },
