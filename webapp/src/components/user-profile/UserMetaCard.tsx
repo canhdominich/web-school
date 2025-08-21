@@ -8,7 +8,6 @@ import Label from "../form/Label";
 import Image from "next/image";
 import { updateUser } from "@/services/userService";
 import { User } from "@/types/common";
-import { getUserPrimaryRole } from '@/utils/user.utils';
 
 const UserMetaCard = () => {
   const { isOpen, openModal, closeModal } = useModal();
@@ -17,6 +16,9 @@ const UserMetaCard = () => {
     name: "",
     email: "",
     phone: "",
+    avatar: "",
+    password: "",
+    confirmPassword: "",
   });
 
   useEffect(() => {
@@ -28,6 +30,9 @@ const UserMetaCard = () => {
         name: parsedUser.name || "",
         email: parsedUser.email || "",
         phone: parsedUser.phone || "",
+        avatar: parsedUser.avatar || "",
+        password: "",
+        confirmPassword: "",
       });
     }
   }, []);
@@ -42,12 +47,34 @@ const UserMetaCard = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
+
+    if (formData.password && formData.password.length < 6) {
+      alert("Mật khẩu tối thiểu 6 ký tự");
+      return;
+    }
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      alert("Xác nhận mật khẩu không khớp");
+      return;
+    }
+
     try {
-      const updatedUser = await updateUser(user.id.toString(), formData);
+      const payload: Record<string, unknown> = {};
+      if (formData.name && formData.name !== user.name) payload.name = formData.name.trim();
+      if (formData.email && formData.email !== user.email) payload.email = formData.email.trim();
+      if (formData.phone && formData.phone !== user.phone) payload.phone = formData.phone.trim();
+      if (formData.avatar && formData.avatar !== (user as any).avatar) payload.avatar = formData.avatar.trim();
+      if (formData.password) payload.password = formData.password;
+
+      if (Object.keys(payload).length === 0) {
+        closeModal();
+        return;
+      }
+
+      const updatedUser = await updateUser(user.id.toString(), payload as any);
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
       closeModal();
-    } catch (error) {
+    } catch (error: unknown) {
       console.log(error);
       alert("Cập nhật thông tin thất bại");
     }
@@ -65,12 +92,14 @@ const UserMetaCard = () => {
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
             <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
+            {user?.avatar && (
               <Image
                 width={80}
                 height={80}
-                src={`/images/user/${getUserPrimaryRole(user)}.jpg`}
+                src={user.avatar}
                 alt="user"
               />
+            )}
             </div>
             <div className="order-3 xl:order-2">
               <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
@@ -159,6 +188,21 @@ const UserMetaCard = () => {
               <div className="col-span-2 lg:col-span-1">
                 <Label>Số điện thoại</Label>
                 <Input type="text" name="phone" value={formData.phone} onChange={handleInputChange} />
+              </div>
+
+              <div className="col-span-2 lg:col-span-1">
+                <Label>Ảnh đại diện (URL)</Label>
+                <Input type="text" name="avatar" value={formData.avatar} onChange={handleInputChange} />
+              </div>
+
+              <div className="col-span-2 lg:col-span-1">
+                <Label>Mật khẩu mới</Label>
+                <Input type="password" name="password" value={formData.password} onChange={handleInputChange} />
+              </div>
+
+              <div className="col-span-2 lg:col-span-1">
+                <Label>Nhập lại mật khẩu</Label>
+                <Input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange} />
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">

@@ -14,6 +14,7 @@ import { Department } from '../department/department.entity';
 import { Major } from '../major/major.entity';
 import { ProjectMember } from './project-member.entity';
 import { Term } from '../term/term.entity';
+import { ProjectMilestone } from '../project-milestone/project-milestone.entity';
 
 export enum ProjectStatus {
   DRAFT = 'draft',
@@ -129,4 +130,7 @@ export class Project {
 
   @OneToMany(() => ProjectMember, (member) => member.project)
   members: ProjectMember[];
+
+  @OneToMany(() => ProjectMilestone, (milestone) => milestone.project)
+  projectMilestones: ProjectMilestone[];
 }

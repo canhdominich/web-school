@@ -9,9 +9,11 @@ import { toast } from "react-hot-toast";
 export default function ProjectPage() {
   const headers = [
     { key: "code", title: "Mã dự án" },
-    { key: "title", title: "Tên dự án" },
-    { key: "term", title: "Kỳ" },
+    { key: "term", title: "Sự kiện" },
     { key: "major", title: "Ngành" },
+    { key: "title", title: "Tên dự án" },
+    { key: "lecturer", title: "Giảng viên hướng dẫn" },
+    { key: "level", title: "Cấp độ" },
     { key: "status", title: "Trạng thái" },
     { key: "members", title: "Thành viên" },
     { key: "action", title: "Hành động" },

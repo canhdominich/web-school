@@ -262,14 +262,43 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     }
   };
 
+  const getEducationLevelLabel = (value: string): string => {
+    switch (value) {
+      case "undergraduate":
+        return "Đại học";
+      case "graduate":
+        return "Sau đại học";
+      case "research":
+        return "Nghiên cứu";
+      default:
+        return "Không xác định";
+    }
+  }
+
+  const getStatusLabel = (status: string): string => {
+    const statusMap: Record<string, string> = {
+      in_progress: "Đang thực hiện",
+      completed: "Hoàn thành",
+      cancelled: "Đã hủy",
+      approved: "Đã duyệt",
+      pending: "Chờ duyệt",
+      draft: "Nháp"
+    };
+  
+    return statusMap[status] ?? "Không xác định";
+  };
+  
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("vi-VN");
   };
 
   const studentOptions = users
-    .filter(u => u.userRoles?.some(ur => ur.role.name === UserRole.Student))
-    .map(u => ({ value: u.id.toString(), label: u.name }));
+    .filter(u =>
+      u.userRoles?.some(ur => ur.role.name === UserRole.Student) &&
+      !u.userRoles?.some(ur => ur.role.name === UserRole.Admin)
+  )
+  .map(u => ({ value: u.id.toString(), label: u.name }));
 
   const handleMembersChange = (values: string[]) => {
     const updatedMembers: ProjectMemberDto[] = values.map(v => {
@@ -325,18 +354,24 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       {item.code}
                     </span>
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-700 text-start text-theme-sm dark:text-gray-200">
-                    {item.title}
-                  </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {item.term?.name}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {item.major?.name}
                   </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-700 text-start text-theme-sm dark:text-gray-200">
+                    {item.title}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {item.supervisorUser?.name}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {getEducationLevelLabel(item.level)}
+                  </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <Badge size="sm" color={item.status === "in_progress" ? "success" : item.status === "completed" ? "primary" : item.status === "cancelled" ? "error" : item.status === "approved" ? "info" : item.status === "pending" ? "warning" : "light"}>
-                      {item.status === "in_progress" ? "Đang thực hiện" : item.status === "completed" ? "Hoàn thành" : item.status === "cancelled" ? "Đã hủy" : item.status === "approved" ? "Đã duyệt" : item.status === "pending" ? "Chờ duyệt" : "Nháp"}
+                      {getStatusLabel(item.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">

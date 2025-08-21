@@ -27,7 +27,8 @@ export const updateUser = async (id: string, data: {
     email?: string
     phone?: string
     password?: string
-    roles?: string[]    
+    roles?: string[]
+    avatar?: string
 }): Promise<User> => {
     const res = await httpClient.patch(`/users/${id}`, data)
     return res.data
@@ -51,4 +52,5 @@ export interface UpdateUserDto {
     phone?: string;
     password?: string;
     roles?: string[];
+    avatar?: string;
 }

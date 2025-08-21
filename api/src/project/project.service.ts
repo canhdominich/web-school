@@ -14,6 +14,14 @@ import { ProjectStatus } from './project.entity';
 import { ProjectMilestoneService } from '../project-milestone/project-milestone.service';
 import { ProjectMember } from './project-member.entity';
 import { User } from '../user/user.entity';
+import {
+  ProjectMilestone,
+  ProjectMilestoneStatus,
+} from '../project-milestone/project-milestone.entity';
+import {
+  TermMilestone,
+  TermMilestoneStatus,
+} from '../term-milestone/term-milestone.entity';
 
 @Injectable()
 export class ProjectService {
@@ -43,7 +51,6 @@ export class ProjectService {
       const students = await this.userRepository!.find({
         where: { id: In(studentIds) },
       });
-      console.log('students =', students);
       const foundIds = new Set(students.map((s) => +s.id));
       const missing = studentIds.filter((id) => !foundIds.has(id));
       if (missing.length > 0) {
@@ -76,7 +83,46 @@ export class ProjectService {
           await projectMemberRepo.save(projectMembers);
         }
 
-        return savedProject;
+        // Copy term milestones to project milestones
+        const tmRepo = manager.getRepository(TermMilestone);
+        const pmRepo = manager.getRepository(ProjectMilestone);
+        const termMilestones = await tmRepo.find({
+          where: { termId: createProjectDto.termId },
+          order: { orderIndex: 'ASC' },
+        });
+        if (termMilestones.length > 0) {
+          const projectMilestones = termMilestones.map((tm) =>
+            pmRepo.create({
+              projectId: savedProject.id,
+              title: tm.title,
+              dueDate: tm.dueDate as unknown as Date,
+              description: tm.description ?? null,
+              orderIndex: tm.orderIndex ?? 0,
+              status:
+                tm.status === TermMilestoneStatus.INACTIVE
+                  ? ProjectMilestoneStatus.INACTIVE
+                  : ProjectMilestoneStatus.ACTIVE,
+            }),
+          );
+          await pmRepo.save(projectMilestones);
+        }
+
+        // Reload project with relations including milestones
+        const savedWithRelations = await projectRepo.findOne({
+          where: { id: savedProject.id },
+          relations: [
+            'faculty',
+            'major',
+            'term',
+            'createdByUser',
+            'supervisorUser',
+            'members',
+            'members.student',
+            'projectMilestones',
+          ],
+        });
+
+        return savedWithRelations!;
       },
     );
 
@@ -93,6 +139,7 @@ export class ProjectService {
         'supervisorUser',
         'members',
         'members.student',
+        'projectMilestones',
       ],
     });
   }
@@ -108,6 +155,7 @@ export class ProjectService {
         'supervisorUser',
         'members',
         'members.student',
+        'projectMilestones',
       ],
     });
 
@@ -122,7 +170,6 @@ export class ProjectService {
     id: number,
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
-    console.log('updateProjectDto =', updateProjectDto);
     const project = await this.projectRepository.findOne({ where: { id } });
 
     if (!project) {
@@ -167,7 +214,55 @@ export class ProjectService {
           }
         }
 
-        return savedProject;
+        // Check if project has milestones, if not copy from term
+        const existingMilestones = await manager
+          .getRepository(ProjectMilestone)
+          .find({
+            where: { projectId: +savedProject.id },
+          });
+
+        if (existingMilestones.length === 0) {
+          // Copy term milestones to project milestones
+          const tmRepo = manager.getRepository(TermMilestone);
+          const pmRepo = manager.getRepository(ProjectMilestone);
+          const termMilestones = await tmRepo.find({
+            where: { termId: savedProject.termId },
+            order: { orderIndex: 'ASC' },
+          });
+          if (termMilestones.length > 0) {
+            const projectMilestones = termMilestones.map((tm) =>
+              pmRepo.create({
+                projectId: +savedProject.id,
+                title: tm.title,
+                dueDate: tm.dueDate as unknown as Date,
+                description: tm.description ?? null,
+                orderIndex: tm.orderIndex ?? 0,
+                status:
+                  tm.status === TermMilestoneStatus.INACTIVE
+                    ? ProjectMilestoneStatus.INACTIVE
+                    : ProjectMilestoneStatus.ACTIVE,
+              }),
+            );
+            await pmRepo.save(projectMilestones);
+          }
+        }
+
+        // Reload with relations including milestones
+        const savedWithRelations = await projectRepo.findOne({
+          where: { id: savedProject.id },
+          relations: [
+            'faculty',
+            'major',
+            'term',
+            'createdByUser',
+            'supervisorUser',
+            'members',
+            'members.student',
+            'projectMilestones',
+          ],
+        });
+
+        return savedWithRelations!;
       },
     );
 
@@ -197,6 +292,7 @@ export class ProjectService {
         'supervisorUser',
         'members',
         'members.student',
+        'projectMilestones',
       ],
     });
   }
@@ -213,6 +309,7 @@ export class ProjectService {
         'supervisorUser',
         'members',
         'members.student',
+        'projectMilestones',
       ],
     });
   }
@@ -229,6 +326,7 @@ export class ProjectService {
         'supervisorUser',
         'members',
         'members.student',
+        'projectMilestones',
       ],
     });
   }
@@ -245,6 +343,7 @@ export class ProjectService {
         'supervisorUser',
         'members',
         'members.student',
+        'projectMilestones',
       ],
     });
   }
