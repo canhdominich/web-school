@@ -24,7 +24,7 @@ export class ProjectMilestoneService {
   async create(dto: CreateProjectMilestoneDto): Promise<ProjectMilestone> {
     const partial: DeepPartial<ProjectMilestone> = {
       projectId: dto.projectId,
-      name: dto.name,
+      title: dto.title,
       dueDate: dto.dueDate as unknown as Date,
       description: dto.description ?? null,
       orderIndex: dto.orderIndex ?? 0,
@@ -53,7 +53,7 @@ export class ProjectMilestoneService {
     if (!entity)
       throw new NotFoundException(`Project milestone ${id} not found`);
     const partial: DeepPartial<ProjectMilestone> = {
-      name: dto.name,
+      title: dto.title,
       dueDate: (dto.dueDate as unknown as Date) ?? undefined,
       description: dto.description,
       orderIndex: dto.orderIndex,
@@ -93,7 +93,7 @@ export class ProjectMilestoneService {
     const records: DeepPartial<ProjectMilestone>[] = termMilestones.map(
       (tm) => ({
         projectId,
-        name: tm.name,
+        title: tm.title,
         dueDate: tm.dueDate as unknown as Date,
         description: tm.description ?? null,
         orderIndex: tm.orderIndex ?? 0,

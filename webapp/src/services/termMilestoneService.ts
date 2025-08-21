@@ -1,4 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
+import { TermMilestoneStatus } from "@/types/common";
 
 export interface TermMilestone {
     id: string;
@@ -6,7 +7,7 @@ export interface TermMilestone {
     description: string;
     dueDate: string;
     termId: string;
-    order: number;
+    orderIndex: number;
     isRequired: boolean;
     createdAt: string;
     updatedAt: string;
@@ -36,7 +37,7 @@ export const createTermMilestone = async (data: {
     description: string;
     dueDate: string;
     termId: string;
-    order: number;
+    orderIndex: number;
     isRequired?: boolean;
 }): Promise<TermMilestone> => {
     const res = await httpClient.post('/term-milestones', data);
@@ -47,7 +48,7 @@ export const updateTermMilestone = async (id: string, data: {
     title?: string;
     description?: string;
     dueDate?: string;
-    order?: number;
+    orderIndex?: number;
     isRequired?: boolean;
 }): Promise<TermMilestone> => {
     const res = await httpClient.patch(`/term-milestones/${id}`, data);
@@ -67,14 +68,16 @@ export interface CreateTermMilestoneDto {
     description: string;
     dueDate: string;
     termId: string;
-    order: number;
+    orderIndex: number;
     isRequired?: boolean;
+    status: TermMilestoneStatus;
 }
 
 export interface UpdateTermMilestoneDto {
     title?: string;
     description?: string;
     dueDate?: string;
-    order?: number;
+    orderIndex?: number;
     isRequired?: boolean;
+    status?: TermMilestoneStatus;
 } 

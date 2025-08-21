@@ -18,15 +18,15 @@ export class CreateProjectMilestoneDto {
   @IsNotEmpty()
   projectId: number;
 
-  @ApiProperty({ example: 'Đề cương', description: 'Milestone name' })
+  @ApiProperty({ example: 'Đề cương', description: 'Tên mốc' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  name: string;
+  title: string;
 
   @ApiProperty({
     example: '2025-02-15',
-    description: 'Default due date (YYYY-MM-DD)',
+    description: 'Hạn chót (YYYY-MM-DD)',
   })
   @IsDateString()
   @IsNotEmpty()

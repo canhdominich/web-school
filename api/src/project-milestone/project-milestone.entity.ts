@@ -27,7 +27,7 @@ export class ProjectMilestone {
   projectId: number;
 
   @Column({ type: 'varchar', length: 255 })
-  name: string;
+  title: string;
 
   @Column({ type: 'date' })
   dueDate: Date;

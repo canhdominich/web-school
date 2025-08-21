@@ -7,7 +7,7 @@ export class TermMilestoneResponseDto {
   id: number;
 
   @ApiProperty({ example: 'Nộp báo cáo', description: 'Milestone name' })
-  name: string;
+  title: string;
 
   @ApiProperty({ example: '2025-03-15', description: 'Due date' })
   dueDate: Date;

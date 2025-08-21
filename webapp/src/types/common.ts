@@ -78,7 +78,7 @@ export interface TermMilestone {
     description: string;
     dueDate: string;
     termId: string;
-    order: number;
+    orderIndex: number;
     isRequired: boolean;
     createdAt: string;
     updatedAt: string;
@@ -86,7 +86,10 @@ export interface TermMilestone {
         id: string;
         name: string;
     };
+    status: TermMilestoneStatus;
 }
+
+export type TermStatus = 'open' | 'closed' | 'archived';
 
 export interface Term {
     id: number;
@@ -95,10 +98,10 @@ export interface Term {
     description?: string;
     startDate: string;
     endDate: string;
-    isActive: boolean;
+    status: TermStatus;
     termMilestones: TermMilestone[];
     createdAt: string;
     updatedAt: string;
 }
 
-  
+export type TermMilestoneStatus = 'active' | 'inactive';

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
@@ -18,15 +19,15 @@ export class CreateTermMilestoneDto {
   @IsNotEmpty()
   termId: number;
 
-  @ApiProperty({ example: 'Đề cương', description: 'Milestone name' })
+  @ApiProperty({ example: 'Đề cương', description: 'Tên mốc' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  name: string;
+  title: string;
 
   @ApiProperty({
     example: '2025-02-15',
-    description: 'Default due date (YYYY-MM-DD)',
+    description: 'Hạn chót (YYYY-MM-DD)',
   })
   @IsDateString()
   @IsNotEmpty()
@@ -39,7 +40,7 @@ export class CreateTermMilestoneDto {
 
   @ApiProperty({
     example: 1,
-    description: 'Order index',
+    description: 'Thứ tự',
     required: false,
     default: 0,
   })
@@ -52,8 +53,18 @@ export class CreateTermMilestoneDto {
     enum: TermMilestoneStatus,
     example: TermMilestoneStatus.ACTIVE,
     required: false,
+    description: 'Trạng thái',
   })
   @IsEnum(TermMilestoneStatus)
   @IsOptional()
   status?: TermMilestoneStatus;
+
+  @ApiProperty({
+    example: true,
+    description: 'Bắt buộc',
+    required: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  isRequired?: boolean;
 }

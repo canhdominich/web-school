@@ -1,5 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-import { Term } from "@/types/common";
+import { Term, TermStatus } from "@/types/common";
 
 export const getTerms = async (): Promise<Term[]> => {
     const res = await httpClient.get('/terms');
@@ -17,7 +17,7 @@ export const createTerm = async (data: {
     description?: string;
     startDate: string;
     endDate: string;
-    isActive: boolean;
+    status: TermStatus;
 }): Promise<Term> => {
     const res = await httpClient.post('/terms', data);
     return res.data;
@@ -29,7 +29,7 @@ export const updateTerm = async (id: string, data: {
     description?: string;
     startDate?: string;
     endDate?: string;
-    isActive?: boolean;
+    status?: TermStatus;
 }): Promise<Term> => {
     const res = await httpClient.patch(`/terms/${id}`, data);
     return res.data;
@@ -45,7 +45,7 @@ export interface CreateTermDto {
     description?: string;
     startDate: string;
     endDate: string;
-    isActive: boolean;
+    status: TermStatus;
 }
 
 export interface UpdateTermDto {
@@ -54,5 +54,5 @@ export interface UpdateTermDto {
     description?: string;
     startDate?: string;
     endDate?: string;
-    isActive?: boolean;
+    status?: TermStatus;
 } 

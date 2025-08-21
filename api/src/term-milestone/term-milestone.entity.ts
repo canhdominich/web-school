@@ -27,7 +27,7 @@ export class TermMilestone {
   termId: number;
 
   @Column({ type: 'varchar', length: 255 })
-  name: string;
+  title: string;
 
   @Column({ type: 'date' })
   dueDate: Date;
@@ -37,6 +37,9 @@ export class TermMilestone {
 
   @Column({ type: 'int', default: 0 })
   orderIndex: number;
+
+  @Column({ type: 'boolean', default: false })
+  isRequired: boolean;
 
   @Column({
     type: 'enum',

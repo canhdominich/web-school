@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { BasicTableProps, Header, Term, TermMilestone } from "@/types/common";
+import { BasicTableProps, Header, Term, TermMilestone, TermStatus, TermMilestoneStatus } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { CreateTermDto, createTerm, deleteTerm, updateTerm, UpdateTermDto } from "@/services/termService";
@@ -32,15 +32,16 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
     description: "",
     startDate: "",
     endDate: "",
-    isActive: false,
+    status: 'open',
   });
   const [milestoneFormData, setMilestoneFormData] = useState<CreateTermMilestoneDto | UpdateTermMilestoneDto>({
     title: "",
     description: "",
     dueDate: "",
     termId: "",
-    order: 0,
+    orderIndex: 0,
     isRequired: false,
+    status: 'active',
   });
   const { isOpen, openModal, closeModal } = useModal();
 
@@ -54,7 +55,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
         description: "",
         startDate: "",
         endDate: "",
-        isActive: false,
+        status: 'open',
       });
     }
   }, [isOpen]);
@@ -68,7 +69,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
         description: selectedTerm.description || "",
         startDate: selectedTerm.startDate,
         endDate: selectedTerm.endDate,
-        isActive: selectedTerm.isActive,
+        status: selectedTerm.status as TermStatus,
       });
     }
   }, [selectedTerm]);
@@ -86,8 +87,9 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
       description: "",
       dueDate: "",
       termId: term.id.toString(),
-      order: (term.termMilestones?.length || 0) + 1,
+      orderIndex: (term.termMilestones?.length || 0) + 1,
       isRequired: false,
+      status: 'active',
     });
     setShowMilestoneModal(true);
   };
@@ -100,8 +102,9 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
       description: milestone.description,
       dueDate: milestone.dueDate,
       termId: milestone.termId,
-      order: milestone.order,
+      orderIndex: milestone.orderIndex,
       isRequired: milestone.isRequired,
+      status: milestone.status as TermMilestoneStatus,
     });
     setShowMilestoneModal(true);
   };
@@ -277,18 +280,18 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <Badge
                       size="sm"
-                      color={item.isActive ? "success" : "error"}
+                      color={item.status === 'open' ? "success" : item.status === 'closed' ? "warning" : "light"}
                     >
-                      {item.isActive ? "Đang hoạt động" : "Không hoạt động"}
+                      {item.status === 'open' ? "Đang mở" : item.status === 'closed' ? "Đã đóng" : "Đã lưu trữ"}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="space-y-2">
-                      <div className="text-sm font-medium">Cột mốc ({item.termMilestones?.length || 0})</div>
+                      <div className="text-sm font-medium">Mốc ({item.termMilestones?.length || 0})</div>
                       {item.termMilestones && item.termMilestones.length > 0 && (
                         <div className="space-y-1">
                           {item.termMilestones
-                            .sort((a, b) => a.order - b.order)
+                            .sort((a, b) => a.orderIndex - b.orderIndex)
                             .map((milestone) => (
                               <div key={milestone.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
                                 <div className="flex items-center gap-2">
@@ -296,6 +299,12 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                                   {milestone.isRequired && (
                                     <Badge size="sm" color="error">Bắt buộc</Badge>
                                   )}
+                                  <Badge
+                                    size="sm"
+                                    color={milestone.status === 'active' ? "success" : "light"}
+                                  >
+                                    {milestone.status === 'active' ? "Đang áp dụng" : "Chưa áp dụng"}
+                                  </Badge>
                                 </div>
                                 <div className="flex gap-1">
                                   <button
@@ -321,7 +330,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleAddMilestone(item)}
-                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
                       >
                         Thêm mốc
                       </button>
@@ -425,18 +434,19 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="flex items-center">
-                    <input
-                      id="isActive"
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                      className="mr-2 h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
-                      Đang hoạt động
-                    </span>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Trạng thái
                   </label>
+                  <select
+                    id="status"
+                    value={(formData as any).status as TermStatus}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as TermStatus })}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                  >
+                    <option value="open">Mở</option>
+                    <option value="closed">Đóng</option>
+                    <option value="archived">Lưu trữ</option>
+                  </select>
                 </div>
               </div>
               <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
@@ -471,7 +481,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                   {selectedMilestone ? "Chỉnh sửa cột mốc" : "Thêm cột mốc"}
                 </h5>
                 {selectedTerm && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-base text-gray-600 dark:text-gray-400">
                     Sự kiện: {selectedTerm.name}
                   </p>
                 )}
@@ -510,25 +520,11 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                     id="milestoneOrder"
                     type="number"
                     min="1"
-                    value={milestoneFormData.order}
-                    onChange={(e) => setMilestoneFormData({ ...milestoneFormData, order: Number(e.target.value) })}
+                    value={milestoneFormData.orderIndex}
+                    onChange={(e) => setMilestoneFormData({ ...milestoneFormData, orderIndex: Number(e.target.value) })}
                     className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     placeholder="Nhập thứ tự"
                   />
-                </div>
-                <div className="mb-3">
-                  <label className="flex items-center">
-                    <input
-                      id="milestoneIsRequired"
-                      type="checkbox"
-                      checked={milestoneFormData.isRequired}
-                      onChange={(e) => setMilestoneFormData({ ...milestoneFormData, isRequired: e.target.checked })}
-                      className="mr-2 h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
-                      Bắt buộc
-                    </span>
-                  </label>
                 </div>
                 <div className="mb-3">
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
@@ -542,6 +538,34 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     placeholder="Nhập mô tả cột mốc"
                   />
+                </div>
+                <div className="mb-3">
+                  <label className="flex items-center">
+                    <input
+                      id="milestoneIsRequired"
+                      type="checkbox"
+                      checked={milestoneFormData.isRequired}
+                      onChange={(e) => setMilestoneFormData({ ...milestoneFormData, isRequired: e.target.checked })}
+                      className="mr-2 h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-400 pt-1">
+                      Bắt buộc
+                    </span>
+                  </label>
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Trạng thái
+                  </label>
+                  <select
+                    id="status"
+                    value={(milestoneFormData as any).status as TermMilestoneStatus}
+                    onChange={(e) => setMilestoneFormData({ ...milestoneFormData, status: e.target.value as TermMilestoneStatus })}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                  >
+                    <option value="active">Đang áp dụng</option>
+                    <option value="inactive">Chưa áp dụng</option>
+                  </select>
                 </div>
               </div>
               <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
