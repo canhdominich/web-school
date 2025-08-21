@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { TermMilestone } from '../term-milestone/term-milestone.entity';
 
 export enum TermStatus {
   OPEN = 'open',
@@ -34,6 +36,11 @@ export class Term {
 
   @Column({ type: 'enum', enum: TermStatus, default: TermStatus.OPEN })
   status: TermStatus;
+
+  @OneToMany(() => TermMilestone, (termMilestone) => termMilestone.term, {
+    cascade: true,
+  })
+  termMilestones: TermMilestone[];
 
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;

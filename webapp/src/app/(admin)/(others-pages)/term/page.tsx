@@ -9,14 +9,12 @@ import { toast } from "react-hot-toast";
 
 export default function TermPage() {
   const headers = [
-    { key: "name", title: "Tên học kỳ" },
-    { key: "code", title: "Mã học kỳ" },
+    { key: "name", title: "Tên sự kiện" },
+    { key: "code", title: "Mã sự kiện" },
     { key: "description", title: "Mô tả" },
     { key: "dateRange", title: "Thời gian" },
     { key: "status", title: "Trạng thái" },
     { key: "milestones", title: "Cột mốc" },
-    { key: "createdAt", title: "Ngày tạo" },
-    { key: "updatedAt", title: "Ngày cập nhật" },
     { key: "action", title: "Hành động" },
   ];
 
@@ -29,7 +27,7 @@ export default function TermPage() {
       const data = await getTerms();
       setTerms(data);
     } catch {
-      toast.error("Không thể tải danh sách học kỳ");
+      toast.error("Không thể tải danh sách sự kiện");
     } finally {
       setIsLoading(false);
     }
@@ -41,7 +39,7 @@ export default function TermPage() {
 
   return (
     <div>
-      <PageBreadcrumb pageTitle="Quản lý học kỳ" />
+      <PageBreadcrumb pageTitle="Quản lý sự kiện" />
       <div className="space-y-6">
         <ComponentCard title="">
           {isLoading ? (

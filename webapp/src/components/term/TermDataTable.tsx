@@ -114,16 +114,16 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
       setIsSubmitting(true);
       if (selectedTerm?.id) {
         await updateTerm(selectedTerm.id.toString(), formData as UpdateTermDto);
-        toast.success("Cập nhật học kỳ thành công");
+        toast.success("Cập nhật sự kiện thành công");
       } else {
         await createTerm(formData as CreateTermDto);
-        toast.success("Thêm học kỳ thành công");
+        toast.success("Thêm sự kiện thành công");
       }
       closeModal();
       onRefresh();
     } catch (error: unknown) {
       console.error('Error in handleSubmit:', error);
-      const errorMessage = selectedTerm?.id ? "Không thể cập nhật học kỳ" : "Không thể thêm học kỳ";
+      const errorMessage = selectedTerm?.id ? "Không thể cập nhật sự kiện" : "Không thể thêm sự kiện";
       
       if (error instanceof Error && error.message) {
         toast.error(`${errorMessage}: ${error.message}`);
@@ -167,21 +167,21 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
   const handleDelete = async (id: number) => {
     if (isSubmitting) return;
 
-    const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa học kỳ này?");
+    const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa sự kiện này?");
     if (!isConfirmed) return;
 
     try {
       setIsSubmitting(true);
       await deleteTerm(id.toString());
-      toast.success("Xóa học kỳ thành công");
+      toast.success("Xóa sự kiện thành công");
       onRefresh();
     } catch (error: unknown) {
       console.error('Error in handleDelete:', error);
       
-      let errorMessage = "Không thể xóa học kỳ";
+      let errorMessage = "Không thể xóa sự kiện";
       
       if (error instanceof Error && error.message) {
-        if (error.message.includes("Không thể xóa học kỳ này vì đang được sử dụng trong:")) {
+        if (error.message.includes("Không thể xóa sự kiện này vì đang được sử dụng trong:")) {
           errorMessage = error.message;
           toast.error(errorMessage, { duration: 6000 });
         } else {
@@ -226,7 +226,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
           type="button"
           className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
         >
-          Thêm học kỳ
+          Thêm sự kiện
         </button>
       </div>
       <div className="max-w-full overflow-x-auto">
@@ -315,22 +315,16 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                             ))}
                         </div>
                       )}
-                      <button
-                        onClick={() => handleAddMilestone(item)}
-                        className="text-blue-600 hover:text-blue-800 text-xs underline"
-                      >
-                        + Thêm cột mốc
-                      </button>
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.createdAt.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.updatedAt.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleAddMilestone(item)}
+                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                      >
+                        Thêm mốc
+                      </button>
                       <button
                         onClick={() => handleEdit(item)}
                         className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
@@ -359,14 +353,14 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
             <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
               <div>
                 <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-                  {selectedTerm ? "Chỉnh sửa học kỳ" : "Thêm học kỳ"}
+                  {selectedTerm ? "Chỉnh sửa sự kiện" : "Thêm sự kiện"}
                 </h5>
               </div>
               <div className="mt-8">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="mb-3">
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                      Tên học kỳ
+                      Tên sự kiện
                     </label>
                     <input
                       id="name"
@@ -374,12 +368,12 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                      placeholder="Nhập tên học kỳ"
+                      placeholder="Nhập tên sự kiện"
                     />
                   </div>
                   <div className="mb-3">
                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                      Mã học kỳ
+                      Mã sự kiện
                     </label>
                     <input
                       id="code"
@@ -387,7 +381,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                       value={formData.code}
                       onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                       className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                      placeholder="Nhập mã học kỳ"
+                      placeholder="Nhập mã sự kiện"
                     />
                   </div>
                 </div>
@@ -427,7 +421,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                    placeholder="Nhập mô tả học kỳ (không bắt buộc)"
+                    placeholder="Nhập mô tả sự kiện (không bắt buộc)"
                   />
                 </div>
                 <div className="mb-3">
@@ -478,7 +472,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                 </h5>
                 {selectedTerm && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Học kỳ: {selectedTerm.name}
+                    Sự kiện: {selectedTerm.name}
                   </p>
                 )}
               </div>

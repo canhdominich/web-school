@@ -39,6 +39,7 @@ export class UserService {
       // Get the next available ID
       const lastUser = await this.userRepository.findOne({
         order: { id: 'DESC' },
+        where: {},
       });
 
       const nextId = lastUser ? lastUser.id + 1 : 1;
@@ -186,7 +187,9 @@ export class UserService {
         const foundNames = new Set(roles.map((r) => r.name));
         const missing = desiredRoleNames.filter((r) => !foundNames.has(r));
         if (missing.length > 0) {
-          throw new BadRequestException(`Vai trò không hợp lệ: ${missing.join(', ')}`);
+          throw new BadRequestException(
+            `Vai trò không hợp lệ: ${missing.join(', ')}`,
+          );
         }
 
         const existingUserRoles = await userRoleRepo.find({

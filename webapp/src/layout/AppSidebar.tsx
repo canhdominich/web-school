@@ -103,7 +103,7 @@ const AppSidebar: React.FC = () => {
   },
   {
     icon: <PageIcon />,
-    name: "Quản lý học kỳ",
+    name: "Quản lý sự kiện",
     path: "/term",
     requiredRole: [UserRole.Admin, UserRole.Student],
   },
@@ -154,7 +154,7 @@ const AppSidebar: React.FC = () => {
   }, []);
 
   const hasAccess = (requiredRole: string | string[]) => {
-    if (!user) return false;
+    if (!user || !user.userRoles) return false;
 
     if (Array.isArray(requiredRole)) {
       const rolesMapping: Record<string, boolean> = {};

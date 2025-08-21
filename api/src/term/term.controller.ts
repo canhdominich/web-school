@@ -12,7 +12,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TermService } from './term.service';
 import { CreateTermDto } from './dto/create-term.dto';
 import { UpdateTermDto } from './dto/update-term.dto';
-import { Term } from './term.entity';
+import { TermResponseDto } from './dto/term-response.dto';
 
 @ApiTags('terms')
 @Controller('terms')
@@ -24,7 +24,7 @@ export class TermController {
   @ApiResponse({
     status: 201,
     description: 'Term successfully created.',
-    type: Term,
+    type: TermResponseDto,
   })
   @ApiResponse({ status: 409, description: 'Term code already exists.' })
   create(@Body() createTermDto: CreateTermDto) {
@@ -33,14 +33,22 @@ export class TermController {
 
   @Get()
   @ApiOperation({ summary: 'Get all terms' })
-  @ApiResponse({ status: 200, description: 'Return all terms.', type: [Term] })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all terms.',
+    type: [TermResponseDto],
+  })
   findAll() {
     return this.termService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a term by id' })
-  @ApiResponse({ status: 200, description: 'Return the term.', type: Term })
+  @ApiResponse({
+    status: 200,
+    description: 'Return the term.',
+    type: TermResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Term not found.' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.termService.findOne(id);
@@ -51,7 +59,7 @@ export class TermController {
   @ApiResponse({
     status: 200,
     description: 'Term successfully updated.',
-    type: Term,
+    type: TermResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Term not found.' })
   update(
@@ -63,7 +71,11 @@ export class TermController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a term' })
-  @ApiResponse({ status: 200, description: 'Term successfully deleted.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Term successfully deleted.',
+    type: TermResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Term not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.termService.remove(id);
