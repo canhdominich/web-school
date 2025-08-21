@@ -72,4 +72,33 @@ export interface Major {
     updatedAt: string;
 }
 
+export interface TermMilestone {
+    id: string;
+    title: string;
+    description: string;
+    dueDate: string;
+    termId: string;
+    order: number;
+    isRequired: boolean;
+    createdAt: string;
+    updatedAt: string;
+    term?: {
+        id: string;
+        name: string;
+    };
+}
+
+export interface Term {
+    id: number;
+    code: string;
+    name: string;
+    description?: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+    termMilestones: TermMilestone[];
+    createdAt: string;
+    updatedAt: string;
+}
+
   

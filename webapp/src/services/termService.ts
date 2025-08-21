@@ -1,15 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-
-export interface Term {
-    id: string;
-    name: string;
-    code: string;
-    startDate: string;
-    endDate: string;
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-}
+import { Term } from "@/types/common";
 
 export const getTerms = async (): Promise<Term[]> => {
     const res = await httpClient.get('/terms');
@@ -21,17 +11,13 @@ export const getTermById = async (id: string): Promise<Term> => {
     return res.data;
 };
 
-export const getActiveTerm = async (): Promise<Term | null> => {
-    const res = await httpClient.get('/terms/active');
-    return res.data;
-};
-
 export const createTerm = async (data: {
     name: string;
     code: string;
+    description?: string;
     startDate: string;
     endDate: string;
-    isActive?: boolean;
+    isActive: boolean;
 }): Promise<Term> => {
     const res = await httpClient.post('/terms', data);
     return res.data;
@@ -40,21 +26,12 @@ export const createTerm = async (data: {
 export const updateTerm = async (id: string, data: {
     name?: string;
     code?: string;
+    description?: string;
     startDate?: string;
     endDate?: string;
     isActive?: boolean;
 }): Promise<Term> => {
     const res = await httpClient.patch(`/terms/${id}`, data);
-    return res.data;
-};
-
-export const activateTerm = async (id: string): Promise<Term> => {
-    const res = await httpClient.patch(`/terms/${id}/activate`);
-    return res.data;
-};
-
-export const deactivateTerm = async (id: string): Promise<Term> => {
-    const res = await httpClient.patch(`/terms/${id}/deactivate`);
     return res.data;
 };
 
@@ -65,14 +42,16 @@ export const deleteTerm = async (id: string): Promise<void> => {
 export interface CreateTermDto {
     name: string;
     code: string;
+    description?: string;
     startDate: string;
     endDate: string;
-    isActive?: boolean;
+    isActive: boolean;
 }
 
 export interface UpdateTermDto {
     name?: string;
     code?: string;
+    description?: string;
     startDate?: string;
     endDate?: string;
     isActive?: boolean;
