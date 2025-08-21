@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 // import { ApexOptions } from "apexcharts";
 // import ChartTab from "../common/ChartTab";
 import dynamic from "next/dynamic";
-import { getDashboardStats } from "@/services/bookingService";
+import { getDashboardStats, IDashboardStatistic } from "@/services/statisticService";
 import { ApexOptions } from "apexcharts";
 
 // Dynamically import the ReactApexChart component
@@ -12,22 +12,8 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-interface DashboardStats {
-  totalBookings: number;
-  totalRevenue: number;
-  totalUsers: number;
-  monthlyBookings: number[];
-  monthlyRevenue: number[];
-}
-
 const StatisticsChart = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalBookings: 0,
-    totalRevenue: 0,
-    totalUsers: 0,
-    monthlyBookings: new Array(12).fill(0),
-    monthlyRevenue: new Array(12).fill(0)
-  });
+  const [stats, setStats] = useState<IDashboardStatistic>({} as IDashboardStatistic);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,12 +39,12 @@ const StatisticsChart = () => {
 
   const series = [
     {
-      name: "Lượt gửi",
-      data: stats.monthlyBookings,
+      name: "Dự án",
+      data: stats.projects.monthlyProjects,
     },
     {
-      name: "Tiền thu",
-      data: stats.monthlyRevenue,
+      name: "Dự án hoàn thành",
+      data: stats.projects.monthlyCompletedProjects,
     },
   ];
 
@@ -105,23 +91,14 @@ const StatisticsChart = () => {
     yaxis: [
       {
         title: {
-          text: "Lượt gửi",
+          text: "Dự án",
         },
       },
       {
         opposite: true,
         title: {
-          text: "Tiền thu (VND)",
+          text: "Dự án hoàn thành",
         },
-        labels: {
-          formatter: (value: number) => {
-            return value.toLocaleString('vi-VN', {
-              style: 'currency',
-              currency: 'VND',
-              minimumFractionDigits: 0
-            });
-          }
-        }
       },
     ],
     tooltip: {
@@ -133,11 +110,7 @@ const StatisticsChart = () => {
         },
         {
           formatter: (value: number) => {
-            return value.toLocaleString('vi-VN', {
-              style: 'currency',
-              currency: 'VND',
-              minimumFractionDigits: 0
-            });
+            return value.toLocaleString();
           },
         },
       ],
@@ -152,7 +125,7 @@ const StatisticsChart = () => {
     <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
       <div>
         <h3 className="text-xl font-semibold text-black dark:text-white">
-          Thống kê theo tháng
+          Thống kê dự án
         </h3>
       </div>
 

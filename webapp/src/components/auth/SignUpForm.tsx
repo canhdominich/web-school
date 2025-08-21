@@ -125,7 +125,7 @@ export default function SignUpForm() {
               <div className="space-y-5">
                 <div>
                   <Label>
-                    Tên khách hàng<span className="text-error-500">*</span>
+                    Tên<span className="text-error-500">*</span>
                     </Label>
                     <Input
                       type="text"

@@ -1,48 +1,23 @@
 "use client";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-// import { MoreDotIcon } from "@/icons";
-// import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useEffect, useState } from "react";
-// import { Dropdown } from "../ui/dropdown/Dropdown";
-import { getDashboardStats } from "@/services/bookingService";
+import { getDashboardStats, IDashboardStatistic } from "@/services/statisticService";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-interface DashboardStats {
-  totalBookings: number;
-  totalRevenue: number;
-  totalUsers: number;
-  monthlyBookings: number[];
-  monthlyRevenue: number[];
-}
-
-export default function MonlthySalesChart() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalBookings: 0,
-    totalRevenue: 0,
-    totalUsers: 0,
-    monthlyBookings: new Array(12).fill(0),
-    monthlyRevenue: new Array(12).fill(0)
-  });
+export default function MonthlyUsersChart() {
+  const [stats, setStats] = useState<IDashboardStatistic>({} as IDashboardStatistic);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const data = await getDashboardStats();
-        // Ensure all values are numbers
-        const processedData = {
-          totalBookings: Number(data.totalBookings) || 0,
-          totalRevenue: Number(data.totalRevenue) || 0,
-          totalUsers: Number(data.totalUsers) || 0,
-          monthlyBookings: data.monthlyBookings.map(Number),
-          monthlyRevenue: data.monthlyRevenue.map(Number)
-        };
-        setStats(processedData);
+        setStats(data);
       } catch (error) {
         console.error("Error fetching dashboard stats:", error);
       } finally {
@@ -140,8 +115,8 @@ export default function MonlthySalesChart() {
   };
   const series = [
     {
-      name: "Doanh thu",
-      data: stats.monthlyRevenue,
+      name: "Số tài khoản",
+      data: stats.users.monthlyUsers,
     },
   ];
 
@@ -149,7 +124,7 @@ export default function MonlthySalesChart() {
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Doanh thu
+          Thống kê tài khoản
         </h3>
       </div>
 

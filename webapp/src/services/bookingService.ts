@@ -37,11 +37,6 @@ export const deleteBooking = async (id: number) => {
     return res.data
 }
 
-export const getDashboardStats = async () => {
-    const res = await httpClient.get('/bookings/dashboard/statistics')
-    return res.data
-}
-
 export interface CreateBookingDto {
     userId: number;
     vehicleId: number;

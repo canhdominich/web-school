@@ -460,12 +460,14 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                         </button>
                         </>
                       )}
-                      <button
+                      {!rolesObject[UserRole.Admin] && (
+                        <button
                           onClick={() => handleEdit(item)}
                           className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
                         >
                           <EyeIcon />
                         </button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
