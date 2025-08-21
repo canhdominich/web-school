@@ -509,15 +509,15 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                 </div>
                 <div className="grid grid-cols-3 gap-4 col-span-2">
                   <div className="mb-3">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Kỳ</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Sự kiện</label>
                     <Select
                       value={(formData as any).termId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, termId: parseInt(v, 10) })}
-                      options={[{ value: "0", label: "Chọn kỳ" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
+                      options={[{ value: "0", label: "Chọn sự kiện" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Người hướng dẫn</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Giảng viên hướng dẫn</label>
                     <Select
                       value={(formData as any).supervisorId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, supervisorId: parseInt(v, 10) })}
