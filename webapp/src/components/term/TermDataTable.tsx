@@ -14,6 +14,7 @@ import { CreateTermDto, createTerm, deleteTerm, updateTerm, UpdateTermDto } from
 import { createTermMilestone, updateTermMilestone, deleteTermMilestone, CreateTermMilestoneDto, UpdateTermMilestoneDto } from "@/services/termMilestoneService";
 import { toast } from "react-hot-toast";
 import Badge from "../ui/badge/Badge";
+import { PlusIcon } from "@/icons";
 
 interface TermDataTableProps extends BasicTableProps {
   onRefresh: () => void;
@@ -287,7 +288,7 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="space-y-2">
-                      <div className="text-sm font-medium">Mốc ({item.termMilestones?.length || 0})</div>
+                      <div className="text-sm font-medium">Milestones ({item.termMilestones?.length || 0})</div>
                       {item.termMilestones && item.termMilestones.length > 0 && (
                         <div className="space-y-1">
                           {item.termMilestones
@@ -329,10 +330,11 @@ export default function TermDataTable({ headers, items, onRefresh }: TermDataTab
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">
                       <button
+                        title="Thêm cột mốc"
                         onClick={() => handleAddMilestone(item)}
-                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
+                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-6 py-1.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
                       >
-                        Thêm mốc
+                        <span className="text-xl">+</span>
                       </button>
                       <button
                         onClick={() => handleEdit(item)}
