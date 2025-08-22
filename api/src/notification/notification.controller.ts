@@ -8,15 +8,26 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
 import { Notification } from './notification.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('notifications')
 @Controller('notifications')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
@@ -27,12 +38,16 @@ export class NotificationController {
     description: 'Notification successfully created.',
     type: Notification,
   })
-  create(@Body() dto: CreateNotificationDto) {
-    return this.notificationService.create(dto);
+  create(@Body() dto: CreateNotificationDto, @Request() req) {
+    // Ensure the notification is created for the authenticated user
+    const userId = req.user.id;
+    return this.notificationService.create({ ...dto, userId });
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all notifications with pagination' })
+  @ApiOperation({
+    summary: 'Get notifications for authenticated user with pagination',
+  })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -51,15 +66,9 @@ export class NotificationController {
     type: Boolean,
     description: 'Filter by seen status',
   })
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    type: String,
-    description: 'Filter by user ID',
-  })
   @ApiResponse({
     status: 200,
-    description: 'Return paginated notifications.',
+    description: 'Return paginated notifications for authenticated user.',
     schema: {
       type: 'object',
       properties: {
@@ -75,22 +84,24 @@ export class NotificationController {
     },
   })
   findAll(
+    @Request() req,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('seen') seen?: boolean,
-    @Query('userId') userId?: string,
   ) {
-    const parsedUserId = userId ? parseInt(userId, 10) : undefined;
+    const userId = req.user.id;
     return this.notificationService.findAll({
       page,
       limit,
       seen,
-      userId: parsedUserId,
+      userId,
     });
   }
 
   @Get('unread')
-  @ApiOperation({ summary: 'Get unread notifications with pagination' })
+  @ApiOperation({
+    summary: 'Get unread notifications for authenticated user with pagination',
+  })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -103,15 +114,10 @@ export class NotificationController {
     type: Number,
     description: 'Items per page (default: 10)',
   })
-  @ApiQuery({
-    name: 'userId',
-    required: false,
-    type: String,
-    description: 'Filter by user ID',
-  })
   @ApiResponse({
     status: 200,
-    description: 'Return paginated unread notifications.',
+    description:
+      'Return paginated unread notifications for authenticated user.',
     schema: {
       type: 'object',
       properties: {
@@ -127,20 +133,22 @@ export class NotificationController {
     },
   })
   findUnread(
+    @Request() req,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-    @Query('userId') userId?: string,
   ) {
-    const parsedUserId = userId ? parseInt(userId, 10) : undefined;
+    const userId = req.user.id;
     return this.notificationService.findUnread({
       page,
       limit,
-      userId: parsedUserId,
+      userId,
     });
   }
 
   @Get('user/:userId')
-  @ApiOperation({ summary: 'Get notifications by user ID with pagination' })
+  @ApiOperation({
+    summary: 'Get notifications by user ID with pagination (admin only)',
+  })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -178,10 +186,16 @@ export class NotificationController {
   })
   findByUserId(
     @Param('userId', ParseIntPipe) userId: number,
+    @Request() req,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('seen') seen?: boolean,
   ) {
+    // Only allow users to access their own notifications or admins
+    const authenticatedUserId = req.user.id;
+    if (authenticatedUserId !== userId && req.user.role !== 'admin') {
+      throw new Error('Unauthorized access to notifications');
+    }
     return this.notificationService.findByUserId(userId, { page, limit, seen });
   }
 
@@ -193,8 +207,9 @@ export class NotificationController {
     type: Notification,
   })
   @ApiResponse({ status: 404, description: 'Notification not found.' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.notificationService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    const userId = req.user.id;
+    return this.notificationService.findOne(id, userId);
   }
 
   @Patch(':id')
@@ -208,18 +223,23 @@ export class NotificationController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateNotificationDto,
+    @Request() req,
   ) {
-    return this.notificationService.update(id, dto);
+    const userId = req.user.id;
+    return this.notificationService.update(id, dto, userId);
   }
 
   @Patch('read-all')
-  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @ApiOperation({
+    summary: 'Mark all notifications as read for authenticated user',
+  })
   @ApiResponse({
     status: 200,
     description: 'All notifications marked as read.',
   })
-  markAllAsRead() {
-    return this.notificationService.markAllAsRead();
+  markAllAsRead(@Request() req) {
+    const userId = req.user.id;
+    return this.notificationService.markAllAsRead(userId);
   }
 
   @Delete(':id')
@@ -229,7 +249,8 @@ export class NotificationController {
     description: 'Notification successfully deleted.',
   })
   @ApiResponse({ status: 404, description: 'Notification not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.notificationService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    const userId = req.user.id;
+    return this.notificationService.remove(id, userId);
   }
 }

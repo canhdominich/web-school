@@ -168,11 +168,17 @@ export class NotificationService {
     };
   }
 
-  async findOne(id: number): Promise<Notification> {
-    const notification = await this.notificationRepository.findOne({
-      where: { id },
-      relations: ['user'],
-    });
+  async findOne(id: number, userId?: number): Promise<Notification> {
+    const queryBuilder = this.notificationRepository
+      .createQueryBuilder('notification')
+      .leftJoinAndSelect('notification.user', 'user')
+      .where('notification.id = :id', { id });
+
+    if (userId) {
+      queryBuilder.andWhere('notification.userId = :userId', { userId });
+    }
+
+    const notification = await queryBuilder.getOne();
 
     if (!notification) {
       throw new NotFoundException(`Không tìm thấy thông báo có ID ${id}`);
@@ -184,10 +190,17 @@ export class NotificationService {
   async update(
     id: number,
     updateNotificationDto: UpdateNotificationDto,
+    userId?: number,
   ): Promise<Notification> {
-    const notification = await this.notificationRepository.findOne({
-      where: { id },
-    });
+    const queryBuilder = this.notificationRepository
+      .createQueryBuilder('notification')
+      .where('notification.id = :id', { id });
+
+    if (userId) {
+      queryBuilder.andWhere('notification.userId = :userId', { userId });
+    }
+
+    const notification = await queryBuilder.getOne();
 
     if (!notification) {
       throw new NotFoundException(`Không tìm thấy thông báo có ID ${id}`);
@@ -209,14 +222,21 @@ export class NotificationService {
     return this.notificationRepository.save(notification);
   }
 
-  async markAllAsRead(): Promise<void> {
-    await this.notificationRepository.update({}, { seen: true });
+  async markAllAsRead(userId?: number): Promise<void> {
+    const updateCondition = userId ? { userId } : {};
+    await this.notificationRepository.update(updateCondition, { seen: true });
   }
 
-  async remove(id: number): Promise<Notification> {
-    const notification = await this.notificationRepository.findOne({
-      where: { id },
-    });
+  async remove(id: number, userId?: number): Promise<Notification> {
+    const queryBuilder = this.notificationRepository
+      .createQueryBuilder('notification')
+      .where('notification.id = :id', { id });
+
+    if (userId) {
+      queryBuilder.andWhere('notification.userId = :userId', { userId });
+    }
+
+    const notification = await queryBuilder.getOne();
 
     if (!notification) {
       throw new NotFoundException(`Không tìm thấy thông báo có ID ${id}`);
