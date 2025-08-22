@@ -10,7 +10,7 @@ import { UserRole } from '../../constants/user.constant';
 interface RequestWithUser {
   user: {
     id: number;
-    role: UserRole;
+    roles: string[];
   };
 }
 
@@ -35,11 +35,11 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User not found in request');
     }
 
-    const hasRole = requiredRoles.some((role) => user.role === role);
+    const hasRole = requiredRoles.some((role) => user.roles.includes(role));
 
     if (!hasRole) {
       throw new ForbiddenException(
-        `User with role ${user.role} does not have access to this resource`,
+        `User with role ${user.roles} does not have access to this resource`,
       );
     }
 

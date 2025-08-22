@@ -27,6 +27,7 @@ import {
 } from "@/services/projectService";
 import { getRolesObject } from "@/utils/user.utils";
 import { EyeIcon } from "@/icons";
+import { createMilestoneSubmissionSimple } from "@/services/milestoneSubmissionService";
 
 interface ProjectDataTableProps extends BasicTableProps {
   onRefresh: () => void;
@@ -67,6 +68,11 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   const { isOpen, openModal, closeModal } = useModal();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [rolesObject, setRolesObject] = useState<Record<string, boolean>>({});
+  const [isSubmittingMilestoneId, setIsSubmittingMilestoneId] = useState<string | null>(null);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [submitForm, setSubmitForm] = useState<{ fileUrl: string; note: string }>({ fileUrl: "", note: "" });
+  const [submitEmails, setSubmitEmails] = useState<string[]>([]);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -266,6 +272,39 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     }
   };
 
+  const openSubmitModal = (project: ProjectEntity, milestoneId: string) => {
+    const emailsSet = new Set<string>();
+    if (project.supervisorUser?.email) emailsSet.add(project.supervisorUser.email);
+    (project.members || []).forEach(m => {
+      const email = m.student?.email;
+      if (email) emailsSet.add(email);
+    });
+    setSubmitEmails(Array.from(emailsSet));
+    setSelectedMilestoneId(milestoneId);
+    setSubmitForm({ fileUrl: "", note: "" });
+    setIsSubmitModalOpen(true);
+  };
+
+  const submitMilestone = async () => {
+    if (!selectedMilestoneId) return;
+    if (isSubmittingMilestoneId) return;
+    try {
+      setIsSubmittingMilestoneId(selectedMilestoneId);
+      await createMilestoneSubmissionSimple({
+        milestoneId: Number(selectedMilestoneId),
+        note: submitForm.note || undefined,
+        fileUrl: submitForm.fileUrl || undefined,
+      });
+      toast.success("Nộp tài liệu thành công");
+      setIsSubmitModalOpen(false);
+    } catch (error: unknown) {
+      console.error("Error submitting milestone:", error);
+      toast.error("Không thể nộp tài liệu");
+    } finally {
+      setIsSubmittingMilestoneId(null);
+    }
+  };
+
   const getEducationLevelLabel = (value: string): string => {
     switch (value) {
       case "undergraduate":
@@ -418,6 +457,15 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                                   </Badge>
                                   <Badge size="sm" color="warning">{milestone.dueDate}</Badge>
                                 </div>
+                                {rolesObject[UserRole.Student] && milestone.status === 'active' && (
+                                  <button
+                                    onClick={() => openSubmitModal(item, milestone.id)}
+                                    className="btn btn-success btn-update-event rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600"
+                                    disabled={isSubmittingMilestoneId === milestone.id}
+                                  >
+                                    {isSubmittingMilestoneId === milestone.id ? "Đang nộp..." : "Nộp tài liệu"}
+                                  </button>
+                                )}
                               </div>
                             ))}
                         </div>
@@ -726,6 +774,58 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                     {isSubmitting ? "Đang xử lý..." : selectedProject ? "Cập nhật" : "Thêm mới"}
                   </button>
                 )}
+              </div>
+            </div>
+          </Modal>
+          <Modal
+            isOpen={isSubmitModalOpen}
+            onClose={() => setIsSubmitModalOpen(false)}
+            className="max-w-[560px] p-6 lg:p-8"
+          >
+            <div className="flex flex-col gap-4">
+              <h5 className="font-semibold text-gray-800 text-theme-xl dark:text-white/90 lg:text-2xl">Nộp tài liệu mốc</h5>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Yêu cầu share tài liệu cho các mail của các thành viên trong dự án, giảng viên hướng dẫn:{" "}
+                <span className="font-bold text-white">
+                  {submitEmails.join(", ")}
+                </span>
+              </p>
+              <div className="mb-3">
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Link tài liệu</label>
+                <input
+                  type="url"
+                  value={submitForm.fileUrl}
+                  onChange={(e) => setSubmitForm({ ...submitForm, fileUrl: e.target.value })}
+                  placeholder="Dán link tài liệu (Google Drive, OneDrive, v.v.)"
+                  className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                />
+              </div>
+              <div className="mb-3">
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Ghi chú</label>
+                <textarea
+                  rows={4}
+                  value={submitForm.note}
+                  onChange={(e) => setSubmitForm({ ...submitForm, note: e.target.value })}
+                  placeholder="Nhập ghi chú (tuỳ chọn)"
+                  className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                />
+              </div>
+              <div className="flex items-center gap-3 mt-2 sm:justify-end">
+                <button
+                  onClick={() => setIsSubmitModalOpen(false)}
+                  type="button"
+                  className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={submitMilestone}
+                  type="button"
+                  disabled={!selectedMilestoneId || isSubmittingMilestoneId === selectedMilestoneId}
+                  className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                >
+                  {isSubmittingMilestoneId === selectedMilestoneId ? "Đang nộp..." : "Nộp"}
+                </button>
               </div>
             </div>
           </Modal>

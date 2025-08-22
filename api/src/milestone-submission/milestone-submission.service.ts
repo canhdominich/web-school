@@ -15,7 +15,7 @@ import { UserRole } from '../constants/user.constant';
 
 interface RequestUser {
   id: number;
-  role: UserRole;
+  roles: string[];
 }
 
 @Injectable()
@@ -33,7 +33,7 @@ export class MilestoneSubmissionService {
     dto: CreateMilestoneSubmissionDto,
     user: RequestUser,
   ): Promise<MilestoneSubmission> {
-    if (user.role !== UserRole.Student) {
+    if (!user.roles.includes(UserRole.Student)) {
       throw new ForbiddenException('Only Student can submit');
     }
 

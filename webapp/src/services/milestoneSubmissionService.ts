@@ -120,4 +120,16 @@ export interface ReviewMilestoneSubmissionDto {
     status: 'approved' | 'rejected' | 'revision_requested';
     feedback?: string;
     reviewerId: string;
-} 
+}
+
+// Simple DTO aligned with backend NestJS service
+export interface CreateMilestoneSubmissionSimpleDto {
+    milestoneId: number;
+    note?: string;
+    fileUrl?: string;
+}
+
+export const createMilestoneSubmissionSimple = async (data: CreateMilestoneSubmissionSimpleDto) => {
+    const res = await httpClient.post('/milestone-submissions', data);
+    return res.data;
+}; 
