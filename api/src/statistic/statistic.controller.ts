@@ -3,7 +3,7 @@ import { StatisticService } from './statistic.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { StatisticResponseDto } from './dto/statistic-response.dto';
 
-@ApiTags('Statistics')
+@ApiTags('statistics')
 @Controller('statistics')
 export class StatisticController {
   constructor(private readonly statisticService: StatisticService) {}
@@ -18,4 +18,4 @@ export class StatisticController {
   async getStatistics(): Promise<StatisticResponseDto> {
     return this.statisticService.getOverallStatistics();
   }
-} 
+}

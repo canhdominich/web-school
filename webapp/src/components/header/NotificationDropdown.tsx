@@ -1,11 +1,83 @@
 "use client";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
+import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import Image from "next/image";
+import { getNotifications, markAsRead, Notification } from "@/services/notificationService";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifying, setNotifying] = useState(true);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUnread, setTotalUnread] = useState(0);
+
+  const loadNotifications = useCallback(async (page: number = 1, append: boolean = false) => {
+    try {
+      setLoading(true);
+      const response = await getNotifications({ 
+        page, 
+        limit: 10,
+        seen: undefined // Get both read and unread
+      });
+      
+      if (append) {
+        setNotifications(prev => [...prev, ...response.data]);
+      } else {
+        setNotifications(response.data);
+      }
+      
+      setHasMore(page < response.totalPages);
+      setCurrentPage(page);
+      
+      // Count unread notifications
+      const unreadCount = response.data.filter(n => !n.seen).length;
+      setTotalUnread(unreadCount);
+      
+      // Update notifying state based on unread count
+      setNotifying(unreadCount > 0);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      loadNotifications(currentPage + 1, true);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: number) => {
+    try {
+      await markAsRead(notificationId);
+      // Update local state
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notificationId ? { ...n, seen: true } : n
+        )
+      );
+      // Update unread count
+      setTotalUnread(prev => Math.max(0, prev - 1));
+      // Update notifying state
+      if (totalUnread <= 1) {
+        setNotifying(false);
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const handleClick = () => {
+    toggleDropdown();
+    if (!isOpen) {
+      loadNotifications(1, false);
+    }
+  };
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -15,10 +87,33 @@ export default function NotificationDropdown() {
     setIsOpen(false);
   }
 
-  const handleClick = () => {
-    toggleDropdown();
-    setNotifying(false);
+  // Load initial notifications when component mounts
+  useEffect(() => {
+    if (isOpen) {
+      loadNotifications(1, false);
+    }
+  }, [isOpen, loadNotifications]);
+
+  const formatTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+      if (diffInMinutes < 1) return 'Vừa xong';
+      if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+      if (diffInHours < 24) return `${diffInHours} giờ trước`;
+      if (diffInDays < 7) return `${diffInDays} ngày trước`;
+      
+      return date.toLocaleDateString('vi-VN');
+    } catch {
+      return 'Vừa xong';
+    }
   };
+
   return (
     <div className="relative">
       <button
@@ -49,14 +144,14 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute -right-[240px] mt-[17px] flex h-[200px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[361px] lg:right-0"
+        className="absolute -right-[240px] mt-[17px] flex h-[400px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[361px] lg:right-0"
       >
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700">
           <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            Thông báo
+            Thông báo {totalUnread > 0 && `(${totalUnread})`}
           </h5>
           <button
-            onClick={toggleDropdown}
+            onClick={closeDropdown}
             className="text-gray-500 transition dropdown-toggle dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           >
             <svg
@@ -75,14 +170,79 @@ export default function NotificationDropdown() {
             </svg>
           </button>
         </div>
-        <ul className="flex flex-col h-auto overflow-y-auto custom-scrollbar">
-        </ul>
-        <Link
-          href="/"
-          className="block px-4 py-2 mt-3 text-sm font-medium text-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-        >
-          Xem tất cả thông báo
-        </Link>
+        
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {loading && notifications.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              Không có thông báo nào
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {notifications.map((notification) => (
+                <li key={notification.id}>
+                  <DropdownItem
+                    onItemClick={() => {
+                      if (!notification.seen) {
+                        handleMarkAsRead(notification.id);
+                      }
+                      if (notification.link) {
+                        window.open(notification.link, '_blank');
+                      }
+                      closeDropdown();
+                    }}
+                    className={`flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 ${
+                      !notification.seen ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                    }`}
+                  >
+                    <span className="relative block w-full h-10 rounded-full z-1 max-w-10">
+                      <Image
+                        width={40}
+                        height={40}
+                        src="/images/icons/notification.png"
+                        alt="User"
+                        className="w-full overflow-hidden rounded-full"
+                      />
+                      {!notification.seen && (
+                        <span className="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white bg-success-500 dark:border-gray-900"></span>
+                      )}
+                    </span>
+
+                    <span className="block flex-1">
+                      <span className="mb-1.5 space-x-1 block text-theme-sm text-gray-500 dark:text-gray-400">
+                        <span className="font-medium text-gray-800 dark:text-white/90">
+                          {notification.title}
+                        </span>
+                        <span>{notification.body}</span>
+                      </span>
+
+                      <span className="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
+                        <span>{notification.user?.name || 'Hệ thống'}</span>
+                        <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                        <span>{formatTime(notification.createdAt)}</span>
+                      </span>
+                    </span>
+                  </DropdownItem>
+                </li>
+              ))}
+            </ul>
+          )}
+          
+          {hasMore && (
+            <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+              <button
+                onClick={handleLoadMore}
+                disabled={loading}
+                className="w-full px-4 py-2 text-sm font-medium text-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+              >
+                {loading ? 'Đang tải...' : 'Tải thêm'}
+              </button>
+            </div>
+          )}
+        </div>
       </Dropdown>
     </div>
   );
