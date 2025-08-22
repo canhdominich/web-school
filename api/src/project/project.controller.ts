@@ -7,15 +7,25 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project, ProjectStatus } from './project.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('projects')
+@ApiBearerAuth()
 @Controller('projects')
+@UseGuards(JwtAuthGuard)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
@@ -32,14 +42,14 @@ export class ProjectController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all projects' })
+  @ApiOperation({ summary: 'Get all projects based on user role' })
   @ApiResponse({
     status: 200,
-    description: 'Return all projects.',
+    description: 'Return projects based on user role.',
     type: [Project],
   })
-  findAll() {
-    return this.projectService.findAll();
+  findAll(@Req() req: any) {
+    return this.projectService.findAll(req.user);
   }
 
   @Get('faculty/:facultyId')
@@ -120,4 +130,4 @@ export class ProjectController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.projectService.remove(id);
   }
-} 
+}

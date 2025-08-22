@@ -23,6 +23,7 @@ import {
   TermMilestoneStatus,
 } from '../term-milestone/term-milestone.entity';
 import { NotificationService } from '../notification/notification.service';
+import { UserRole } from 'src/constants/user.constant';
 
 @Injectable()
 export class ProjectService {
@@ -482,20 +483,137 @@ export class ProjectService {
     }
   }
 
-  async findAll(): Promise<Project[]> {
-    return this.projectRepository.find({
-      relations: [
-        'faculty',
-        'department',
-        'major',
-        'term',
-        'createdByUser',
-        'supervisorUser',
-        'members',
-        'members.student',
-        'projectMilestones',
-      ],
-    });
+  async findAll(user?: any): Promise<Project[]> {
+    if (!user) {
+      return this.projectRepository.find({
+        relations: [
+          'faculty',
+          'department',
+          'major',
+          'term',
+          'createdByUser',
+          'supervisorUser',
+          'members',
+          'members.student',
+          'projectMilestones',
+        ],
+      });
+    }
+
+    const roles = user.roles || [];
+
+    // Admin: Return all projects
+    if (roles.includes(UserRole.Admin)) {
+      return this.projectRepository.find({
+        relations: [
+          'faculty',
+          'department',
+          'major',
+          'term',
+          'createdByUser',
+          'supervisorUser',
+          'members',
+          'members.student',
+          'projectMilestones',
+        ],
+      });
+    }
+
+    // Student: Return projects created by user or where user is a member
+    if (roles.includes(UserRole.Student)) {
+      // First get projects created by the user
+      const createdProjects = await this.projectRepository.find({
+        where: { createdBy: user.id },
+        relations: [
+          'faculty',
+          'department',
+          'major',
+          'term',
+          'createdByUser',
+          'supervisorUser',
+          'members',
+          'members.student',
+          'projectMilestones',
+        ],
+      });
+
+      // Then get projects where user is a member
+      const memberProjects = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.faculty', 'faculty')
+        .leftJoinAndSelect('project.department', 'department')
+        .leftJoinAndSelect('project.major', 'major')
+        .leftJoinAndSelect('project.term', 'term')
+        .leftJoinAndSelect('project.createdByUser', 'createdByUser')
+        .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .leftJoinAndSelect('project.projectMilestones', 'projectMilestones')
+        .where('members.studentId = :userId', { userId: user.id })
+        .getMany();
+
+      // Combine and remove duplicates
+      const allProjects = [...createdProjects, ...memberProjects];
+      const uniqueProjects = allProjects.filter(
+        (project, index, self) =>
+          index === self.findIndex((p) => p.id === project.id),
+      );
+
+      return uniqueProjects;
+    }
+
+    // Lecturer: Return projects where user is supervisor
+    if (roles.includes(UserRole.Lecturer)) {
+      return this.projectRepository.find({
+        where: { supervisorId: user.id },
+        relations: [
+          'faculty',
+          'department',
+          'major',
+          'term',
+          'createdByUser',
+          'supervisorUser',
+          'members',
+          'members.student',
+          'projectMilestones',
+        ],
+      });
+    }
+
+    // DepartmentHead: Return projects in user's department
+    if (roles.includes(UserRole.DepartmentHead)) {
+      // Note: This assumes the user object has departmentId property
+      // If the user entity doesn't have this property, you may need to:
+      // 1. Add departmentId to User entity, or
+      // 2. Create a separate query to find user's department, or
+      // 3. Pass departmentId as a separate parameter
+      if (user.departmentId) {
+        return this.findByDepartment(user.departmentId);
+      }
+      // If no departmentId, return empty array
+      console.warn(
+        `DepartmentHead user ${user.id} has no departmentId property`,
+      );
+      return [];
+    }
+
+    // FacultyDean: Return projects in user's faculty
+    if (roles.includes(UserRole.FacultyDean)) {
+      // Note: This assumes the user object has facultyId property
+      // If the user entity doesn't have this property, you may need to:
+      // 1. Add facultyId to User entity, or
+      // 2. Create a separate query to find user's faculty, or
+      // 3. Pass facultyId as a separate parameter
+      if (user.facultyId) {
+        return this.findByFaculty(user.facultyId);
+      }
+      // If no facultyId, return empty array
+      console.warn(`FacultyDean user ${user.id} has no facultyId property`);
+      return [];
+    }
+
+    // Default: Return empty array for unknown roles
+    return [];
   }
 
   async findOne(id: number): Promise<Project> {
@@ -633,14 +751,14 @@ export class ProjectService {
               }
             }
 
-            console.log('  - Members to remove count:', membersToRemove.length);
-            console.log('  - Members to add count:', membersToAdd.length);
-            console.log('  - Members to update count:', membersToUpdate.length);
+            console.log('Members to remove count:', membersToRemove.length);
+            console.log('Members to add count:', membersToAdd.length);
+            console.log('Members to update count:', membersToUpdate.length);
 
             // Only perform database operations for actual changes
             if (membersToRemove.length > 0) {
               console.log(
-                '🗑️ Removing members:',
+                'Removing members:',
                 membersToRemove.map((m) => m.studentId),
               );
               await projectMemberRepo.delete({
@@ -651,7 +769,7 @@ export class ProjectService {
 
             if (membersToAdd.length > 0) {
               console.log(
-                '➕ Adding members:',
+                'Adding members:',
                 membersToAdd.map((m) => m.studentId),
               );
               const newProjectMembers = membersToAdd.map((member) =>
@@ -667,7 +785,7 @@ export class ProjectService {
             if (membersToUpdate.length > 0) {
               for (const memberUpdate of membersToUpdate) {
                 console.log(
-                  `  - Updating user ${memberUpdate.studentId} role to: ${memberUpdate.roleInTeam}`,
+                  `Updating user ${memberUpdate.studentId} role to: ${memberUpdate.roleInTeam}`,
                 );
                 await projectMemberRepo.update(
                   {

@@ -13,8 +13,8 @@ export class JwtService {
     const payload = {
       sub: user.id,
       email: user.email,
+      roles: user.userRoles?.map((ur: any) => ur.role.name) || [],
     };
-
     return this.jwtService.sign(payload);
   }
 
