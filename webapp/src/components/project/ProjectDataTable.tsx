@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
-import { BasicTableProps, Header, Term, Major, Faculty, Department, User, IUserRole } from "@/types/common";
+import { BasicTableProps, Header, Term, Major, Faculty, Department, User, IUserRole, IMilestoneSubmissions } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Select from "@/components/form/Select";
@@ -75,7 +75,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [selectedMilestoneForHistory, setSelectedMilestoneForHistory] = useState<{ id: string; title: string } | null>(null);
-  const [milestoneSubmissions, setMilestoneSubmissions] = useState<any[]>([]);
+  const [milestoneSubmissions, setMilestoneSubmissions] = useState<IMilestoneSubmissions[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   useEffect(() => {
@@ -948,4 +948,4 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       </div>
     </div>
   );
-} 
+}

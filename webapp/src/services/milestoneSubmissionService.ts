@@ -1,4 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
+import { IMilestoneSubmissions } from "@/types/common";
 
 export interface MilestoneSubmission {
     id: number;
@@ -36,7 +37,7 @@ export const getMilestoneSubmissionsByProjectMilestoneId = async (projectMilesto
     return res.data;
 };
 
-export const getMilestoneSubmissionsByMilestoneId = async (milestoneId: string): Promise<MilestoneSubmission[]> => {
+export const getMilestoneSubmissionsByMilestoneId = async (milestoneId: string): Promise<IMilestoneSubmissions[]> => {
     const res = await httpClient.get(`/milestone-submissions/milestone/${milestoneId}`);
     return res.data;
 };

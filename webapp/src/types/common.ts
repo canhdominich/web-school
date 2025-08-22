@@ -26,7 +26,7 @@ export interface User {
     avatar?: string;
     createdAt: string;
     updatedAt: string;
-    userRoles: Array<{
+    userRoles?: Array<{
         id: string;
         userId: string;
         roleId: string;
@@ -120,5 +120,19 @@ export interface IUserRole {
     createdAt: string;
     updatedAt: string;
     role: IRole;
-  }
+}
+
+ export interface IMilestoneSubmissions {
+  id: string;
+  milestoneId: string;
+  submittedByUser: User;
+  submittedBy: string;
+  submittedAt: string; // ISO datetime
+  note: string;
+  fileUrl: string;
+  version: number;
+  createdAt: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+}
+
   

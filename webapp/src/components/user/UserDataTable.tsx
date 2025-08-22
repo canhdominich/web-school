@@ -37,7 +37,7 @@ const getAllRoleLabels = (user: User): string[] => {
 };
 
 // Function to check if user has student role
-const hasStudentRole = (user: User): boolean => {
+const hasStudentRole = (user: User): boolean | undefined => {
   return user.userRoles && user.userRoles.some(userRole => userRole.role.name === UserRole.Student);
 };
 
