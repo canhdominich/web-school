@@ -178,29 +178,12 @@ export class ProjectService {
     }
   }
 
-  /**
-   * Test method để kiểm tra logic so sánh
-   */
   private testRoleComparison(
     existingRole: string,
     newRole: string,
     userId: number,
   ): boolean {
     console.log(`🧪 TEST Role Comparison for User ${userId}:`);
-    console.log(
-      `  - Existing: "${existingRole}" (type: ${typeof existingRole}, length: ${existingRole?.length})`,
-    );
-    console.log(
-      `  - New: "${newRole}" (type: ${typeof newRole}, length: ${newRole?.length})`,
-    );
-    console.log(`  - Direct comparison: ${existingRole !== newRole}`);
-    console.log(
-      `  - Trimmed comparison: ${existingRole?.trim() !== newRole?.trim()}`,
-    );
-    console.log(
-      `  - Length comparison: ${existingRole?.length !== newRole?.length}`,
-    );
-
     const hasChange = existingRole !== newRole;
     console.log(`  - Final result: ${hasChange}`);
     return hasChange;
@@ -628,7 +611,6 @@ export class ProjectService {
                 const existingRole = existing.roleInTeam;
                 const newRole = m.roleInTeam;
 
-                // Sử dụng method test để kiểm tra
                 const hasRoleChange = this.testRoleComparison(
                   existingRole,
                   newRole,
