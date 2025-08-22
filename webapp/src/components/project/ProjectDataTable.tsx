@@ -27,7 +27,7 @@ import {
 } from "@/services/projectService";
 import { getRolesObject } from "@/utils/user.utils";
 import { EyeIcon } from "@/icons";
-import { createMilestoneSubmissionSimple } from "@/services/milestoneSubmissionService";
+import { createMilestoneSubmissionSimple, getMilestoneSubmissionsByMilestoneId } from "@/services/milestoneSubmissionService";
 
 interface ProjectDataTableProps extends BasicTableProps {
   onRefresh: () => void;
@@ -73,6 +73,10 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   const [submitForm, setSubmitForm] = useState<{ fileUrl: string; note: string }>({ fileUrl: "", note: "" });
   const [submitEmails, setSubmitEmails] = useState<string[]>([]);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [selectedMilestoneForHistory, setSelectedMilestoneForHistory] = useState<{ id: string; title: string } | null>(null);
+  const [milestoneSubmissions, setMilestoneSubmissions] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -285,6 +289,22 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     setIsSubmitModalOpen(true);
   };
 
+  const openHistoryModal = async (milestone: { id: string; title: string }) => {
+    setSelectedMilestoneForHistory(milestone);
+    setIsHistoryModalOpen(true);
+    setIsLoadingHistory(true);
+    try {
+      const submissions = await getMilestoneSubmissionsByMilestoneId(milestone.id);
+      setMilestoneSubmissions(submissions.sort((a, b) => b.version - a.version));
+    } catch (error) {
+      console.error("Error loading milestone submissions:", error);
+      toast.error("Không thể tải lịch sử nộp tài liệu");
+      setMilestoneSubmissions([]);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
   const submitMilestone = async () => {
     if (!selectedMilestoneId) return;
     if (isSubmittingMilestoneId) return;
@@ -457,7 +477,8 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                                   </Badge>
                                   <Badge size="sm" color="warning">{milestone.dueDate}</Badge>
                                 </div>
-                                {rolesObject[UserRole.Student] && milestone.status === 'active' && (
+                                <div className="flex items-center gap-2">
+                                  {rolesObject[UserRole.Student] && milestone.status === 'active' && (
                                   <button
                                     onClick={() => openSubmitModal(item, milestone.id)}
                                     className="btn btn-success btn-update-event rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600"
@@ -465,7 +486,16 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                                   >
                                     {isSubmittingMilestoneId === milestone.id ? "Đang nộp..." : "Nộp tài liệu"}
                                   </button>
-                                )}
+                                  )}
+                                  <button
+                                    onClick={() =>
+                                      openHistoryModal({ id: milestone.id, title: milestone.title })
+                                    }
+                                    className="btn btn-info btn-update-event rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-pink-700"
+                                  >
+                                    Lịch sử nộp
+                                  </button>
+                                </div>
                               </div>
                             ))}
                         </div>
@@ -784,14 +814,14 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
           >
             <div className="flex flex-col gap-4">
               <h5 className="font-semibold text-gray-800 text-theme-xl dark:text-white/90 lg:text-2xl">Nộp tài liệu mốc</h5>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-base text-gray-600 dark:text-gray-400">
                 Yêu cầu share tài liệu cho các mail của các thành viên trong dự án, giảng viên hướng dẫn:{" "}
                 <span className="font-bold text-white">
                   {submitEmails.join(", ")}
                 </span>
               </p>
               <div className="mb-3">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Link tài liệu</label>
+                <label className="mb-1.5 block text-base font-medium text-gray-700 dark:text-gray-400">Link tài liệu</label>
                 <input
                   type="url"
                   value={submitForm.fileUrl}
@@ -801,7 +831,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                 />
               </div>
               <div className="mb-3">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Ghi chú</label>
+                <label className="mb-1.5 block text-base font-medium text-gray-700 dark:text-gray-400">Ghi chú</label>
                 <textarea
                   rows={4}
                   value={submitForm.note}
@@ -825,6 +855,91 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                   className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
                 >
                   {isSubmittingMilestoneId === selectedMilestoneId ? "Đang nộp..." : "Nộp"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+          <Modal
+            isOpen={isHistoryModalOpen}
+            onClose={() => setIsHistoryModalOpen(false)}
+            className="max-w-[1000px] p-6 lg:p-8"
+          >
+            <div className="flex flex-col gap-4">
+              <h5 className="font-semibold text-gray-800 text-theme-xl dark:text-white/90 lg:text-xl">
+                Lịch sử nộp tài liệu: {selectedMilestoneForHistory?.title}
+              </h5>
+              {isLoadingHistory ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500 dark:text-gray-400">Đang tải...</div>
+                </div>
+              ) : milestoneSubmissions.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-500 dark:text-gray-400">Chưa có lịch sử nộp tài liệu</div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-800">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-base font-medium text-gray-500 dark:text-gray-400 tracking-wider">
+                          Phiên bản
+                        </th>
+                        <th className="px-6 py-3 text-left text-base font-medium text-gray-500 dark:text-gray-400 tracking-wider">
+                          Người nộp
+                        </th>
+                        <th className="px-6 py-3 text-left text-base font-medium text-gray-500 dark:text-gray-400 tracking-wider">
+                          Thời gian nộp
+                        </th>
+                        <th className="px-6 py-3 text-left text-base font-medium text-gray-500 dark:text-gray-400 tracking-wider">
+                          Ghi chú
+                        </th>
+                        <th className="px-6 py-3 text-left text-base font-medium text-gray-500 dark:text-gray-400 tracking-wider">
+                          Link tài liệu
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                      {milestoneSubmissions.map((submission) => (
+                        <tr key={submission.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-gray-900 dark:text-white">
+                            v{submission.version}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500 dark:text-gray-400">
+                            {submission.submittedByUser?.name || submission.submittedBy}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500 dark:text-gray-400">
+                            {new Date(submission.submittedAt).toLocaleString('vi-VN')}
+                          </td>
+                          <td className="px-6 py-4 text-base text-gray-500 dark:text-gray-400 max-w-xs">
+                            {submission.note || '-'}
+                          </td>
+                          <td className="px-6 py-4 text-base text-gray-500 dark:text-gray-400 max-w-xs truncate">
+                            {submission.fileUrl ? (
+                              <a
+                                href={submission.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                              >
+                                Xem tài liệu
+                              </a>
+                            ) : (
+                              '-'
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className="flex items-center gap-3 mt-4 sm:justify-end">
+                <button
+                  onClick={() => setIsHistoryModalOpen(false)}
+                  type="button"
+                  className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
+                >
+                  Đóng
                 </button>
               </div>
             </div>

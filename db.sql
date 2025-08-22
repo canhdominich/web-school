@@ -130,7 +130,7 @@ CREATE TABLE `milestone_submissions` (
   KEY `FK_61b99debd406ae86eeeede41c0d` (`submittedBy`),
   CONSTRAINT `FK_61b99debd406ae86eeeede41c0d` FOREIGN KEY (`submittedBy`) REFERENCES `users` (`id`),
   CONSTRAINT `FK_da3bda55ed7562f6e400f8cec8f` FOREIGN KEY (`milestoneId`) REFERENCES `project_milestones` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -139,6 +139,7 @@ CREATE TABLE `milestone_submissions` (
 
 LOCK TABLES `milestone_submissions` WRITE;
 /*!40000 ALTER TABLE `milestone_submissions` DISABLE KEYS */;
+INSERT INTO `milestone_submissions` VALUES (1,2,2,'2025-08-22 17:08:02','Yêu cầu share tài liệu cho các mail của các thành viên trong dự án, giảng viên hướng dẫn: giangvien1@gmail.com, sinhviena@gmail.com','https://enelifeconsole.miichisoft.net/login',1,'2025-08-22 10:08:01.727416','2025-08-22 10:31:18.957407'),(2,2,2,'2025-08-22 17:31:11','Yêu cầu share tài liệu cho các mail của các thành viên trong dự án, giảng viên hướng dẫn: giangvien1@gmail.com, sinhviena@gmail.com','https://enelifeconsole.miichisoft.net/login',2,'2025-08-22 10:31:10.778330','2025-08-22 10:31:10.778330'),(3,2,3,'2025-08-22 17:43:44','Yêu cầu share tài liệu cho các mail của các thành viên trong dự án, giảng viên hướng dẫn: giangvien1@gmail.com, sinhvienb@gmail.com','https://enelifeconsole.miichisoft.net/login',3,'2025-08-22 10:43:44.028206','2025-08-22 10:44:52.791649'),(4,2,3,'2025-08-22 17:45:08','Yêu cầu share tài liệu cho các mail của các thành viên trong dự án, giảng viên hướng dẫn: giangvien1@gmail.com, sinhvienb@gmail.com','https://enelifeconsole.miichisoft.net/login',4,'2025-08-22 10:45:08.017212','2025-08-22 10:45:08.017212');
 /*!40000 ALTER TABLE `milestone_submissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -161,7 +162,7 @@ CREATE TABLE `notifications` (
   PRIMARY KEY (`id`),
   KEY `FK_692a909ee0fa9383e7859f9b406` (`userId`),
   CONSTRAINT `FK_692a909ee0fa9383e7859f9b406` FOREIGN KEY (`userId`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -170,6 +171,7 @@ CREATE TABLE `notifications` (
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,2,'Vai trò của bạn trong dự án đã thay đổi','Vai trò của bạn trong dự án \"Hệ thống quản lý bãi đố xe thông minh\" (P0000001) đã thay đổi từ \"PM2\" thành \"PM\"',NULL,1,'2025-08-22 04:16:38.436207','2025-08-22 06:19:12.000000'),(2,6,'Bạn đã bị loại khỏi dự án','Bạn đã bị loại khỏi dự án \"Hệ thống quản lý bãi đố xe thông minh\" (P0000001)',NULL,0,'2025-08-22 04:16:58.566995','2025-08-22 04:16:58.566995'),(3,6,'Bạn đã được thêm vào dự án','Bạn đã được thêm vào dự án \"Hệ thống quản lý bãi đố xe thông minh\" (P0000001) với vai trò Member',NULL,0,'2025-08-22 04:17:07.733343','2025-08-22 04:17:07.733343'),(4,2,'Bạn đã bị loại khỏi dự án','Bạn đã bị loại khỏi dự án \"Hệ thống quản lý bãi đố xe thông minh\" (P0000002)',NULL,0,'2025-08-22 09:16:25.824573','2025-08-22 09:16:25.824573');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -192,7 +194,7 @@ CREATE TABLE `project_members` (
   KEY `FK_e76b652548ae50e9cbf8df05552` (`studentId`),
   CONSTRAINT `FK_d19892d8f03928e5bfc7313780c` FOREIGN KEY (`projectId`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
   CONSTRAINT `FK_e76b652548ae50e9cbf8df05552` FOREIGN KEY (`studentId`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -201,7 +203,7 @@ CREATE TABLE `project_members` (
 
 LOCK TABLES `project_members` WRITE;
 /*!40000 ALTER TABLE `project_members` DISABLE KEYS */;
-INSERT INTO `project_members` VALUES (27,1,2,'Member','2025-08-21 10:38:24.101460','2025-08-21 10:38:24.101460'),(28,1,3,'Tester','2025-08-21 10:38:24.104634','2025-08-21 10:38:24.104634'),(29,1,6,'Developer','2025-08-21 10:38:24.107114','2025-08-21 10:38:24.107114'),(30,4,6,'Member','2025-08-21 10:38:40.399309','2025-08-21 10:38:40.399309'),(31,4,3,'PM','2025-08-21 10:38:40.401034','2025-08-21 10:38:40.401034');
+INSERT INTO `project_members` VALUES (38,4,3,'PM','2025-08-22 03:17:54.566815','2025-08-22 03:17:54.566815'),(39,4,6,'Member','2025-08-22 03:17:54.568538','2025-08-22 03:17:54.568538'),(53,1,2,'PM','2025-08-22 03:51:59.231401','2025-08-22 04:16:38.000000'),(54,1,3,'Tester','2025-08-22 03:51:59.236301','2025-08-22 03:51:59.236301'),(57,1,6,'Member','2025-08-22 04:17:07.727198','2025-08-22 04:17:07.727198');
 /*!40000 ALTER TABLE `project_members` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -222,6 +224,7 @@ CREATE TABLE `project_milestones` (
   `createdAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updatedAt` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `title` varchar(255) NOT NULL,
+  `isRequired` tinyint NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `FK_9fb847267f120c4cdbbb28b408b` (`projectId`),
   CONSTRAINT `FK_9fb847267f120c4cdbbb28b408b` FOREIGN KEY (`projectId`) REFERENCES `projects` (`id`) ON DELETE CASCADE
@@ -234,7 +237,7 @@ CREATE TABLE `project_milestones` (
 
 LOCK TABLES `project_milestones` WRITE;
 /*!40000 ALTER TABLE `project_milestones` DISABLE KEYS */;
-INSERT INTO `project_milestones` VALUES (1,1,'2025-01-02','Chọn đề tài: quá trình lựa chọn một chủ đề cụ thể để làm bài nghiên cứu, luận văn, đồ án, bài thuyết trình hoặc dự án khoa học.',1,'inactive','2025-08-21 10:38:24.113680','2025-08-21 10:38:24.113680','Chọn đề tài,  lựa chọn một chủ đề cụ thể'),(2,1,'2025-12-02','Báo cáo sơ bộ lần 1',2,'active','2025-08-21 10:38:24.117878','2025-08-21 10:38:24.117878','Báo cáo sơ bộ lần 1'),(3,1,'2025-03-01','Báo cáo sơ bộ lần 2',3,'active','2025-08-21 10:38:24.121812','2025-08-21 10:38:24.121812','Báo cáo sơ bộ lần 2');
+INSERT INTO `project_milestones` VALUES (1,1,'2025-01-02','Chọn đề tài: quá trình lựa chọn một chủ đề cụ thể để làm bài nghiên cứu, luận văn, đồ án, bài thuyết trình hoặc dự án khoa học.',1,'inactive','2025-08-21 10:38:24.113680','2025-08-21 10:38:24.113680','Chọn đề tài,  lựa chọn một chủ đề cụ thể',0),(2,1,'2025-12-02','Báo cáo sơ bộ lần 1',2,'active','2025-08-21 10:38:24.117878','2025-08-21 10:38:24.117878','Báo cáo sơ bộ lần 1',0),(3,1,'2025-03-01','Báo cáo sơ bộ lần 2',3,'active','2025-08-21 10:38:24.121812','2025-08-21 10:38:24.121812','Báo cáo sơ bộ lần 2',0);
 /*!40000 ALTER TABLE `project_milestones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -290,7 +293,7 @@ CREATE TABLE `projects` (
 
 LOCK TABLES `projects` WRITE;
 /*!40000 ALTER TABLE `projects` DISABLE KEYS */;
-INSERT INTO `projects` VALUES (1,'P0000001','Hệ thống quản lý bãi đố xe thông minh','vvv','bbbb','ccc','ddd','vvvv','2025-01-01','2025-01-09','approved','undergraduate',0.00,1,1,1,1,4,1,'2025-08-21 08:24:38.562871','2025-08-21 10:38:24.000000'),(4,'P0000002','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','2025-01-01','2025-01-09','pending','graduate',0.00,1,1,1,1,5,2,'2025-08-21 09:10:57.100312','2025-08-21 10:38:40.000000');
+INSERT INTO `projects` VALUES (1,'P0000001','Hệ thống quản lý bãi đố xe thông minh','vvv','bbbb','ccc','ddd','vvvv','2025-01-01','2025-01-09','approved','undergraduate',0.00,1,1,1,1,4,1,'2025-08-21 08:24:38.562871','2025-08-22 04:17:07.000000'),(4,'P0000002','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','Hệ thống quản lý bãi đố xe thông minh','2025-01-01','2025-01-09','pending','graduate',0.00,1,1,1,1,5,2,'2025-08-21 09:10:57.100312','2025-08-22 09:16:25.000000');
 /*!40000 ALTER TABLE `projects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -460,4 +463,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-08-21 17:50:24
+-- Dump completed on 2025-08-22 18:01:06

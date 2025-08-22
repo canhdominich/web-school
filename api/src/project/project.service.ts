@@ -549,7 +549,10 @@ export class ProjectService {
         .leftJoinAndSelect('project.members', 'members')
         .leftJoinAndSelect('members.student', 'student')
         .leftJoinAndSelect('project.projectMilestones', 'projectMilestones')
-        .where('members.studentId = :userId', { userId: user.id })
+        .where(
+          'EXISTS (SELECT 1 FROM project_members pm WHERE pm.projectId = project.id AND pm.studentId = :userId)',
+          { userId: user.id },
+        )
         .getMany();
 
       // Combine and remove duplicates

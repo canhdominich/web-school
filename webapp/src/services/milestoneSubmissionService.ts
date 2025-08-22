@@ -1,31 +1,21 @@
 import { httpClient } from "@/lib/httpClient";
 
 export interface MilestoneSubmission {
-    id: string;
-    title: string;
-    description: string;
-    content: string;
-    attachments: string[];
-    projectMilestoneId: string;
-    userId: string;
-    status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'revision_requested';
-    submittedAt?: string;
-    reviewedAt?: string;
-    reviewerId?: string;
-    feedback?: string;
+    id: number;
+    milestoneId: number;
+    submittedBy: number;
+    submittedAt: string;
+    note?: string | null;
+    fileUrl?: string | null;
+    version: number;
     createdAt: string;
     updatedAt: string;
     projectMilestone?: {
-        id: string;
+        id: number;
         title: string;
     };
     user?: {
-        id: string;
-        name: string;
-        email: string;
-    };
-    reviewer?: {
-        id: string;
+        id: number;
         name: string;
         email: string;
     };
@@ -43,6 +33,11 @@ export const getMilestoneSubmissionById = async (id: string): Promise<MilestoneS
 
 export const getMilestoneSubmissionsByProjectMilestoneId = async (projectMilestoneId: string): Promise<MilestoneSubmission[]> => {
     const res = await httpClient.get(`/milestone-submissions/project-milestone/${projectMilestoneId}`);
+    return res.data;
+};
+
+export const getMilestoneSubmissionsByMilestoneId = async (milestoneId: string): Promise<MilestoneSubmission[]> => {
+    const res = await httpClient.get(`/milestone-submissions/milestone/${milestoneId}`);
     return res.data;
 };
 

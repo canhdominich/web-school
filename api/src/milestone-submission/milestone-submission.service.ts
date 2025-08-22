@@ -11,12 +11,10 @@ import { CreateMilestoneSubmissionDto } from './dto/create-milestone-submission.
 import { UpdateMilestoneSubmissionDto } from './dto/update-milestone-submission.dto';
 import { ProjectMilestone } from '../project-milestone/project-milestone.entity';
 import { ProjectMember } from '../project/project-member.entity';
+import { Project } from '../project/project.entity';
 import { UserRole } from '../constants/user.constant';
-
-interface RequestUser {
-  id: number;
-  roles: string[];
-}
+import { NotificationService } from '../notification/notification.service';
+import { RequestUser } from '../interfaces';
 
 @Injectable()
 export class MilestoneSubmissionService {
@@ -27,6 +25,9 @@ export class MilestoneSubmissionService {
     private readonly pmRepo: Repository<ProjectMilestone>,
     @InjectRepository(ProjectMember)
     private readonly memberRepo: Repository<ProjectMember>,
+    @InjectRepository(Project)
+    private readonly projectRepo: Repository<Project>,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(
@@ -39,6 +40,7 @@ export class MilestoneSubmissionService {
 
     const milestone = await this.pmRepo.findOne({
       where: { id: dto.milestoneId },
+      relations: ['project'],
     });
     if (!milestone) throw new NotFoundException('Milestone not found');
 
@@ -59,7 +61,7 @@ export class MilestoneSubmissionService {
 
     // Versioning: next version = last version + 1 for this milestone & user
     const last = await this.submissionRepo.find({
-      where: { milestoneId: dto.milestoneId, submittedBy: user.id },
+      where: { milestoneId: dto.milestoneId },
       order: { version: 'DESC' },
       take: 1,
     });
@@ -73,11 +75,78 @@ export class MilestoneSubmissionService {
       fileUrl: dto.fileUrl ?? null,
       version: nextVersion,
     });
-    return await this.submissionRepo.save(entity);
+    const savedSubmission = await this.submissionRepo.save(entity);
+
+    // Send notifications to supervisor and project members
+    await this.sendMilestoneSubmissionNotifications(
+      milestone,
+      user.id,
+      savedSubmission,
+    );
+
+    return savedSubmission;
+  }
+
+  private async sendMilestoneSubmissionNotifications(
+    milestone: ProjectMilestone,
+    submittedByUserId: number,
+    submission: MilestoneSubmission,
+  ): Promise<void> {
+    try {
+      // Get project with relations to access supervisor and members
+      const project = await this.projectRepo.findOne({
+        where: { id: milestone.projectId },
+        relations: ['supervisorUser', 'members', 'members.student'],
+      });
+
+      if (!project) return;
+
+      // Get submitter info
+      const submitter = await this.memberRepo.findOne({
+        where: { projectId: project.id, studentId: submittedByUserId },
+        relations: ['student'],
+      });
+
+      const submitterName = submitter?.student?.name || 'Sinh viên';
+
+      // Notification for supervisor
+      if (project.supervisorUser) {
+        await this.notificationService.create({
+          title: 'Tài liệu mốc mới được nộp',
+          body: `Sinh viên ${submitterName} đã nộp tài liệu cho mốc "${milestone.title}" của dự án "${project.title}" (${project.code}). Phiên bản: v${submission.version}`,
+          userId: project.supervisorUser.id,
+        });
+      }
+
+      // Notifications for project members (excluding the submitter)
+      if (project.members && project.members.length > 0) {
+        const memberNotifications = project.members
+          .filter((member) => member.studentId !== submittedByUserId)
+          .map((member) => ({
+            title: 'Tài liệu mốc mới được nộp',
+            body: `Sinh viên ${submitterName} đã nộp tài liệu cho mốc "${milestone.title}" của dự án "${project.title}" (${project.code}). Phiên bản: v${submission.version}`,
+            userId: member.studentId,
+          }));
+
+        // Create notifications in parallel
+        await Promise.all(
+          memberNotifications.map((notification) =>
+            this.notificationService.create(notification),
+          ),
+        );
+      }
+    } catch (error) {
+      // Log error but don't fail the submission creation
+      console.error('Error sending milestone submission notifications:', error);
+    }
   }
 
   async findByMilestone(milestoneId: number): Promise<MilestoneSubmission[]> {
-    return this.submissionRepo.find({ where: { milestoneId } });
+    return this.submissionRepo.find({
+      where: { milestoneId },
+      relations: ['submittedByUser'],
+      order: { version: 'DESC' },
+    });
   }
 
   async findMine(user: RequestUser): Promise<MilestoneSubmission[]> {
