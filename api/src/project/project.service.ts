@@ -152,7 +152,6 @@ export class ProjectService {
           title: 'Dự án mới được giao',
           body: `Bạn đã được yêu cầu làm giảng viên hướng dẫn cho dự án "${project.title}" (${project.code})`,
           userId: project.supervisorUser.id,
-          link: undefined,
         });
       }
 
@@ -162,7 +161,6 @@ export class ProjectService {
           title: 'Bạn đã được thêm vào dự án mới',
           body: `Bạn đã được thêm vào dự án "${project.title}" (${project.code}) với vai trò ${member.roleInTeam}`,
           userId: member.studentId,
-          link: undefined,
         }));
 
         // Create notifications in parallel
@@ -606,7 +604,6 @@ export class ProjectService {
             );
             const membersToUpdate = members.filter((m) => {
               const existing = existingMemberMap.get(+m.studentId);
-              // So sánh roleInTeam từ existing member với new member
               if (existing) {
                 const existingRole = existing.roleInTeam;
                 const newRole = m.roleInTeam;
