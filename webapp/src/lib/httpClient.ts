@@ -43,7 +43,7 @@ httpClient.interceptors.response.use(
       }
 
       // Throw error with message from server
-      throw new Error(data.message || "An error occurred");
+      throw new Error(data?.message || "An error occurred");
     } else if (error.request) {
       // The request was made but no response was received
       throw new Error("No response from server");

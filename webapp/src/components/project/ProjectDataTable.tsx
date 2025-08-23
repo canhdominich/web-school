@@ -573,9 +573,9 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                           {/* Luôn hiển thị nút Xem chi tiết */}
                           <button
                             onClick={() => handleEdit(item)}
-                            className="btn btn-info btn-view-event flex w-full justify-center rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600 sm:w-auto"
+                            className="btn btn-info btn-view-event flex w-full justify-center rounded-lg bg-green-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600 sm:w-auto"
                           >
-                            <EyeIcon />
+                            <EyeIcon/>
                           </button>
                         </>
                       )}
