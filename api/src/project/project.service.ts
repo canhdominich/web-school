@@ -24,6 +24,7 @@ import {
 } from '../term-milestone/term-milestone.entity';
 import { NotificationService } from '../notification/notification.service';
 import { UserRole } from 'src/constants/user.constant';
+import { RequestUser } from 'src/interfaces';
 
 @Injectable()
 export class ProjectService {
@@ -483,7 +484,130 @@ export class ProjectService {
     }
   }
 
-  async findAll(user?: any): Promise<Project[]> {
+  private async createStatusChangeNotification(
+    project: Project,
+    oldStatus: ProjectStatus,
+    newStatus: ProjectStatus,
+  ): Promise<void> {
+    try {
+      // Get status labels for better notification messages
+      const statusLabels = {
+        draft: 'Nháp',
+        pending: 'Chờ duyệt',
+        approved: 'Đã duyệt',
+        in_progress: 'Đang thực hiện',
+        completed: 'Hoàn thành',
+        cancelled: 'Hủy',
+      };
+
+      console.log('project = ', project);
+
+      const oldStatusLabel = statusLabels[oldStatus] || oldStatus;
+      const newStatusLabel = statusLabels[newStatus] || newStatus;
+
+      // Notification for supervisor about status change
+      if (project.supervisorUser) {
+        await this.notificationService.create({
+          title: 'Trạng thái dự án đã thay đổi',
+          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
+          userId: project.supervisorUser.id,
+          link: undefined,
+        });
+      }
+
+      // Notification for project members about status change
+      const projectMembers = await this.projectMemberRepository!.find({
+        where: { projectId: project.id },
+      });
+
+      for (const member of projectMembers) {
+        await this.notificationService.create({
+          title: 'Trạng thái dự án đã thay đổi',
+          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
+          userId: member.studentId,
+          link: undefined,
+        });
+      }
+
+      // Notification for project creator about status change
+      if (
+        project.createdByUser &&
+        project.createdByUser.id !== project.supervisorUser?.id
+      ) {
+        await this.notificationService.create({
+          title: 'Trạng thái dự án đã thay đổi',
+          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
+          userId: project.createdByUser.id,
+          link: undefined,
+        });
+      }
+    } catch (error) {
+      // Log error but don't fail the project update
+      console.error('Error creating status change notification:', error);
+    }
+  }
+
+  private async createLevelChangeNotification(
+    project: Project,
+    oldLevel: string,
+    newLevel: string,
+  ): Promise<void> {
+    try {
+      // Get level labels for better notification messages
+      const levelLabels = {
+        undergraduate: 'Đại học',
+        graduate: 'Sau đại học',
+        research: 'Nghiên cứu',
+      };
+
+      const oldLevelLabel =
+        levelLabels[oldLevel as keyof typeof levelLabels] || oldLevel;
+      const newLevelLabel =
+        levelLabels[newLevel as keyof typeof levelLabels] || newLevel;
+
+      // Notification for supervisor about level change
+      if (project.supervisorUser) {
+        await this.notificationService.create({
+          title: 'Cấp độ dự án đã thay đổi',
+          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
+          userId: project.supervisorUser.id,
+          link: undefined,
+        });
+      }
+
+      // Notification for project members about level change
+      const projectMembers = await this.projectMemberRepository!.find({
+        where: { projectId: project.id },
+      });
+
+      for (const member of projectMembers) {
+        await this.notificationService.create({
+          title: 'Cấp độ dự án đã thay đổi',
+          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
+          userId: member.studentId,
+          link: undefined,
+        });
+      }
+
+      // Notification for project creator about level change
+      if (
+        project.createdByUser &&
+        project.createdByUser.id !== project.supervisorUser?.id
+      ) {
+        await this.notificationService.create({
+          title: 'Cấp độ dự án đã thay đổi',
+          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
+          userId: project.createdByUser.id,
+          link: undefined,
+        });
+      }
+    } catch (error) {
+      // Log error but don't fail the project update
+      console.error('Error creating level change notification:', error);
+    }
+  }
+
+  async findAll(user?: RequestUser): Promise<Project[]> {
     if (!user) {
       return this.projectRepository.find({
         relations: [
@@ -590,7 +714,7 @@ export class ProjectService {
       // 1. Add departmentId to User entity, or
       // 2. Create a separate query to find user's department, or
       // 3. Pass departmentId as a separate parameter
-      if (user.departmentId) {
+      if (user?.departmentId) {
         return this.findByDepartment(user.departmentId);
       }
       // If no departmentId, return empty array
@@ -672,6 +796,9 @@ export class ProjectService {
         const projectRepo = manager.getRepository(Project);
         const projectMemberRepo = manager.getRepository(ProjectMember);
 
+        const oldStatus = project.status;
+        const oldLevel = project.level;
+
         const { members, ...rest } = updateProjectDto;
         Object.assign(project, rest);
 
@@ -680,7 +807,17 @@ export class ProjectService {
           project.supervisorId !== updateProjectDto.supervisorId;
         const oldSupervisorId = project.supervisorId;
 
-        const savedProject = await projectRepo.save(project);
+        // Check if status changed
+        const statusChanged =
+          updateProjectDto.status && oldStatus !== updateProjectDto.status;
+
+        // Check if level changed
+        const levelChanged =
+          updateProjectDto.level && oldLevel !== updateProjectDto.level;
+
+        await projectRepo.save(project);
+
+        const savedProject = await this.findOne(project.id);
 
         // Create notification for supervisor change only if actually changed
         if (
@@ -692,6 +829,24 @@ export class ProjectService {
             savedProject,
             oldSupervisorId,
             updateProjectDto.supervisorId,
+          );
+        }
+
+        // Create notification for status change if actually changed
+        if (statusChanged && updateProjectDto.status) {
+          await this.createStatusChangeNotification(
+            savedProject,
+            oldStatus,
+            updateProjectDto.status,
+          );
+        }
+
+        // Create notification for level change if actually changed
+        if (levelChanged && updateProjectDto.level) {
+          await this.createLevelChangeNotification(
+            savedProject,
+            oldLevel,
+            updateProjectDto.level,
           );
         }
 
@@ -826,16 +981,9 @@ export class ProjectService {
 
               for (const memberUpdate of membersToUpdate) {
                 try {
-                  const notifications =
-                    await this.notificationService.findByUserId(
-                      memberUpdate.studentId,
-                    );
-                  if (notifications.data.length > 0) {
-                    const latest = notifications.data[0];
-                    console.log(
-                      `    Latest: "${latest.title}" - "${latest.body}" (${latest.createdAt})`,
-                    );
-                  }
+                  await this.notificationService.findByUserId(
+                    memberUpdate.studentId,
+                  );
                 } catch (error) {
                   console.error(
                     `❌ Error fetching notifications for user ${memberUpdate.studentId}:`,

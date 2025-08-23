@@ -13,6 +13,9 @@ import { hash } from 'bcrypt';
 import { Role } from '../role/role.entity';
 import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
 import { UserRole as UserRoleEnum } from '../constants/user.constant';
+import { Faculty } from '../faculty/faculty.entity';
+import { Department } from '../department/department.entity';
+import { Major } from '../major/major.entity';
 
 @Injectable()
 export class UserService {
@@ -23,6 +26,12 @@ export class UserService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserRoleEntity)
     private readonly userRoleRepository: Repository<UserRoleEntity>,
+    @InjectRepository(Faculty)
+    private readonly facultyRepository: Repository<Faculty>,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
+    @InjectRepository(Major)
+    private readonly majorRepository: Repository<Major>,
   ) {}
 
   /**
@@ -64,6 +73,70 @@ export class UserService {
     return code;
   }
 
+  /**
+   * Validate faculty, department, and major IDs
+   */
+  private async validateAcademicInfo(
+    facultyId?: number,
+    departmentId?: number,
+    majorId?: number,
+  ): Promise<void> {
+    if (facultyId) {
+      const faculty = await this.facultyRepository.findOne({
+        where: { id: facultyId },
+      });
+      if (!faculty) {
+        throw new BadRequestException(`Không tìm thấy khoa có ID ${facultyId}`);
+      }
+    }
+
+    if (departmentId) {
+      const department = await this.departmentRepository.findOne({
+        where: { id: departmentId },
+      });
+      if (!department) {
+        throw new BadRequestException(
+          `Không tìm thấy bộ môn có ID ${departmentId}`,
+        );
+      }
+
+      // If facultyId is provided, check if department belongs to that faculty
+      if (facultyId && Number(department.facultyId) !== facultyId) {
+        throw new BadRequestException(
+          `Bộ môn có ID ${departmentId} không thuộc khoa có ID ${facultyId}`,
+        );
+      }
+    }
+
+    if (majorId) {
+      const major = await this.majorRepository.findOne({
+        where: { id: majorId },
+      });
+      if (!major) {
+        throw new BadRequestException(`Không tìm thấy ngành có ID ${majorId}`);
+      }
+
+      // If departmentId is provided, check if major belongs to that department
+      if (departmentId && Number(major.departmentId) !== departmentId) {
+        throw new BadRequestException(
+          `Ngành có ID ${majorId} không thuộc bộ môn có ID ${departmentId}`,
+        );
+      }
+
+      // If facultyId is provided, check if major belongs to that faculty through department
+      if (facultyId) {
+        const department = await this.departmentRepository.findOne({
+          where: { id: major.departmentId },
+        });
+        if (department && Number(department.facultyId) !== facultyId) {
+          throw new BadRequestException(
+            `Ngành có ID ${majorId} không thuộc khoa có ID ${facultyId}`,
+          );
+        }
+      }
+    }
+  }
+
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -72,6 +145,13 @@ export class UserService {
     if (existingUser) {
       throw new ConflictException('Email đã tồn tại');
     }
+
+    // Validate academic information
+    await this.validateAcademicInfo(
+      createUserDto.facultyId,
+      createUserDto.departmentId,
+      createUserDto.majorId,
+    );
 
     const hashedPassword = await hash(createUserDto.password, 10);
 
@@ -120,14 +200,26 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find({
-      relations: ['userRoles', 'userRoles.role'],
+      relations: [
+        'userRoles',
+        'userRoles.role',
+        'faculty',
+        'department',
+        'major',
+      ],
     });
   }
 
   async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['userRoles', 'userRoles.role'],
+      relations: [
+        'userRoles',
+        'userRoles.role',
+        'faculty',
+        'department',
+        'major',
+      ],
     });
 
     if (!user) {
@@ -173,6 +265,19 @@ export class UserService {
 
       if (updateUserDto.password) {
         updateUserDto.password = await hash(updateUserDto.password, 10);
+      }
+
+      // Validate academic information if provided
+      if (
+        updateUserDto.facultyId ||
+        updateUserDto.departmentId ||
+        updateUserDto.majorId
+      ) {
+        await this.validateAcademicInfo(
+          updateUserDto.facultyId,
+          updateUserDto.departmentId,
+          updateUserDto.majorId,
+        );
       }
 
       const { roles: rolesMaybe, ...rest } = updateUserDto;
@@ -333,5 +438,38 @@ export class UserService {
     }
 
     return violations;
+  }
+
+  /**
+   * Get all faculties
+   */
+  async getFaculties(): Promise<Faculty[]> {
+    return this.facultyRepository.find({
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * Get departments by faculty
+   */
+  async getDepartments(facultyId?: number): Promise<Department[]> {
+    const whereCondition = facultyId ? { facultyId } : {};
+    return this.departmentRepository.find({
+      where: whereCondition,
+      relations: ['faculty'],
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * Get majors by department
+   */
+  async getMajors(departmentId?: number): Promise<Major[]> {
+    const whereCondition = departmentId ? { departmentId } : {};
+    return this.majorRepository.find({
+      where: whereCondition,
+      relations: ['department', 'department.faculty'],
+      order: { name: 'ASC' },
+    });
   }
 }

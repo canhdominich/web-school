@@ -48,7 +48,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     expectedOutputs: "",
     startDate: "",
     endDate: "",
-    status: "draft",
+    status: "pending",
     level: "undergraduate",
     budget: 0,
     facultyId: 0,
@@ -77,6 +77,25 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   const [selectedMilestoneForHistory, setSelectedMilestoneForHistory] = useState<{ id: string; title: string } | null>(null);
   const [milestoneSubmissions, setMilestoneSubmissions] = useState<IMilestoneSubmissions[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Helper function để kiểm tra quyền chỉnh sửa project
+  const canEditProject = (project: ProjectEntity | null): boolean => {
+    if (!project) return true; // Cho phép tạo mới
+    if (rolesObject[UserRole.Admin]) return true; // Admin luôn được chỉnh sửa
+    if (rolesObject[UserRole.Student]) {
+      // Sinh viên chỉ được chỉnh sửa khi trạng thái là draft hoặc pending
+      return project.status === 'draft' || project.status === 'pending';
+    }
+    return true; // Các role khác được chỉnh sửa
+  };
+
+  const canChangeProjectStatus = (): boolean => {
+    return rolesObject[UserRole.Admin] || 
+      !rolesObject[UserRole.Student] || 
+      !selectedProject || 
+      selectedProject.status === 'draft' 
+      || selectedProject.status === 'pending';
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -128,7 +147,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
         expectedOutputs: "",
         startDate: "",
         endDate: "",
-        status: "draft",
+        status: "pending",
         level: "undergraduate",
         budget: 0,
         facultyId: 0,
@@ -539,12 +558,26 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                         </>
                       )}
                       {!rolesObject[UserRole.Admin] && (
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-                        >
-                          <EyeIcon />
-                        </button>
+                        <>
+                          {/* Nếu là sinh viên và trạng thái không phải draft/pending thì ẩn nút Sửa */}
+                          {(!rolesObject[UserRole.Student] || 
+                            (rolesObject[UserRole.Student] && 
+                             (item.status === 'draft' || item.status === 'pending'))) && (
+                            <button
+                              onClick={() => handleEdit(item)}
+                              className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                            >
+                              Sửa
+                            </button>
+                          )}
+                          {/* Luôn hiển thị nút Xem chi tiết */}
+                          <button
+                            onClick={() => handleEdit(item)}
+                            className="btn btn-info btn-view-event flex w-full justify-center rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600 sm:w-auto"
+                          >
+                            <EyeIcon />
+                          </button>
+                        </>
                       )}
                     </div>
                   </TableCell>
@@ -577,7 +610,8 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                     type="text"
                     value={formData?.code || ""}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                    disabled={!canEditProject(selectedProject)}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
                     placeholder="Nhập mã dự án"
                   />
                 </div>
@@ -588,7 +622,8 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                     type="text"
                     value={formData?.title || ""}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                    disabled={!canEditProject(selectedProject)}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
                     placeholder="Nhập tên dự án"
                   />
                 </div>
@@ -676,6 +711,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       value={formData?.facultyId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, facultyId: parseInt(v, 10) })}
                       options={[{ value: "0", label: "Chọn khoa" }, ...faculties.map(f => ({ value: f.id.toString(), label: f.name }))]}
+                      disabled={!canChangeProjectStatus()}
                     />
                   </div>
                   <div className="mb-3">
@@ -684,6 +720,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       value={formData?.departmentId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, departmentId: parseInt(v, 10) })}
                       options={[{ value: "0", label: "Chọn bộ môn" }, ...departments.map(d => ({ value: d.id.toString(), label: d.name }))]}
+                      disabled={!canChangeProjectStatus()}
                     />
                   </div>
                   <div className="mb-3">
@@ -692,6 +729,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       value={formData?.majorId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, majorId: parseInt(v, 10) })}
                       options={[{ value: "0", label: "Chọn ngành" }, ...majors.map(m => ({ value: m.id.toString(), label: m.name }))]}
+                      disabled={!canChangeProjectStatus()}
                     />
                   </div>
                 </div>
@@ -702,6 +740,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       value={formData?.termId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, termId: parseInt(v, 10) })}
                       options={[{ value: "0", label: "Chọn sự kiện" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
+                      disabled={!canChangeProjectStatus()}
                     />
                   </div>
                   <div className="mb-3">
@@ -711,6 +750,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       onChange={(v) => setFormData({ ...formData, supervisorId: parseInt(v, 10) })}
                       options={[{ value: "0", label: "Chọn giảng viên" }, ...users.filter(u => u.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Lecturer) &&
                         !u.userRoles?.some((ur: IUserRole) => ur.role.name === UserRole.Admin)).map(u => ({ value: u.id.toString(), label: u.name }))]}
+                      disabled={!canChangeProjectStatus()}
                     />
                   </div>
                   <div className="mb-3">
@@ -726,6 +766,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                         { value: "completed", label: "Hoàn thành" },
                         { value: "cancelled", label: "Hủy" },
                       ]}
+                      disabled={!canChangeProjectStatus() || !selectedProject || (selectedProject && rolesObject[UserRole.Student])}
                     />
                   </div>
                 </div>
@@ -740,6 +781,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                         { value: "graduate", label: "Sau đại học" },
                         { value: "research", label: "Nghiên cứu" },
                       ]}
+                      disabled={!canChangeProjectStatus()}
                     />
                   </div>
                   <div className="mb-3">
@@ -750,7 +792,8 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       min="0"
                       value={formData?.budget?.toString() || "0"}
                       onChange={(e) => setFormData({ ...formData, budget: parseFloat(e.target.value) || 0 })}
-                      className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                      disabled={!canEditProject(selectedProject)}
+                      className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
                     />
                   </div>
                   <div className="mb-3">
@@ -760,6 +803,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       onChange={handleMembersChange}
                       options={studentOptions}
                       placeholder="Chọn thành viên"
+                      disabled={!canEditProject(selectedProject)}
                     />
                   </div>
                 </div>
@@ -769,14 +813,15 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       {(formData.members || []).map(member => (
                         <div key={member.studentId} className="grid grid-cols-3 gap-3 items-center">
                           <div className="text-sm text-gray-700 dark:text-gray-400">
-                            {(users.find(u => u.id === member.studentId)?.name) || member.studentId}
+                            {(users.find(u => Number(u.id) === Number(member.studentId))?.name) || member.studentId}
                           </div>
                           <div className="col-span-2">
                             <input
                               type="text"
                               value={member.roleInTeam}
                               onChange={(e) => handleMemberRoleChange(member.studentId, e.target.value)}
-                              className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                              disabled={!canEditProject(selectedProject)}
+                              className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
                               placeholder="Vai trò trong nhóm (VD: Leader, Member)"
                             />
                           </div>
@@ -794,12 +839,17 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                 >
                   Đóng
                 </button>
-                {rolesObject[UserRole.Admin] && (
+                {/* Chỉ hiển thị nút Cập nhật khi:
+                    1. Không phải sinh viên, HOẶC
+                    2. Là sinh viên nhưng trạng thái project là draft/pending */}
+                {(!rolesObject[UserRole.Student] || !selectedProject ||
+                  (rolesObject[UserRole.Student] && selectedProject && 
+                   (selectedProject.status === 'draft' || selectedProject.status === 'pending'))) && (
                   <button
                     onClick={handleSubmit}
                     type="button"
-                  disabled={isSubmitting}
-                  className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                    disabled={isSubmitting}
+                    className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
                   >
                     {isSubmitting ? "Đang xử lý..." : selectedProject ? "Cập nhật" : "Thêm mới"}
                   </button>

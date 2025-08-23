@@ -1,5 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-import { User } from "@/types/common";
+import { User, Faculty, Department, Major } from "@/types/common";
 
 export const getUsers = async (): Promise<User[]> => {
     const res = await httpClient.get('/users');
@@ -17,6 +17,9 @@ export const createUser = async (data: {
     phone: string
     password: string
     roles: string[]
+    facultyId?: number
+    departmentId?: number
+    majorId?: number
 }): Promise<User> => {
     const res = await httpClient.post('/users', data)
     return res.data
@@ -29,6 +32,9 @@ export const updateUser = async (id: string, data: {
     password?: string
     roles?: string[]
     avatar?: string
+    facultyId?: number
+    departmentId?: number
+    majorId?: number
 }): Promise<User> => {
     const res = await httpClient.patch(`/users/${id}`, data)
     return res.data
@@ -38,12 +44,33 @@ export const deleteUser = async (id: string): Promise<void> => {
     await httpClient.delete(`/users/${id}`)
 }
 
+// Academic information APIs
+export const getFaculties = async (): Promise<Faculty[]> => {
+    const res = await httpClient.get('/users/academic/faculties');
+    return res.data;
+};
+
+export const getDepartments = async (facultyId?: number): Promise<Department[]> => {
+    const params = facultyId ? { facultyId } : {};
+    const res = await httpClient.get('/users/academic/departments', { params });
+    return res.data;
+};
+
+export const getMajors = async (departmentId?: number): Promise<Major[]> => {
+    const params = departmentId ? { departmentId } : {};
+    const res = await httpClient.get('/users/academic/majors', { params });
+    return res.data;
+};
+
 export interface CreateUserDto {
     name: string;
     email: string;
     phone: string;
     password: string;
     roles: string[];
+    facultyId?: number;
+    departmentId?: number;
+    majorId?: number;
 }
 
 export interface UpdateUserDto {
@@ -53,4 +80,7 @@ export interface UpdateUserDto {
     password?: string;
     roles?: string[];
     avatar?: string;
+    facultyId?: number;
+    departmentId?: number;
+    majorId?: number;
 }

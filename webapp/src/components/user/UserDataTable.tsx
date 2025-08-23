@@ -8,11 +8,11 @@ import {
   TableRow,
 } from "../ui/table";
 import Badge from "../ui/badge/Badge";
-import { BasicTableProps, Header, User } from "@/types/common";
+import { BasicTableProps, Header, User, Faculty, Department, Major } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import MultiSelect from "../form/MultiSelect";
-import { CreateUserDto, createUser, deleteUser, updateUser, UpdateUserDto } from "@/services/userService";
+import { CreateUserDto, createUser, deleteUser, updateUser, UpdateUserDto, getFaculties, getDepartments, getMajors } from "@/services/userService";
 import { toast } from "react-hot-toast";
 import { UserRole, UserRoleOptions } from "@/constants/user.constant";
 
@@ -53,6 +53,31 @@ export default function UserDataTable({ headers, items, onRefresh }: UserDataTab
   });
   const { isOpen, openModal, closeModal } = useModal();
 
+  // Academic data states
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [majors, setMajors] = useState<Major[]>([]);
+
+  // Load academic data
+  useEffect(() => {
+    const loadAcademicData = async () => {
+      try {
+        const [facultiesData, departmentsData, majorsData] = await Promise.all([
+          getFaculties(),
+          getDepartments(),
+          getMajors(),
+        ]);
+        setFaculties(facultiesData);
+        setDepartments(departmentsData);
+        setMajors(majorsData);
+      } catch (error) {
+        console.error('Error loading academic data:', error);
+      }
+    };
+
+    loadAcademicData();
+  }, []);
+
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -63,6 +88,9 @@ export default function UserDataTable({ headers, items, onRefresh }: UserDataTab
         email: "",
         roles: [UserRole.Student],
         password: "",
+        facultyId: undefined,
+        departmentId: undefined,
+        majorId: undefined,
       });
     }
   }, [isOpen]);
@@ -75,12 +103,53 @@ export default function UserDataTable({ headers, items, onRefresh }: UserDataTab
         phone: selectedUser.phone,
         email: selectedUser.email,
         roles: selectedUser.userRoles?.map(userRole => userRole.role.name) || [UserRole.Student],
+        facultyId: selectedUser.facultyId,
+        departmentId: selectedUser.departmentId,
+        majorId: selectedUser.majorId,
       });
     }
   }, [selectedUser]);
 
   const handleSelectUserRoleChange = (values: string[]) => {
     setFormData({ ...formData, roles: values as UserRole[] });
+  };
+
+  const handleFacultyChange = async (facultyId: number) => {
+    setFormData({ 
+      ...formData, 
+      facultyId,
+      departmentId: undefined, // Reset department when faculty changes
+      majorId: undefined, // Reset major when faculty changes
+    });
+    
+    // Load departments for selected faculty
+    try {
+      const departmentsData = await getDepartments(facultyId);
+      setDepartments(departmentsData);
+      setMajors([]); // Reset majors
+    } catch (error) {
+      console.error('Error loading departments:', error);
+    }
+  };
+
+  const handleDepartmentChange = async (departmentId: number) => {
+    setFormData({ 
+      ...formData, 
+      departmentId,
+      majorId: undefined, // Reset major when department changes
+    });
+    
+    // Load majors for selected department
+    try {
+      const majorsData = await getMajors(departmentId);
+      setMajors(majorsData);
+    } catch (error) {
+      console.error('Error loading majors:', error);
+    }
+  };
+
+  const handleMajorChange = (majorId: number) => {
+    setFormData({ ...formData, majorId });
   };
 
   const handleEdit = (User: User) => {
@@ -164,7 +233,7 @@ export default function UserDataTable({ headers, items, onRefresh }: UserDataTab
         </button>
       </div>
       <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[1102px]">
+        <div className="min-w-[1400px]">
           <Table>
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -219,10 +288,10 @@ export default function UserDataTable({ headers, items, onRefresh }: UserDataTab
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.createdAt.toLocaleString()}
+                    {new Date(item.createdAt).toLocaleString('vi-VN')}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.updatedAt.toLocaleString()}
+                    {new Date(item.updatedAt).toLocaleString('vi-VN')}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">
@@ -306,6 +375,62 @@ export default function UserDataTable({ headers, items, onRefresh }: UserDataTab
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                   />
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Khoa
+                  </label>
+                  <select
+                    id="faculty"
+                    value={formData.facultyId || ''}
+                    onChange={(e) => handleFacultyChange(parseInt(e.target.value))}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                  >
+                    <option value="">Chọn khoa</option>
+                    {faculties.map((faculty) => (
+                      <option key={faculty.id} value={faculty.id}>
+                        {faculty.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Bộ môn
+                  </label>
+                  <select
+                    id="department"
+                    value={formData.departmentId || ''}
+                    onChange={(e) => handleDepartmentChange(parseInt(e.target.value))}
+                    disabled={!formData.facultyId}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
+                  >
+                    <option value="">Chọn bộ môn</option>
+                    {departments.map((department) => (
+                      <option key={department.id} value={department.id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Ngành
+                  </label>
+                  <select
+                    id="major"
+                    value={formData.majorId || ''}
+                    onChange={(e) => handleMajorChange(parseInt(e.target.value))}
+                    disabled={!formData.departmentId}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
+                  >
+                    <option value="">Chọn ngành</option>
+                    {majors.map((major) => (
+                      <option key={major.id} value={major.id}>
+                        {major.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 {selectedUser && selectedUser?.id ?
                   null

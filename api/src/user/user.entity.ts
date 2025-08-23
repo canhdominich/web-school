@@ -5,8 +5,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { UserRole } from '../userRole/userRole.entity';
+import { Faculty } from 'src/faculty/faculty.entity';
+import { Department } from 'src/department/department.entity';
+import { Major } from 'src/major/major.entity';
 
 @Entity('users')
 export class User {
@@ -30,6 +35,27 @@ export class User {
 
   @Column({ type: 'varchar', length: 255 })
   password: string;
+
+  @Column({ type: 'bigint', nullable: true })
+  facultyId: number;
+
+  @ManyToOne(() => Faculty)
+  @JoinColumn({ name: 'facultyId' })
+  faculty: Faculty;
+
+  @Column({ type: 'bigint', nullable: true })
+  departmentId: number;
+
+  @ManyToOne(() => Department)
+  @JoinColumn({ name: 'departmentId' })
+  department: Department;
+
+  @Column({ type: 'bigint', nullable: true })
+  majorId: number;
+
+  @ManyToOne(() => Major)
+  @JoinColumn({ name: 'majorId' })
+  major: Major;
 
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;

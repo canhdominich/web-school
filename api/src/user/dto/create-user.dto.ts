@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  IsNumber,
 } from 'class-validator';
 import { UserRole } from 'src/constants/user.constant';
 
@@ -44,4 +45,28 @@ export class CreateUserDto {
   @IsEnum(UserRole, { each: true })
   @IsNotEmpty()
   roles: UserRole[];
+
+  @ApiPropertyOptional({ 
+    description: 'ID của khoa',
+    example: 1 
+  })
+  @IsNumber()
+  @IsOptional()
+  facultyId?: number;
+
+  @ApiPropertyOptional({ 
+    description: 'ID của bộ môn',
+    example: 1 
+  })
+  @IsNumber()
+  @IsOptional()
+  departmentId?: number;
+
+  @ApiPropertyOptional({ 
+    description: 'ID của ngành',
+    example: 1 
+  })
+  @IsNumber()
+  @IsOptional()
+  majorId?: number;
 }

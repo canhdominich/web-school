@@ -198,10 +198,10 @@ export default function DepartmentDataTable({ headers, items, onRefresh }: Depar
                     {item.faculty?.name || "Không xác định"}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.createdAt.toLocaleString()}
+                    {new Date(item.createdAt).toLocaleString('vi-VN')}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.updatedAt.toLocaleString()}
+                    {new Date(item.updatedAt).toLocaleString('vi-VN')}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">

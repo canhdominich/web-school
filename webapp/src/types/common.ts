@@ -24,6 +24,12 @@ export interface User {
     email: string;
     phone: string;
     avatar?: string;
+    facultyId?: number;
+    faculty?: Faculty;
+    departmentId?: number;
+    department?: Department;
+    majorId?: number;
+    major?: Major;
     createdAt: string;
     updatedAt: string;
     userRoles?: Array<{
