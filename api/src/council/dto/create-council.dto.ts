@@ -41,6 +41,14 @@ export class CreateCouncilDto {
   @IsOptional()
   status?: CouncilStatus;
 
+  @ApiPropertyOptional({
+    description: 'ID của khoa',
+    example: 1,
+  })
+  @IsNumber()
+  @IsOptional()
+  facultyId?: number;
+
   @ApiProperty({
     type: [Number],
     example: [1, 2, 3],

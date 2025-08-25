@@ -1,8 +1,13 @@
 import { httpClient } from "@/lib/httpClient";
-import { Faculty } from "@/types/common";
+
+export interface Faculty {
+  id: number;
+  name: string;
+  description?: string;
+}
 
 export const getFaculties = async (): Promise<Faculty[]> => {
-    const res = await httpClient.get('/faculties');
+    const res = await httpClient.get('/users/academic/faculties');
     return res.data;
 };
 

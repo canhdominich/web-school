@@ -7,10 +7,18 @@ import { CouncilMember } from './council-member.entity';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
 import { UserRole } from '../userRole/userRole.entity';
+import { Faculty } from '../faculty/faculty.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Council, CouncilMember, User, Role, UserRole]),
+    TypeOrmModule.forFeature([
+      Council,
+      CouncilMember,
+      User,
+      Role,
+      UserRole,
+      Faculty,
+    ]),
   ],
   controllers: [CouncilController],
   providers: [CouncilService],

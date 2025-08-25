@@ -71,6 +71,12 @@ const AppSidebar: React.FC = () => {
     requiredRole: [UserRole.Admin, UserRole.FacultyDean, UserRole.DepartmentHead],
   },
   {
+    icon: <TableIcon />,
+    name: "Quản lý hội đồng",
+    path: "/council",
+    requiredRole: [UserRole.Admin, UserRole.FacultyDean],
+  },
+  {
     icon: <PaperPlaneIcon />,
     name: "Quản lý sự kiện",
     path: "/term",

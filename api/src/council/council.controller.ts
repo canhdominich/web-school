@@ -17,11 +17,45 @@ import {
   CouncilResponseDto,
   CouncilStatus,
 } from './dto';
+import { Council } from './council.entity';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../constants/user.constant';
 
 @ApiTags('councils')
 @Controller('councils')
 export class CouncilController {
   constructor(private readonly councilService: CouncilService) {}
+
+  private mapCouncilToResponse(council: Council): CouncilResponseDto {
+    const members = (council.councilMembers || []).map((cm) => {
+      const u = cm.user as any;
+      return {
+        id: u.id,
+        code: u.code,
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        avatar: u.avatar,
+      };
+    });
+
+    return {
+      id: council.id,
+      name: council.name,
+      description: council.description,
+      status: council.status as any,
+      facultyId: council.facultyId,
+      faculty: council.faculty
+        ? { id: Number(council.faculty.id), name: council.faculty.name }
+        : undefined,
+      createdAt: council.createdAt as any,
+      updatedAt: council.updatedAt as any,
+      members,
+    } as CouncilResponseDto;
+  }
 
   @Post()
   @ApiOperation({ summary: 'Tạo hội đồng mới' })
@@ -32,8 +66,11 @@ export class CouncilController {
   })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
   @ApiResponse({ status: 409, description: 'Tên hội đồng đã tồn tại.' })
-  create(@Body() createCouncilDto: CreateCouncilDto) {
-    return this.councilService.create(createCouncilDto);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  async create(@Body() createCouncilDto: CreateCouncilDto) {
+    const council = await this.councilService.create(createCouncilDto);
+    return this.mapCouncilToResponse(council);
   }
 
   @Get()
@@ -43,8 +80,9 @@ export class CouncilController {
     description: 'Trả về danh sách hội đồng.',
     type: [CouncilResponseDto],
   })
-  findAll() {
-    return this.councilService.findAll();
+  async findAll() {
+    const councils = await this.councilService.findAll();
+    return councils.map((c) => this.mapCouncilToResponse(c));
   }
 
   @Get('status/:status')
@@ -54,8 +92,9 @@ export class CouncilController {
     description: 'Trả về danh sách hội đồng theo trạng thái.',
     type: [CouncilResponseDto],
   })
-  findByStatus(@Param('status') status: CouncilStatus) {
-    return this.councilService.findByStatus(status);
+  async findByStatus(@Param('status') status: CouncilStatus) {
+    const councils = await this.councilService.findByStatus(status);
+    return councils.map((c) => this.mapCouncilToResponse(c));
   }
 
   @Get('member/:memberId')
@@ -65,8 +104,9 @@ export class CouncilController {
     description: 'Trả về danh sách hội đồng mà thành viên tham gia.',
     type: [CouncilResponseDto],
   })
-  findByMemberId(@Param('memberId', ParseIntPipe) memberId: number) {
-    return this.councilService.findByMemberId(memberId);
+  async findByMemberId(@Param('memberId', ParseIntPipe) memberId: number) {
+    const councils = await this.councilService.findByMemberId(memberId);
+    return councils.map((c) => this.mapCouncilToResponse(c));
   }
 
   @Get(':id')
@@ -77,8 +117,9 @@ export class CouncilController {
     type: CouncilResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.councilService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const council = await this.councilService.findOne(id);
+    return this.mapCouncilToResponse(council);
   }
 
   @Patch(':id')
@@ -91,11 +132,14 @@ export class CouncilController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
   @ApiResponse({ status: 409, description: 'Tên hội đồng đã tồn tại.' })
-  update(
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCouncilDto: UpdateCouncilDto,
   ) {
-    return this.councilService.update(id, updateCouncilDto);
+    const council = await this.councilService.update(id, updateCouncilDto);
+    return this.mapCouncilToResponse(council);
   }
 
   @Post(':id/members')
@@ -107,11 +151,14 @@ export class CouncilController {
   })
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
-  addMembers(
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  async addMembers(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { memberIds: number[] },
   ) {
-    return this.councilService.addMembers(id, body.memberIds);
+    const council = await this.councilService.addMembers(id, body.memberIds);
+    return this.mapCouncilToResponse(council);
   }
 
   @Delete(':id/members')
@@ -123,17 +170,22 @@ export class CouncilController {
   })
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
-  removeMembers(
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  async removeMembers(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { memberIds: number[] },
   ) {
-    return this.councilService.removeMembers(id, body.memberIds);
+    const council = await this.councilService.removeMembers(id, body.memberIds);
+    return this.mapCouncilToResponse(council);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Xóa hội đồng' })
   @ApiResponse({ status: 200, description: 'Hội đồng được xóa thành công.' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin, UserRole.FacultyDean)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.councilService.remove(id);
   }

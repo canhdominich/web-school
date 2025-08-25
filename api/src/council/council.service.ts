@@ -95,6 +95,7 @@ export class CouncilService {
       name: createCouncilDto.name,
       description: createCouncilDto.description,
       status: createCouncilDto.status || CouncilStatus.Active,
+      facultyId: createCouncilDto.facultyId,
     });
 
     const savedCouncil = await this.councilRepository.save(council);
@@ -114,7 +115,7 @@ export class CouncilService {
 
   async findAll(): Promise<Council[]> {
     return this.councilRepository.find({
-      relations: ['councilMembers', 'councilMembers.user'],
+      relations: ['councilMembers', 'councilMembers.user', 'faculty'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -122,7 +123,7 @@ export class CouncilService {
   async findOne(id: number): Promise<Council> {
     const council = await this.councilRepository.findOne({
       where: { id },
-      relations: ['councilMembers', 'councilMembers.user'],
+      relations: ['councilMembers', 'councilMembers.user', 'faculty'],
     });
 
     if (!council) {
@@ -164,6 +165,9 @@ export class CouncilService {
     }
     if (updateCouncilDto.status) {
       council.status = updateCouncilDto.status;
+    }
+    if (updateCouncilDto.facultyId !== undefined) {
+      council.facultyId = updateCouncilDto.facultyId;
     }
 
     await this.councilRepository.save(council);
@@ -207,7 +211,7 @@ export class CouncilService {
   async findByStatus(status: CouncilStatus): Promise<Council[]> {
     return this.councilRepository.find({
       where: { status },
-      relations: ['councilMembers', 'councilMembers.user'],
+      relations: ['councilMembers', 'councilMembers.user', 'faculty'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -220,6 +224,7 @@ export class CouncilService {
       .createQueryBuilder('council')
       .leftJoinAndSelect('council.councilMembers', 'councilMember')
       .leftJoinAndSelect('councilMember.user', 'user')
+      .leftJoinAndSelect('council.faculty', 'faculty')
       .where('councilMember.userId = :memberId', { memberId })
       .orderBy('council.createdAt', 'DESC')
       .getMany();

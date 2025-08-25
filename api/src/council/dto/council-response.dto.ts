@@ -21,6 +21,14 @@ export class CouncilMemberDto {
   avatar?: string;
 }
 
+export class CouncilFacultyDto {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'Khoa Công nghệ Thông tin' })
+  name: string;
+}
+
 export class CouncilResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
@@ -39,6 +47,12 @@ export class CouncilResponseDto {
     example: CouncilStatus.Active,
   })
   status: CouncilStatus;
+
+  @ApiPropertyOptional({ example: 1 })
+  facultyId?: number;
+
+  @ApiPropertyOptional({ type: CouncilFacultyDto })
+  faculty?: CouncilFacultyDto;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt: Date;

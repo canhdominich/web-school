@@ -1,0 +1,505 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+import { BasicTableProps, Header } from "@/types/common";
+import { Council, CreateCouncilDto, UpdateCouncilDto, CouncilStatus } from "@/types/council";
+import { Faculty } from "@/services/facultyService";
+import { User } from "@/services/userService";
+import { Modal } from "../ui/modal";
+import MultiSelect from "../form/MultiSelect";
+import { useModal } from "@/hooks/useModal";
+import { 
+  createCouncil, 
+  deleteCouncil, 
+  updateCouncil, 
+  addCouncilMembers, 
+  removeCouncilMembers 
+} from "@/services/councilService";
+import { getFaculties } from "@/services/facultyService";
+import { getLecturers } from "@/services/userService";
+import { toast } from "react-hot-toast";
+import Badge from "../ui/badge/Badge";
+
+interface CouncilDataTableProps extends BasicTableProps {
+  onRefresh: () => void;
+  items: Council[];
+  headers: Header[];
+}
+
+export default function CouncilDataTable({ headers, items, onRefresh }: CouncilDataTableProps) {
+  const [selectedCouncil, setSelectedCouncil] = useState<Council | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [lecturers, setLecturers] = useState<User[]>([]);
+  const [formData, setFormData] = useState<CreateCouncilDto | UpdateCouncilDto>({
+    name: "",
+    description: "",
+    status: 'active',
+    facultyId: undefined,
+    memberIds: [],
+  });
+  const [memberFormData, setMemberFormData] = useState<{
+    action: 'add' | 'remove';
+    memberIds: number[];
+  }>({
+    action: 'add',
+    memberIds: [],
+  });
+  const { isOpen, openModal, closeModal } = useModal();
+
+  // Fetch faculties and lecturers
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [facultiesData, lecturersData] = await Promise.all([
+          getFaculties(),
+          getLecturers(),
+        ]);
+        setFaculties(facultiesData);
+        setLecturers(lecturersData);
+        console.log(lecturersData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedCouncil(null);
+      setFormData({
+        name: "",
+        description: "",
+        status: 'active',
+        facultyId: undefined,
+        memberIds: [],
+      });
+    }
+  }, [isOpen]);
+
+  // Update form data when selected Council changes
+  useEffect(() => {
+    if (selectedCouncil) {
+      setFormData({
+        name: selectedCouncil.name,
+        description: selectedCouncil.description || "",
+        status: selectedCouncil.status,
+        facultyId: selectedCouncil.facultyId,
+        memberIds: (selectedCouncil.members || []).map(m => m.id),
+      });
+    }
+  }, [selectedCouncil]);
+
+  const handleEdit = (council: Council) => {
+    setSelectedCouncil(council);
+    openModal();
+  };
+
+  const handleManageMembers = (council: Council, action: 'add' | 'remove') => {
+    setSelectedCouncil(council);
+    setMemberFormData({
+      action,
+      memberIds: [],
+    });
+    setShowMemberModal(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      if (selectedCouncil?.id) {
+        await updateCouncil(selectedCouncil.id.toString(), formData as UpdateCouncilDto);
+        toast.success("Cập nhật hội đồng thành công");
+      } else {
+        await createCouncil(formData as CreateCouncilDto);
+        toast.success("Thêm hội đồng thành công");
+      }
+      closeModal();
+      onRefresh();
+    } catch (error: unknown) {
+      console.error('Error in handleSubmit:', error);
+      const errorMessage = selectedCouncil?.id ? "Không thể cập nhật hội đồng" : "Không thể thêm hội đồng";
+      
+      if (error instanceof Error && error.message) {
+        toast.error(`${errorMessage}: ${error.message}`);
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleMemberSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting || !selectedCouncil) return;
+
+    try {
+      setIsSubmitting(true);
+      if (memberFormData.action === 'add') {
+        await addCouncilMembers(selectedCouncil.id.toString(), memberFormData.memberIds);
+        toast.success("Thêm giảng viên thành công");
+      } else {
+        await removeCouncilMembers(selectedCouncil.id.toString(), memberFormData.memberIds);
+        toast.success("Xóa giảng viên thành công");
+      }
+      setShowMemberModal(false);
+      onRefresh();
+    } catch (error: unknown) {
+      console.error('Error in handleMemberSubmit:', error);
+      const errorMessage = memberFormData.action === 'add' ? "Không thể thêm giảng viên" : "Không thể xóa giảng viên";
+      
+      if (error instanceof Error && error.message) {
+        toast.error(`${errorMessage}: ${error.message}`);
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (isSubmitting) return;
+
+    const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa hội đồng này?");
+    if (!isConfirmed) return;
+
+    try {
+      setIsSubmitting(true);
+      await deleteCouncil(id.toString());
+      toast.success("Xóa hội đồng thành công");
+      onRefresh();
+    } catch (error: unknown) {
+      console.error('Error in handleDelete:', error);
+      
+      let errorMessage = "Không thể xóa hội đồng";
+      
+      if (error instanceof Error && error.message) {
+        toast.error(`${errorMessage}: ${error.message}`);
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  const getStatusColor = (status: CouncilStatus) => {
+    switch (status) {
+      case 'active':
+        return 'success';
+      case 'inactive':
+        return 'warning';
+      case 'archived':
+        return 'light';
+      default:
+        return 'light';
+    }
+  };
+
+  const getStatusText = (status: CouncilStatus) => {
+    switch (status) {
+      case 'active':
+        return 'Đang hoạt động';
+      case 'inactive':
+        return 'Tạm ngưng';
+      case 'archived':
+        return 'Đã lưu trữ';
+      default:
+        return status;
+    }
+  };
+
+  return (
+    <div className="overflow-hidden rounded-xl bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+      <div className="mb-6 px-5 flex items-center gap-3 modal-footer sm:justify-start">
+        <button
+          onClick={openModal}
+          type="button"
+          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+        >
+          Thêm hội đồng
+        </button>
+      </div>
+      <div className="max-w-full overflow-x-auto">
+        <div className="min-w-[1000px]">
+          <Table>
+            {/* Table Header */}
+            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+              <TableRow>
+                {headers.map((header) => (
+                  <TableCell
+                    key={header.key}
+                    isHeader
+                    className="px-5 py-3 font-medium text-start text-theme-sm dark:text-gray-400"
+                  >
+                    {header.title}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHeader>
+
+            {/* Table Body */}
+            <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+              {items.map((item: Council) => (
+                <TableRow key={item.id}>
+                  <TableCell className="px-5 py-4 sm:px-6 text-start">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <span className="block text-gray-500 text-theme-sm dark:text-gray-400">
+                          {item.name}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {item.description || "Không có mô tả"}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {item.faculty?.name || "Không thuộc khoa"}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <Badge
+                      size="sm"
+                      color={getStatusColor(item.status)}
+                    >
+                      {getStatusText(item.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Giảng viên ({item.members?.length || 0})</div>
+                      {item.members && item.members.length > 0 && (
+                        <div className="space-y-1">
+                          {item.members.map((member) => (
+                            <div key={member.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                              <div className="flex items-center gap-2">
+                                <span>{member.name}</span>
+                                <span className="text-gray-500">({member.code})</span>
+                                <span className="text-gray-500">({member.email})</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {formatDate(item.createdAt)}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    <div className="flex items-center gap-3">
+                      <button
+                        title="Thêm giảng viên"
+                        onClick={() => handleManageMembers(item, 'add')}
+                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-6 py-1.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
+                      >
+                        <span className="text-xl">+</span>
+                      </button>
+                      <button
+                        title="Xóa giảng viên"
+                        onClick={() => handleManageMembers(item, 'remove')}
+                        className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-6 py-1.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
+                      >
+                        <span className="text-xl">-</span>
+                      </button>
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {/* Council Modal */}
+          <Modal
+            isOpen={isOpen}
+            onClose={closeModal}
+            className="max-w-[700px] p-6 lg:p-10"
+          >
+            <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
+              <div>
+                <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
+                  {selectedCouncil ? "Chỉnh sửa hội đồng" : "Thêm hội đồng"}
+                </h5>
+              </div>
+              <div className="mt-8">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="mb-3">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Tên hội đồng
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                      placeholder="Nhập tên hội đồng"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Khoa
+                    </label>
+                    <select
+                      id="facultyId"
+                      value={formData.facultyId || ''}
+                      onChange={(e) => setFormData({ ...formData, facultyId: e.target.value ? Number(e.target.value) : undefined })}
+                      className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                    >
+                      <option value="">Chọn khoa</option>
+                      {faculties.map((faculty) => (
+                        <option key={faculty.id} value={faculty.id}>
+                          {faculty.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Mô tả
+                  </label>
+                  <textarea
+                    id="description"
+                    rows={3}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                    placeholder="Nhập mô tả hội đồng (không bắt buộc)"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Trạng thái
+                  </label>
+                  <select
+                    id="status"
+                    value={formData?.status as CouncilStatus}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as CouncilStatus })}
+                    className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                  >
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Tạm ngưng</option>
+                    <option value="archived">Lưu trữ</option>
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Giảng viên (chỉ giảng viên)
+                  </label>
+                  <MultiSelect
+                    value={formData.memberIds?.map(String) || []}
+                    onChange={(values) => setFormData({ ...formData, memberIds: values.map(v => Number(v)) })}
+                    options={lecturers.map(l => ({ value: l.id.toString(), label: `${l.name} (${l.code}) - ${l.email}` }))}
+                    placeholder="Chọn giảng viên"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
+                <button
+                  onClick={closeModal}
+                  type="button"
+                  className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  type="button"
+                  disabled={isSubmitting}
+                  className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                >
+                  {isSubmitting ? "Đang xử lý..." : selectedCouncil ? "Cập nhật" : "Thêm mới"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+
+          {/* Member Management Modal */}
+          <Modal
+            isOpen={showMemberModal}
+            onClose={() => setShowMemberModal(false)}
+            className="max-w-[600px] p-6 lg:p-10"
+          >
+            <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
+              <div>
+                <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
+                  {memberFormData.action === 'add' ? 'Thêm giảng viên' : 'Xóa giảng viên'}
+                </h5>
+                {selectedCouncil && (
+                  <p className="text-base text-gray-600 dark:text-gray-400">
+                    Hội đồng: {selectedCouncil.name}
+                  </p>
+                )}
+              </div>
+              <div className="mt-8">
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    {memberFormData.action === 'add' ? 'Chọn giảng viên để thêm' : 'Chọn giảng viên để xóa'}
+                  </label>
+                  <MultiSelect
+                    value={memberFormData.memberIds.map(String)}
+                    onChange={(values) => setMemberFormData({ ...memberFormData, memberIds: values.map(v => Number(v)) })}
+                    options={(memberFormData.action === 'add' 
+                      ? lecturers.filter(lecturer => !((selectedCouncil?.members || []).some(m => m.id === lecturer.id)))
+                        .map(lecturer => ({ value: lecturer.id.toString(), label: `${lecturer.name} (${lecturer.code}) - ${lecturer.email}` }))
+                      : (selectedCouncil?.members || []).map(member => ({ value: member.id.toString(), label: `${member.name} (${member.code}) - ${member.email}` }))
+                    )}
+                    placeholder={memberFormData.action === 'add' ? 'Chọn giảng viên để thêm' : 'Chọn giảng viên để xóa'}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
+                <button
+                  onClick={() => setShowMemberModal(false)}
+                  type="button"
+                  className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={handleMemberSubmit}
+                  type="button"
+                  disabled={isSubmitting}
+                  className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                >
+                  {isSubmitting ? "Đang xử lý..." : memberFormData.action === 'add' ? "Thêm giảng viên" : "Xóa giảng viên"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+        </div>
+      </div>
+    </div>
+  );
+}
