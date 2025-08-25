@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../constants/user.constant';
+import { ParseArrayPipe } from '@nestjs/common';
 
 @ApiTags('councils')
 @Controller('councils')
@@ -188,5 +189,38 @@ export class CouncilController {
   @Roles(UserRole.Admin, UserRole.FacultyDean)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.councilService.remove(id);
+  }
+
+  // Assign/Unassign projects
+  @Post(':id/projects')
+  @ApiOperation({ summary: 'Gán nhiều project cho hội đồng' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  async addProjects(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('projectIds', new ParseArrayPipe({ items: Number, separator: ',' }))
+    projectIds: number[],
+  ) {
+    const council = await this.councilService.addProjects(id, projectIds);
+    return this.mapCouncilToResponse(council);
+  }
+
+  @Delete(':id/projects')
+  @ApiOperation({ summary: 'Gỡ gán project khỏi hội đồng' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  async removeProjects(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('projectIds', new ParseArrayPipe({ items: Number, separator: ',' }))
+    projectIds: number[],
+  ) {
+    const council = await this.councilService.removeProjects(id, projectIds);
+    return this.mapCouncilToResponse(council);
+  }
+
+  @Get(':id/projects')
+  @ApiOperation({ summary: 'Danh sách project đã gán cho hội đồng' })
+  async listProjects(@Param('id', ParseIntPipe) id: number) {
+    return this.councilService.getProjects(id);
   }
 }

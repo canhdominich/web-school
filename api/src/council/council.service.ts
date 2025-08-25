@@ -13,6 +13,8 @@ import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
 import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
 import { UserRole as UserRoleEnum } from '../constants/user.constant';
+import { Project } from '../project/project.entity';
+import { CouncilProject } from './council-project.entity';
 
 @Injectable()
 export class CouncilService {
@@ -21,6 +23,10 @@ export class CouncilService {
     private readonly councilRepository: Repository<Council>,
     @InjectRepository(CouncilMember)
     private readonly councilMemberRepository: Repository<CouncilMember>,
+    @InjectRepository(CouncilProject)
+    private readonly councilProjectRepository: Repository<CouncilProject>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
@@ -306,5 +312,107 @@ export class CouncilService {
     });
 
     return this.findOne(councilId);
+  }
+
+  /**
+   * Assign multiple projects to a council
+   */
+  async addProjects(councilId: number, projectIds: number[]): Promise<Council> {
+    const council = await this.councilRepository.findOne({
+      where: { id: councilId },
+    });
+    if (!council) {
+      throw new NotFoundException(`Không tìm thấy hội đồng có ID ${councilId}`);
+    }
+
+    if (!projectIds || projectIds.length === 0) {
+      throw new BadRequestException('Danh sách dự án không được để trống');
+    }
+
+    const projects = await this.projectRepository.find({
+      where: { id: In(projectIds) },
+    });
+    const foundIds = new Set(projects.map((p) => Number(p.id)));
+    const missing = projectIds.filter((id) => !foundIds.has(id));
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Không tìm thấy dự án có ID: ${missing.join(', ')}`,
+      );
+    }
+
+    // Validate projects belong to the same faculty as council
+    if (council.facultyId) {
+      const invalid = projects.filter(
+        (p) => Number(p.facultyId) !== Number(council.facultyId),
+      );
+      if (invalid.length > 0) {
+        const invalidCodes = invalid.map((p) => p.code || p.id).join(', ');
+        throw new BadRequestException(
+          `Các dự án không thuộc cùng khoa với hội đồng (facultyId=${council.facultyId}): ${invalidCodes}`,
+        );
+      }
+    }
+
+    const existing = await this.councilProjectRepository.find({
+      where: { councilId },
+    });
+    const existingProjectIds = new Set(existing.map((cp) => cp.projectId));
+    const toCreate = projectIds.filter((id) => !existingProjectIds.has(id));
+
+    if (toCreate.length === 0) {
+      throw new BadRequestException(
+        'Tất cả dự án đã được gán cho hội đồng này',
+      );
+    }
+
+    const rows = toCreate.map((projectId) =>
+      this.councilProjectRepository.create({ councilId, projectId }),
+    );
+    await this.councilProjectRepository.save(rows);
+
+    return this.findOne(councilId);
+  }
+
+  /**
+   * Unassign multiple projects from a council
+   */
+  async removeProjects(
+    councilId: number,
+    projectIds: number[],
+  ): Promise<Council> {
+    const council = await this.councilRepository.findOne({
+      where: { id: councilId },
+    });
+    if (!council) {
+      throw new NotFoundException(`Không tìm thấy hội đồng có ID ${councilId}`);
+    }
+
+    if (!projectIds || projectIds.length === 0) {
+      throw new BadRequestException('Danh sách dự án không được để trống');
+    }
+
+    await this.councilProjectRepository.delete({
+      councilId,
+      projectId: In(projectIds),
+    });
+    return this.findOne(councilId);
+  }
+
+  /**
+   * Get all projects assigned to a council
+   */
+  async getProjects(councilId: number): Promise<Project[]> {
+    const council = await this.councilRepository.findOne({
+      where: { id: councilId },
+    });
+    if (!council) {
+      throw new NotFoundException(`Không tìm thấy hội đồng có ID ${councilId}`);
+    }
+
+    const rows = await this.councilProjectRepository.find({
+      where: { councilId },
+      relations: ['project'],
+    });
+    return rows.map((r) => r.project);
   }
 }

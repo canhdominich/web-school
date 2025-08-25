@@ -13,7 +13,7 @@ export default function CouncilPage() {
     { key: "description", title: "Mô tả" },
     { key: "faculty", title: "Khoa" },
     { key: "status", title: "Trạng thái" },
-    { key: "members", title: "Thành viên" },
+    { key: "members", title: "Thông tin hội đồng" },
     { key: "createdAt", title: "Ngày tạo" },
     { key: "action", title: "Hành động" },
   ];

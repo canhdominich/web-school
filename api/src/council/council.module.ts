@@ -8,12 +8,16 @@ import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
 import { UserRole } from '../userRole/userRole.entity';
 import { Faculty } from '../faculty/faculty.entity';
+import { CouncilProject } from './council-project.entity';
+import { Project } from '../project/project.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Council,
       CouncilMember,
+      CouncilProject,
+      Project,
       User,
       Role,
       UserRole,

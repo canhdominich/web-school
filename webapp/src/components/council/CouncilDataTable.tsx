@@ -19,8 +19,12 @@ import {
   deleteCouncil, 
   updateCouncil, 
   addCouncilMembers, 
-  removeCouncilMembers 
+  removeCouncilMembers,
+  addCouncilProjects,
+  removeCouncilProjects,
+  getCouncilProjects,
 } from "@/services/councilService";
+import { getProjects, type ProjectEntity } from "@/services/projectService";
 import { getFaculties } from "@/services/facultyService";
 import { getLecturers } from "@/services/userService";
 import { toast } from "react-hot-toast";
@@ -52,25 +56,61 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
     action: 'add',
     memberIds: [],
   });
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [projects, setProjects] = useState<ProjectEntity[]>([]);
+  const [projectFormData, setProjectFormData] = useState<{
+    action: 'add' | 'remove';
+    projectIds: number[];
+  }>({ action: 'add', projectIds: [] });
+  const [projectsByCouncil, setProjectsByCouncil] = useState<Record<number, ProjectEntity[]>>({});
   const { isOpen, openModal, closeModal } = useModal();
 
-  // Fetch faculties and lecturers
+  // Fetch faculties, lecturers, projects
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [facultiesData, lecturersData] = await Promise.all([
+        const [facultiesData, lecturersData, projectsData] = await Promise.all([
           getFaculties(),
           getLecturers(),
+          getProjects(),
         ]);
         setFaculties(facultiesData);
         setLecturers(lecturersData);
-        console.log(lecturersData);
+        setProjects(projectsData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
     fetchData();
   }, []);
+
+  // Load assigned projects for each council when list changes
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const entries = await Promise.all(
+          (items || []).map(async (c) => {
+            try {
+              const list = await getCouncilProjects(c.id.toString());
+              return [c.id, list as ProjectEntity[]] as const;
+            } catch {
+              return [c.id, []] as const;
+            }
+          })
+        );
+        const map: Record<number, ProjectEntity[]> = {};
+        entries.forEach(([id, list]) => { map[id] = list; });
+        setProjectsByCouncil(map);
+      } catch (e) {
+        // noop
+      }
+    };
+    if (items && items.length > 0) {
+      loadProjects();
+    } else {
+      setProjectsByCouncil({});
+    }
+  }, [items]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -111,6 +151,12 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
       memberIds: [],
     });
     setShowMemberModal(true);
+  };
+
+  const handleManageProjects = async (council: Council, action: 'add' | 'remove') => {
+    setSelectedCouncil(council);
+    setProjectFormData({ action, projectIds: [] });
+    setShowProjectModal(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -199,6 +245,34 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  const handleProjectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting || !selectedCouncil) return;
+
+    try {
+      setIsSubmitting(true);
+      if (projectFormData.action === 'add') {
+        await addCouncilProjects(selectedCouncil.id.toString(), projectFormData.projectIds);
+        toast.success("Gán dự án thành công");
+      } else {
+        await removeCouncilProjects(selectedCouncil.id.toString(), projectFormData.projectIds);
+        toast.success("Gỡ dự án thành công");
+      }
+      setShowProjectModal(false);
+      onRefresh();
+    } catch (error: unknown) {
+      console.error('Error in handleProjectSubmit:', error);
+      const errorMessage = projectFormData.action === 'add' ? "Không thể gán dự án" : "Không thể gỡ dự án";
+      if (error instanceof Error && error.message) {
+        toast.error(`${errorMessage}: ${error.message}`);
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusColor = (status: CouncilStatus) => {
@@ -299,6 +373,37 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
                           ))}
                         </div>
                       )}
+                      <div className="flex items-center gap-2">
+                        <button
+                          title="Thêm giảng viên"
+                          onClick={() => handleManageMembers(item, 'add')}
+                          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-4 py-0.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
+                        >
+                          <span className="text-xl">+</span>
+                        </button>
+                        <button
+                          title="Xóa giảng viên"
+                          onClick={() => handleManageMembers(item, 'remove')}
+                          className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-4 py-0.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
+                        >
+                          <span className="text-xl">-</span>
+                        </button>
+                      </div>
+                      <div className="pt-3 space-y-1">
+                        <div className="text-sm font-medium">Dự án ({(projectsByCouncil[item.id] || []).length})</div>
+                        {(projectsByCouncil[item.id] || []).length > 0 && (
+                          <div className="space-y-1">
+                            {(projectsByCouncil[item.id] || []).map((p) => (
+                              <div key={p.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                <div className="flex items-center gap-2">
+                                  <span>{p.title}</span>
+                                  <span className="text-gray-500">({p.code})</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
@@ -307,18 +412,18 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">
                       <button
-                        title="Thêm giảng viên"
-                        onClick={() => handleManageMembers(item, 'add')}
-                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-6 py-1.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
+                        title="Gán dự án"
+                        onClick={() => handleManageProjects(item, 'add')}
+                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
                       >
-                        <span className="text-xl">+</span>
+                        Gán dự án
                       </button>
                       <button
-                        title="Xóa giảng viên"
-                        onClick={() => handleManageMembers(item, 'remove')}
-                        className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-6 py-1.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
+                        title="Gỡ dự án"
+                        onClick={() => handleManageProjects(item, 'remove')}
+                        className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
                       >
-                        <span className="text-xl">-</span>
+                        Gỡ dự án
                       </button>
                       <button
                         onClick={() => handleEdit(item)}
@@ -440,6 +545,59 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
                   className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
                 >
                   {isSubmitting ? "Đang xử lý..." : selectedCouncil ? "Cập nhật" : "Thêm mới"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+
+          {/* Project Management Modal */}
+          <Modal
+            isOpen={showProjectModal}
+            onClose={() => setShowProjectModal(false)}
+            className="max-w-[600px] p-6 lg:p-10"
+          >
+            <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
+              <div>
+                <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
+                  {projectFormData.action === 'add' ? 'Gán dự án cho hội đồng' : 'Gỡ dự án khỏi hội đồng'}
+                </h5>
+                {selectedCouncil && (
+                  <p className="text-base text-gray-600 dark:text-gray-400">
+                    Hội đồng: {selectedCouncil.name}
+                  </p>
+                )}
+              </div>
+              <div className="mt-8">
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    {projectFormData.action === 'add' ? 'Chọn dự án để gán' : 'Chọn dự án để gỡ'}
+                  </label>
+                  <MultiSelect
+                    value={projectFormData.projectIds.map(String)}
+                    onChange={(values) => setProjectFormData({ ...projectFormData, projectIds: values.map(v => Number(v)) })}
+                    options={(projectFormData.action === 'add'
+                      ? projects.filter(p => !selectedCouncil?.facultyId || Number(p.facultyId) === Number(selectedCouncil?.facultyId))
+                      : projects.filter(p => !selectedCouncil?.facultyId || Number(p.facultyId) === Number(selectedCouncil?.facultyId))
+                    ).map(p => ({ value: p.id.toString(), label: `${p.title} (${p.code})` }))}
+                    placeholder={projectFormData.action === 'add' ? 'Chọn dự án để gán' : 'Chọn dự án để gỡ'}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
+                <button
+                  onClick={() => setShowProjectModal(false)}
+                  type="button"
+                  className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={handleProjectSubmit}
+                  type="button"
+                  disabled={isSubmitting}
+                  className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                >
+                  {isSubmitting ? "Đang xử lý..." : projectFormData.action === 'add' ? "Gán dự án" : "Gỡ dự án"}
                 </button>
               </div>
             </div>

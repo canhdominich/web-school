@@ -44,3 +44,19 @@ export const getCouncilsByMember = async (memberId: string): Promise<Council[]> 
     const res = await httpClient.get(`/councils/member/${memberId}`);
     return res.data;
 };
+
+// Projects assignment APIs
+export const addCouncilProjects = async (id: string, projectIds: number[]): Promise<Council> => {
+    const res = await httpClient.post(`/councils/${id}/projects`, { projectIds });
+    return res.data;
+};
+
+export const removeCouncilProjects = async (id: string, projectIds: number[]): Promise<Council> => {
+    const res = await httpClient.delete(`/councils/${id}/projects`, { data: { projectIds } });
+    return res.data;
+};
+
+export const getCouncilProjects = async (id: string) => {
+    const res = await httpClient.get(`/councils/${id}/projects`);
+    return res.data;
+};
