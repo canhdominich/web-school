@@ -24,6 +24,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../constants/user.constant';
 import { ParseArrayPipe } from '@nestjs/common';
+import { Request } from 'express';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('councils')
 @Controller('councils')
@@ -34,12 +36,12 @@ export class CouncilController {
     const members = (council.councilMembers || []).map((cm) => {
       const u = cm.user as any;
       return {
-        id: u.id,
-        code: u.code,
-        name: u.name,
-        email: u.email,
-        phone: u.phone,
-        avatar: u.avatar,
+        id: u?.id || 0,
+        code: u?.code || '',
+        name: u?.name || '',
+        email: u?.email || '',
+        phone: u?.phone || '',
+        avatar: u?.avatar || '',
       };
     });
 
@@ -49,9 +51,10 @@ export class CouncilController {
       description: council.description,
       status: council.status as any,
       facultyId: council.facultyId,
-      faculty: council.faculty
-        ? { id: Number(council.faculty.id), name: council.faculty.name }
-        : undefined,
+      faculty:
+        council.faculty && council.faculty.id
+          ? { id: Number(council.faculty.id), name: council.faculty.name }
+          : undefined,
       createdAt: council.createdAt as any,
       updatedAt: council.updatedAt as any,
       members,
@@ -222,5 +225,46 @@ export class CouncilController {
   @ApiOperation({ summary: 'Danh sách project đã gán cho hội đồng' })
   async listProjects(@Param('id', ParseIntPipe) id: number) {
     return this.councilService.getProjects(id);
+  }
+
+  // Grading endpoints
+  @Post(':id/projects/:projectId/grade')
+  @ApiOperation({ summary: 'Giảng viên trong hội đồng chấm điểm dự án (0-10)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.Lecturer, UserRole.FacultyDean, UserRole.Admin)
+  async gradeProject(
+    @Param('id', ParseIntPipe) councilId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Body() body: { score: number; comment?: string; lecturerId?: number },
+  ) {
+    const result = await this.councilService.gradeProject(
+      councilId,
+      projectId,
+      body.score,
+      body.comment,
+      body.lecturerId,
+    );
+    return result;
+  }
+
+  @Get(':id/projects/:projectId/grades')
+  @ApiOperation({ summary: 'Danh sách điểm của các giảng viên cho dự án' })
+  async listGrades(
+    @Param('id', ParseIntPipe) councilId: number,
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ) {
+    return this.councilService.listGrades(councilId, projectId);
+  }
+
+  @Get('can-grade-project/:projectId')
+  @ApiOperation({
+    summary: 'Lấy danh sách hội đồng có thể chấm điểm cho dự án',
+  })
+  async getCouncilsForProjectGrading(
+    @Param('projectId', ParseIntPipe) projectId: number,
+  ) {
+    const councils =
+      await this.councilService.findCouncilsForProjectGrading(projectId);
+    return councils.map((c) => this.mapCouncilToResponse(c));
   }
 }

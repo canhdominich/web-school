@@ -10,6 +10,7 @@ export default function ProjectPage() {
   const headers = [
     { key: "title", title: "Tên dự án" },
     { key: "lecturer", title: "Hướng dẫn" },
+    { key: "averageScore", title: "Điểm TB" },
     { key: "milestone", title: "Cột mốc" },
     { key: "level", title: "Cấp độ" },
     { key: "members", title: "Thành viên" },

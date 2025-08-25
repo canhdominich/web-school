@@ -5,8 +5,7 @@ export interface Header {
 
 export interface RowData {
     id: number;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any
+    [key: string]: string | number | boolean | null | undefined | Array<unknown> | Record<string, unknown>;
 }
 
 export interface BasicTableProps {

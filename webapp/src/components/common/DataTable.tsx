@@ -6,11 +6,10 @@ import {
     TableHeader,
     TableRow,
 } from "../ui/table";
-import { BasicTableProps } from "@/types/common";
+import { BasicTableProps, RowData } from "@/types/common";
 
 interface CommonDataTableProps extends BasicTableProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    renderRow: (item: any) => React.ReactNode;
+    renderRow: (item: RowData) => React.ReactNode;
 }
 
 export default function DataTable({

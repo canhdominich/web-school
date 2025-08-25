@@ -1,5 +1,6 @@
 import { httpClient } from "@/lib/httpClient";
 import { Council, CreateCouncilDto, UpdateCouncilDto } from "@/types/council";
+import { ProjectEntity } from "@/services/projectService";
 
 export const getCouncils = async (): Promise<Council[]> => {
     const res = await httpClient.get('/councils');
@@ -56,7 +57,45 @@ export const removeCouncilProjects = async (id: string, projectIds: number[]): P
     return res.data;
 };
 
-export const getCouncilProjects = async (id: string) => {
+export const getCouncilProjects = async (id: string): Promise<ProjectEntity[]> => {
     const res = await httpClient.get(`/councils/${id}/projects`);
+    return res.data;
+};
+
+// New function to get councils that can grade a specific project
+export const getCouncilsForProjectGrading = async (projectId: string): Promise<Council[]> => {
+    const res = await httpClient.get(`/councils/can-grade-project/${projectId}`);
+    return res.data;
+};
+
+// New grading functions
+export const gradeProject = async (
+    councilId: string,
+    projectId: string,
+    score: number,
+    comment?: string,
+    lecturerId?: number
+): Promise<{ success: boolean; averageScore: number | null }> => {
+    const res = await httpClient.post(`/councils/${councilId}/projects/${projectId}/grade`, {
+        score,
+        comment,
+        lecturerId,
+    });
+    return res.data;
+};
+
+export const getProjectGrades = async (
+    councilId: string,
+    projectId: string
+): Promise<Array<{
+    id: number;
+    lecturerId: number;
+    lecturerName: string;
+    score: number;
+    comment: string | null;
+    createdAt: string;
+    updatedAt: string;
+}>> => {
+    const res = await httpClient.get(`/councils/${councilId}/projects/${projectId}/grades`);
     return res.data;
 };

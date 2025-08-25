@@ -56,6 +56,7 @@ export interface ProjectEntity {
 	supervisorUser?: Pick<User, "id" | "name" | "email">;
 	members?: ProjectMemberEntity[];
 	projectMilestones?: ProjectMilestoneEntity[];
+	averageScore?: number | null;
 }
 
 export interface ProjectMilestoneEntity {

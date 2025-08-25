@@ -15,6 +15,7 @@ import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
 import { UserRole as UserRoleEnum } from '../constants/user.constant';
 import { Project } from '../project/project.entity';
 import { CouncilProject } from './council-project.entity';
+import { CouncilGrade } from './council-grade.entity';
 
 @Injectable()
 export class CouncilService {
@@ -27,6 +28,8 @@ export class CouncilService {
     private readonly councilProjectRepository: Repository<CouncilProject>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(CouncilGrade)
+    private readonly councilGradeRepository: Repository<CouncilGrade>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
@@ -414,5 +417,116 @@ export class CouncilService {
       relations: ['project'],
     });
     return rows.map((r) => r.project);
+  }
+
+  /**
+   * Lecturer in council grades a project
+   */
+  async gradeProject(
+    councilId: number,
+    projectId: number,
+    score: number,
+    comment?: string,
+    lecturerId?: number,
+  ) {
+    if (score == null || isNaN(Number(score)) || score < 0 || score > 10) {
+      throw new BadRequestException('Điểm phải trong khoảng 0-10');
+    }
+
+    // Ensure council and project relation exists
+    const mapping = await this.councilProjectRepository.findOne({
+      where: { councilId, projectId },
+    });
+    if (!mapping) {
+      throw new BadRequestException('Hội đồng chưa được gán cho dự án này');
+    }
+
+    // Ensure lecturer is member of council
+    if (!lecturerId) {
+      throw new BadRequestException('Thiếu lecturerId');
+    }
+    const cm = await this.councilMemberRepository.findOne({
+      where: { councilId, userId: lecturerId },
+    });
+    if (!cm) {
+      throw new BadRequestException('Giảng viên không thuộc hội đồng này');
+    }
+
+    // Upsert grade
+    let grade = await this.councilGradeRepository.findOne({
+      where: { councilId, projectId, lecturerId },
+    });
+    if (!grade) {
+      grade = this.councilGradeRepository.create({
+        councilId,
+        projectId,
+        lecturerId,
+        score,
+        comment: comment ?? null,
+      });
+    } else {
+      grade.score = score;
+      grade.comment = comment ?? null;
+    }
+    await this.councilGradeRepository.save(grade);
+
+    // Recompute average score and store on project
+    const allGrades = await this.councilGradeRepository.find({
+      where: { projectId },
+    });
+    const avg =
+      allGrades.length > 0
+        ? Number(
+            (
+              allGrades.reduce((s, g) => s + Number(g.score), 0) /
+              allGrades.length
+            ).toFixed(2),
+          )
+        : null;
+    await this.projectRepository.update(
+      { id: projectId as any },
+      { averageScore: avg as any },
+    );
+
+    return { success: true, averageScore: avg };
+  }
+
+  async listGrades(councilId: number, projectId: number) {
+    const rows = await this.councilGradeRepository.find({
+      where: { councilId, projectId },
+      relations: ['lecturer'],
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      lecturerId: r.lecturerId,
+      lecturerName: r.lecturer?.name || 'Unknown',
+      score: Number(r.score),
+      comment: r.comment,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+    }));
+  }
+
+  async findCouncilsForProjectGrading(projectId: number) {
+    // Find councils that have been assigned to this project
+    const councilProjects = await this.councilProjectRepository.find({
+      where: { projectId },
+      relations: ['council'],
+    });
+
+    // Get council IDs
+    const councilIds = councilProjects
+      .filter((cp) => cp.council)
+      .map((cp) => cp.council.id);
+
+    if (councilIds.length === 0) {
+      return [];
+    }
+
+    // Load councils with proper relations
+    return this.councilRepository.find({
+      where: { id: In(councilIds) },
+      relations: ['councilMembers', 'councilMembers.user', 'faculty'],
+    });
   }
 }

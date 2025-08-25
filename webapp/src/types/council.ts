@@ -12,6 +12,17 @@ export interface CouncilFaculty {
   name: string;
 }
 
+export interface CouncilProject {
+  id: number;
+  projectId: number;
+  project: {
+    id: number;
+    code: string;
+    title: string;
+    status: string;
+  };
+}
+
 export interface Council {
   id: number;
   name: string;

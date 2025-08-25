@@ -10,6 +10,7 @@ import { UserRole } from '../userRole/userRole.entity';
 import { Faculty } from '../faculty/faculty.entity';
 import { CouncilProject } from './council-project.entity';
 import { Project } from '../project/project.entity';
+import { CouncilGrade } from './council-grade.entity';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { Project } from '../project/project.entity';
       CouncilMember,
       CouncilProject,
       Project,
+      CouncilGrade,
       User,
       Role,
       UserRole,

@@ -133,4 +133,7 @@ export class Project {
 
   @OneToMany(() => ProjectMilestone, (milestone) => milestone.project)
   projectMilestones: ProjectMilestone[];
+
+  @Column({ type: 'decimal', precision: 4, scale: 2, nullable: true })
+  averageScore: number | null;
 }

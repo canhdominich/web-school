@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
-import { BasicTableProps, Header, Term, Major, Faculty, Department, User, IUserRole, IMilestoneSubmissions } from "@/types/common";
+import { Header, Term, Major, Faculty, Department, User, IUserRole, IMilestoneSubmissions } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Select from "@/components/form/Select";
@@ -26,10 +26,12 @@ import {
   ProjectMemberDto,
 } from "@/services/projectService";
 import { getRolesObject } from "@/utils/user.utils";
-import { EyeIcon } from "@/icons";
+import { PencilIcon } from "@/icons";
 import { createMilestoneSubmissionSimple, getMilestoneSubmissionsByMilestoneId } from "@/services/milestoneSubmissionService";
+import { gradeProject, getProjectGrades, getCouncilsForProjectGrading } from "@/services/councilService";
+import { Council } from "@/types/council";
 
-interface ProjectDataTableProps extends BasicTableProps {
+interface ProjectDataTableProps {
   onRefresh: () => void;
   items: ProjectEntity[];
   headers: Header[];
@@ -77,6 +79,25 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   const [selectedMilestoneForHistory, setSelectedMilestoneForHistory] = useState<{ id: string; title: string } | null>(null);
   const [milestoneSubmissions, setMilestoneSubmissions] = useState<IMilestoneSubmissions[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [showGradingModal, setShowGradingModal] = useState(false);
+  const [selectedProjectForGrading, setSelectedProjectForGrading] = useState<ProjectEntity | null>(null);
+  const [councils, setCouncils] = useState<Council[]>([]);
+  const [selectedCouncil, setSelectedCouncil] = useState<Council | null>(null);
+  const [gradingForm, setGradingForm] = useState({
+    score: '',
+    comment: '',
+  });
+  const [isGrading, setIsGrading] = useState(false);
+  const [projectGrades, setProjectGrades] = useState<Array<{
+    id: number;
+    lecturerId: number;
+    lecturerName: string;
+    score: number;
+    comment: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>>([]);
+
 
   // Helper function để kiểm tra quyền chỉnh sửa project
   const canEditProject = (project: ProjectEntity | null): boolean => {
@@ -123,9 +144,9 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
         ]);
         setTerms(termList);
         setMajors(majorList);
-        setFaculties(facultyList);
+        setFaculties(facultyList as any);
         setDepartments(departmentList);
-        setUsers(userList);
+        setUsers(userList as any);
       } catch (e) {
         console.error(e);
         toast.error("Không thể tải dữ liệu chọn");
@@ -344,6 +365,87 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     }
   };
 
+  const openGradingModal = async (project: ProjectEntity) => {
+    setSelectedProjectForGrading(project);
+    setGradingForm({ score: '', comment: '' });
+    setSelectedCouncil(null);
+    setProjectGrades([]);
+    
+    // Fetch councils that can grade this project
+    try {
+      const councilsData = await getCouncilsForProjectGrading(project.id.toString());
+      setCouncils(councilsData);
+    } catch (error) {
+      console.error('Error fetching councils for grading:', error);
+      setCouncils([]);
+    }
+    
+    setShowGradingModal(true);
+  };
+
+  const handleGradingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProjectForGrading || !selectedCouncil || !gradingForm.score) return;
+
+    try {
+      setIsGrading(true);
+      const score = parseFloat(gradingForm.score);
+      if (isNaN(score) || score < 0 || score > 10) {
+        toast.error('Điểm phải trong khoảng 0-10');
+        return;
+      }
+
+      // Get current user ID from context or localStorage
+      let currentUserId: number | null = null;
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        currentUserId = parsedUser.id;
+      }
+      
+      if (!currentUserId) {
+        toast.error('Không thể xác định người dùng hiện tại');
+        return;
+      }
+
+      await gradeProject(
+        selectedCouncil.id.toString(),
+        selectedProjectForGrading.id.toString(),
+        score,
+        gradingForm.comment || undefined,
+        currentUserId
+      );
+
+      toast.success('Chấm điểm thành công');
+      setShowGradingModal(false);
+      onRefresh(); // Refresh to get updated average score
+    } catch (error: unknown) {
+      console.error('Error in grading:', error);
+      if (error instanceof Error && error.message) {
+        toast.error(`Không thể chấm điểm: ${error.message}`);
+      } else {
+        toast.error('Không thể chấm điểm');
+      }
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
+  const handleCouncilChange = async (councilId: string) => {
+    const council = councils.find(c => c.id.toString() === councilId);
+    setSelectedCouncil(council || null);
+    
+    if (council && selectedProjectForGrading) {
+      try {
+        const grades = await getProjectGrades(council.id.toString(), selectedProjectForGrading.id.toString());
+        setProjectGrades(grades);
+      } catch (error) {
+        console.error('Error fetching grades:', error);
+        setProjectGrades([]);
+      }
+    }
+  };
+
   const getEducationLevelLabel = (value: string): string => {
     switch (value) {
       case "undergraduate":
@@ -474,6 +576,9 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {item.supervisorUser?.name}
                   </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-800 text-start text-theme-sm dark:text-gray-200">
+                    {typeof item.averageScore === 'number' ? item.averageScore.toFixed(2) : '-'}
+                  </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="space-y-2">
                       <div className="text-sm font-medium">Milestones ({item.projectMilestones?.length || 0})</div>
@@ -541,44 +646,25 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="flex items-center gap-3">
-                      {rolesObject[UserRole.Admin] && (
-                        <>
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
-                        >
-                          Xóa
-                        </button>
-                        </>
-                      )}
-                      {!rolesObject[UserRole.Admin] && (
-                        <>
-                          {/* Nếu là sinh viên và trạng thái không phải draft/pending thì ẩn nút Sửa */}
-                          {(!rolesObject[UserRole.Student] || 
-                            (rolesObject[UserRole.Student] && 
-                             (item.status === 'draft' || item.status === 'pending'))) && (
-                            <button
-                              onClick={() => handleEdit(item)}
-                              className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-                            >
-                              Sửa
-                            </button>
-                          )}
-                          {/* Luôn hiển thị nút Xem chi tiết */}
-                          <button
-                            onClick={() => handleEdit(item)}
-                            className="btn btn-info btn-view-event flex w-full justify-center rounded-lg bg-green-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-600 sm:w-auto"
-                          >
-                            <EyeIcon/>
-                          </button>
-                        </>
-                      )}
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
+                      >
+                        Xóa
+                      </button>
+                      <button
+                        onClick={() => openGradingModal(item)}
+                        className="btn btn-info btn-update-event flex w-full justify-center rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 sm:w-auto"
+                        title="Chấm điểm dự án"
+                      >
+                        <PencilIcon />
+                      </button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -994,6 +1080,116 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
               </div>
             </div>
           </Modal>
+
+      {/* Grading Modal */}
+      <Modal
+        isOpen={showGradingModal}
+        onClose={() => setShowGradingModal(false)}
+        className="max-w-[600px] p-6 lg:p-10"
+      >
+        <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
+          <div>
+            <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
+              Chấm điểm dự án
+            </h5>
+            {selectedProjectForGrading && (
+              <p className="text-base text-gray-600 dark:text-gray-400">
+                Dự án: {selectedProjectForGrading.title} ({selectedProjectForGrading.code})
+              </p>
+            )}
+          </div>
+
+          <form onSubmit={handleGradingSubmit} className="mt-8 space-y-6">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Chọn hội đồng
+              </label>
+              <select
+                value={selectedCouncil?.id || ''}
+                onChange={(e) => handleCouncilChange(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                required
+              >
+                <option value="">Chọn hội đồng</option>
+                {councils
+                  .map(council => (
+                    <option key={council.id} value={council.id}>
+                      {council.name} - {council.faculty?.name || 'N/A'}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {selectedCouncil && (
+              <>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Điểm (0-10)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="10"
+                    value={gradingForm.score}
+                    onChange={(e) => setGradingForm({ ...gradingForm, score: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    placeholder="Nhập điểm từ 0-10"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Nhận xét (tùy chọn)
+                  </label>
+                  <textarea
+                    value={gradingForm.comment}
+                    onChange={(e) => setGradingForm({ ...gradingForm, comment: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                    placeholder="Nhập nhận xét (nếu có)"
+                    rows={3}
+                  />
+                </div>
+
+                {projectGrades.length > 0 && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                      Điểm đã chấm
+                    </label>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {projectGrades.map(grade => (
+                        <div key={grade.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                          <span>{grade.lecturerName}</span>
+                          <span className="font-medium">{grade.score}</span>
+                          {grade.comment && <span className="text-gray-500">({grade.comment})</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="flex items-center gap-3 modal-footer sm:justify-end">
+              <button
+                onClick={() => setShowGradingModal(false)}
+                type="button"
+                className="flex w-full justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] sm:w-auto"
+              >
+                Đóng
+              </button>
+              <button
+                type="submit"
+                disabled={isGrading || !selectedCouncil || !gradingForm.score}
+                className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto disabled:opacity-50"
+              >
+                {isGrading ? "Đang chấm điểm..." : "Chấm điểm"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
         </div>
       </div>
     </div>
