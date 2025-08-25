@@ -16,6 +16,7 @@ import { TermMilestoneModule } from './term-milestone/term-milestone.module';
 import { ProjectMilestoneModule } from './project-milestone/project-milestone.module';
 import { MilestoneSubmissionModule } from './milestone-submission/milestone-submission.module';
 import { StatisticModule } from './statistic/statistic.module';
+import { CouncilModule } from './council/council.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { StatisticModule } from './statistic/statistic.module';
     ProjectMilestoneModule,
     MilestoneSubmissionModule,
     StatisticModule,
+    CouncilModule,
   ],
 })
 export class AppModule {}
