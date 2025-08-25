@@ -400,6 +400,17 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
                 </div>
                 <div className="mb-3">
                   <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    Giảng viên (chỉ giảng viên)
+                  </label>
+                  <MultiSelect
+                    value={formData.memberIds?.map(String) || []}
+                    onChange={(values) => setFormData({ ...formData, memberIds: values.map(v => Number(v)) })}
+                    options={lecturers.map(l => ({ value: l.id.toString(), label: `${l.name} (${l.code}) - ${l.email}` }))}
+                    placeholder="Chọn giảng viên"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                     Trạng thái
                   </label>
                   <select
@@ -412,17 +423,6 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
                     <option value="inactive">Tạm ngưng</option>
                     <option value="archived">Lưu trữ</option>
                   </select>
-                </div>
-                <div className="mb-3">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                    Giảng viên (chỉ giảng viên)
-                  </label>
-                  <MultiSelect
-                    value={formData.memberIds?.map(String) || []}
-                    onChange={(values) => setFormData({ ...formData, memberIds: values.map(v => Number(v)) })}
-                    options={lecturers.map(l => ({ value: l.id.toString(), label: `${l.name} (${l.code}) - ${l.email}` }))}
-                    placeholder="Chọn giảng viên"
-                  />
                 </div>
               </div>
               <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
