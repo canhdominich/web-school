@@ -26,6 +26,7 @@ import { getProjects, type ProjectEntity } from "@/services/projectService";
 import { getFaculties } from "@/services/facultyService";
 import { getLecturers } from "@/services/userService";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 import Badge from "../ui/badge/Badge";
 
 interface CouncilDataTableProps extends BasicTableProps {
@@ -175,12 +176,7 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
     } catch (error: unknown) {
       console.error('Error in handleSubmit:', error);
       const errorMessage = selectedCouncil?.id ? "Không thể cập nhật hội đồng" : "Không thể thêm hội đồng";
-      
-      if (error instanceof Error && error.message) {
-        toast.error(`${errorMessage}: ${error.message}`);
-      } else {
-        toast.error(errorMessage);
-      }
+      toast.error(getErrorMessage(error, errorMessage));
     } finally {
       setIsSubmitting(false);
     }
@@ -204,12 +200,7 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
     } catch (error: unknown) {
       console.error('Error in handleMemberSubmit:', error);
       const errorMessage = memberFormData.action === 'add' ? "Không thể thêm giảng viên" : "Không thể xóa giảng viên";
-      
-      if (error instanceof Error && error.message) {
-        toast.error(`${errorMessage}: ${error.message}`);
-      } else {
-        toast.error(errorMessage);
-      }
+      toast.error(getErrorMessage(error, errorMessage));
     } finally {
       setIsSubmitting(false);
     }
@@ -228,14 +219,8 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
       onRefresh();
     } catch (error: unknown) {
       console.error('Error in handleDelete:', error);
-      
       const errorMessage = "Không thể xóa hội đồng";
-      
-      if (error instanceof Error && error.message) {
-        toast.error(`${errorMessage}: ${error.message}`);
-      } else {
-        toast.error(errorMessage);
-      }
+      toast.error(getErrorMessage(error, errorMessage));
     } finally {
       setIsSubmitting(false);
     }
@@ -263,11 +248,7 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
     } catch (error: unknown) {
       console.error('Error in handleProjectSubmit:', error);
       const errorMessage = projectFormData.action === 'add' ? "Không thể gán dự án" : "Không thể gỡ dự án";
-      if (error instanceof Error && error.message) {
-        toast.error(`${errorMessage}: ${error.message}`);
-      } else {
-        toast.error(errorMessage);
-      }
+      toast.error(getErrorMessage(error, errorMessage));
     } finally {
       setIsSubmitting(false);
     }

@@ -6,6 +6,7 @@ import { getUsers } from "@/services/userService";
 import { User } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function UserPage() {
   const headers = [
@@ -27,8 +28,8 @@ export default function UserPage() {
       setIsLoading(true);
       const data = await getUsers();
       setUsers(data as User[]);
-    } catch {
-      toast.error("Không thể tải danh sách tài khoản");
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách tài khoản"));
     } finally {
       setIsLoading(false);
     }

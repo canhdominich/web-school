@@ -6,6 +6,7 @@ import { getDepartments } from "@/services/departmentService";
 import { Department } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function DepartmentPage() {
   const headers = [
@@ -26,8 +27,8 @@ export default function DepartmentPage() {
       setIsLoading(true);
       const data = await getDepartments();
       setDepartments(data);
-    } catch {
-      toast.error("Không thể tải danh sách bộ môn");
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách bộ môn"));
     } finally {
       setIsLoading(false);
     }

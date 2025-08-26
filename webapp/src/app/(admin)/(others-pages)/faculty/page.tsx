@@ -6,6 +6,7 @@ import { getFaculties } from "@/services/facultyService";
 import { Faculty } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function FacultyPage() {
   const headers = [
@@ -25,8 +26,8 @@ export default function FacultyPage() {
       setIsLoading(true);
       const data = await getFaculties();
       setFaculties(data as Faculty[]);
-    } catch {
-      toast.error("Không thể tải danh sách khoa");
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách khoa"));
     } finally {
       setIsLoading(false);
     }

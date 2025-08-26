@@ -8,6 +8,7 @@ import Select from "@/components/form/Select";
 import MultiSelect from "@/components/form/MultiSelect";
 import Badge from "../ui/badge/Badge";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 import { UserRole } from "@/constants/user.constant";
 import { getUsers } from "@/services/userService";
 import { getTerms } from "@/services/termService";
@@ -175,7 +176,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
         setUsers(userList);
       } catch (e) {
         console.error(e);
-        toast.error("Không thể tải dữ liệu chọn");
+        toast.error(getErrorMessage(e, "Không thể tải dữ liệu chọn"));
       }
     })();
   }, []);
@@ -256,7 +257,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       onRefresh();
     } catch (error: unknown) {
       console.error("Error in handleDelete:", error);
-      toast.error("Không thể xóa dự án");
+      toast.error(getErrorMessage(error, "Không thể xóa dự án"));
     } finally {
       setIsSubmitting(false);
     }
@@ -343,7 +344,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       setTimeout(() => loadProjectCouncils(), 100);
     } catch (error: unknown) {
       console.error("Error in handleSubmit:", error);
-      toast.error(selectedProject?.id ? "Không thể cập nhật dự án" : "Không thể thêm dự án");
+      toast.error(getErrorMessage(error, selectedProject?.id ? "Không thể cập nhật dự án" : "Không thể thêm dự án"));
     } finally {
       setIsSubmitting(false);
     }
@@ -371,7 +372,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       setMilestoneSubmissions(submissions.sort((a, b) => b.version - a.version));
     } catch (error) {
       console.error("Error loading milestone submissions:", error);
-      toast.error("Không thể tải lịch sử nộp tài liệu");
+      toast.error(getErrorMessage(error, "Không thể tải lịch sử nộp tài liệu"));
       setMilestoneSubmissions([]);
     } finally {
       setIsLoadingHistory(false);
@@ -392,7 +393,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       setIsSubmitModalOpen(false);
     } catch (error: unknown) {
       console.error("Error submitting milestone:", error);
-      toast.error("Không thể nộp tài liệu");
+      toast.error(getErrorMessage(error, "Không thể nộp tài liệu"));
     } finally {
       setIsSubmittingMilestoneId(null);
     }
@@ -421,7 +422,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       }
     } catch (error) {
       console.error('Error fetching council for grading:', error);
-      toast.error('Không thể tải thông tin hội đồng');
+      toast.error(getErrorMessage(error, 'Không thể tải thông tin hội đồng'));
       return;
     }
     
@@ -468,11 +469,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       setTimeout(() => loadProjectCouncils(), 100);
     } catch (error: unknown) {
       console.error('Error in grading:', error);
-      if (error instanceof Error && error.message) {
-        toast.error(`Không thể chấm điểm: ${error.message}`);
-      } else {
-        toast.error('Không thể chấm điểm');
-      }
+      toast.error(getErrorMessage(error, 'Không thể chấm điểm'));
     } finally {
       setIsGrading(false);
     }

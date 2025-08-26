@@ -11,7 +11,8 @@ import { CreateMilestoneSubmissionDto } from './dto/create-milestone-submission.
 import { UpdateMilestoneSubmissionDto } from './dto/update-milestone-submission.dto';
 import { ProjectMilestone } from '../project-milestone/project-milestone.entity';
 import { ProjectMember } from '../project/project-member.entity';
-import { Project } from '../project/project.entity';
+import { Project, ProjectStatus } from '../project/project.entity';
+import { getProjectStatusLabel } from '../project/project.utils';
 import { UserRole } from '../constants/user.constant';
 import { NotificationService } from '../notification/notification.service';
 import { RequestUser } from '../interfaces';
@@ -35,20 +36,32 @@ export class MilestoneSubmissionService {
     user: RequestUser,
   ): Promise<MilestoneSubmission> {
     if (!user.roles.includes(UserRole.Student)) {
-      throw new ForbiddenException('Only Student can submit');
+      throw new ForbiddenException('Chỉ sinh viên mới có thể nộp tài liệu');
     }
 
     const milestone = await this.pmRepo.findOne({
       where: { id: dto.milestoneId },
       relations: ['project'],
     });
-    if (!milestone) throw new NotFoundException('Milestone not found');
+    if (!milestone) throw new NotFoundException('Mốc không tồn tại');
+
+    // Project status check: only allow when APPROVED or IN_PROGRESS
+    const projectStatus = milestone.project?.status;
+    if (
+      projectStatus !== ProjectStatus.APPROVED &&
+      projectStatus !== ProjectStatus.IN_PROGRESS
+    ) {
+      const label = getProjectStatusLabel(projectStatus);
+      throw new BadRequestException(
+        `Không thể submit tài liệu vì dự án đang ở trạng thái ${label}`,
+      );
+    }
 
     // Due date check (allow submission on or before dueDate)
     const today = new Date();
     const due = new Date(milestone.dueDate);
     if (today.getTime() > due.getTime()) {
-      throw new BadRequestException('The milestone due date has passed');
+      throw new BadRequestException('Ngày hết hạn của mốc đã qua');
     }
 
     // Membership check
@@ -56,7 +69,9 @@ export class MilestoneSubmissionService {
       where: { projectId: milestone.projectId, studentId: user.id },
     });
     if (!membership) {
-      throw new ForbiddenException('You are not a member of this project');
+      throw new ForbiddenException(
+        'Bạn không phải là thành viên của dự án này',
+      );
     }
 
     // Versioning: next version = last version + 1 for this milestone & user
@@ -161,7 +176,7 @@ export class MilestoneSubmissionService {
     const entity = await this.submissionRepo.findOne({ where: { id } });
     if (!entity) throw new NotFoundException('Submission not found');
     if (entity.submittedBy !== user.id) {
-      throw new ForbiddenException('You can only update your own submission');
+      throw new ForbiddenException('Bạn chỉ có thể cập nhật bản nộp của mình');
     }
     Object.assign(entity, dto);
     return await this.submissionRepo.save(entity);
@@ -171,7 +186,7 @@ export class MilestoneSubmissionService {
     const entity = await this.submissionRepo.findOne({ where: { id } });
     if (!entity) throw new NotFoundException('Submission not found');
     if (entity.submittedBy !== user.id) {
-      throw new ForbiddenException('You can only delete your own submission');
+      throw new ForbiddenException('Bạn chỉ có thể xóa bản nộp của mình');
     }
     await this.submissionRepo.remove(entity);
     return entity;

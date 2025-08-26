@@ -6,6 +6,7 @@ import { getCouncils } from "@/services/councilService";
 import { Council } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function CouncilPage() {
   const headers = [
@@ -26,8 +27,8 @@ export default function CouncilPage() {
       setIsLoading(true);
       const data = await getCouncils();
       setCouncils(data);
-    } catch {
-      toast.error("Không thể tải danh sách hội đồng");
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách hội đồng"));
     } finally {
       setIsLoading(false);
     }

@@ -5,6 +5,7 @@ import ProjectDataTable from "@/components/project/ProjectDataTable";
 import { getProjects, ProjectEntity } from "@/services/projectService";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function ProjectPage() {
   const headers = [
@@ -26,8 +27,8 @@ export default function ProjectPage() {
       setIsLoading(true);
       const data = await getProjects();
       setProjects(data);
-    } catch {
-      toast.error("Không thể tải danh sách dự án");
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách dự án"));
     } finally {
       setIsLoading(false);
     }

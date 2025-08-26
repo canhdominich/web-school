@@ -6,6 +6,7 @@ import { getTerms } from "@/services/termService";
 import { Term } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function TermPage() {
   const headers = [
@@ -26,8 +27,8 @@ export default function TermPage() {
       setIsLoading(true);
       const data = await getTerms();
       setTerms(data);
-    } catch {
-      toast.error("Không thể tải danh sách sự kiện");
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách sự kiện"));
     } finally {
       setIsLoading(false);
     }

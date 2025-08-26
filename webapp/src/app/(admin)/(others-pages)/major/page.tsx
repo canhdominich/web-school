@@ -6,6 +6,7 @@ import { getMajors } from "@/services/majorService";
 import { Major } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function MajorPage() {
   const headers = [
@@ -26,8 +27,8 @@ export default function MajorPage() {
       setIsLoading(true);
       const data = await getMajors();
       setMajors(data);
-    } catch {
-      toast.error("Không thể tải danh sách ngành học");
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách ngành học"));
     } finally {
       setIsLoading(false);
     }
