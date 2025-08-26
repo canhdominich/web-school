@@ -11,9 +11,11 @@ import { Faculty } from '../faculty/faculty.entity';
 import { CouncilProject } from './council-project.entity';
 import { Project } from '../project/project.entity';
 import { CouncilGrade } from './council-grade.entity';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
+    NotificationModule,
     TypeOrmModule.forFeature([
       Council,
       CouncilMember,

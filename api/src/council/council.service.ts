@@ -16,6 +16,7 @@ import { UserRole as UserRoleEnum } from '../constants/user.constant';
 import { Project } from '../project/project.entity';
 import { CouncilProject } from './council-project.entity';
 import { CouncilGrade } from './council-grade.entity';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class CouncilService {
@@ -36,6 +37,7 @@ export class CouncilService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(UserRoleEntity)
     private readonly userRoleRepository: Repository<UserRoleEntity>,
+    private readonly notificationService: NotificationService,
   ) {}
 
   /**
@@ -509,6 +511,30 @@ export class CouncilService {
       { id: projectId as any },
       { averageScore: avg as any },
     );
+
+    // Notify project members about the new average score
+    try {
+      const proj = await this.projectRepository.findOne({
+        where: { id: projectId as any },
+        relations: ['members'],
+      });
+      if (proj && proj.members && proj.members.length > 0) {
+        const notifications = proj.members.map((m) => ({
+          title: 'Cập nhật điểm trung bình dự án',
+          body:
+            avg == null
+              ? `Dự án của bạn hiện chưa có điểm trung bình`
+              : `Điểm trung bình mới của dự án là ${avg}`,
+          userId: m.studentId,
+        }));
+        await Promise.all(
+          notifications.map((n) => this.notificationService.create(n)),
+        );
+      }
+    } catch (e) {
+      // fail-soft: logging only
+      console.error('Error sending average score notifications:', e);
+    }
 
     return { success: true, averageScore: avg };
   }
