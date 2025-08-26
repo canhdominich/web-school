@@ -7,10 +7,8 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { BasicTableProps, Header } from "@/types/common";
-import { Council, CreateCouncilDto, UpdateCouncilDto, CouncilStatus } from "@/types/council";
-import { Faculty } from "@/services/facultyService";
-import { User } from "@/services/userService";
+import { BasicTableProps, Header, Faculty, User } from "@/types/common";
+import { Council, CreateCouncilDto, UpdateCouncilDto, CouncilStatus } from "@/types/common";
 import { Modal } from "../ui/modal";
 import MultiSelect from "../form/MultiSelect";
 import { useModal } from "@/hooks/useModal";
@@ -99,10 +97,10 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
           })
         );
         const map: Record<number, ProjectEntity[]> = {};
-        entries.forEach(([id, list]) => { map[id] = list; });
+        entries.forEach(([id, list]) => { map[id] = list as ProjectEntity[]; });
         setProjectsByCouncil(map);
       } catch (e) {
-        // noop
+        console.error('Error loading projects:', e);
       }
     };
     if (items && items.length > 0) {
@@ -231,7 +229,7 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
     } catch (error: unknown) {
       console.error('Error in handleDelete:', error);
       
-      let errorMessage = "Không thể xóa hội đồng";
+      const errorMessage = "Không thể xóa hội đồng";
       
       if (error instanceof Error && error.message) {
         toast.error(`${errorMessage}: ${error.message}`);

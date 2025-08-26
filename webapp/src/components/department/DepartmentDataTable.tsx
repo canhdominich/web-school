@@ -37,7 +37,7 @@ export default function DepartmentDataTable({ headers, items, onRefresh }: Depar
     const fetchFaculties = async () => {
       try {
         const data = await getFaculties();
-        setFaculties(data);
+        setFaculties(data as Faculty[]);
       } catch (error) {
         console.error('Error fetching faculties:', error);
       }

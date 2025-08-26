@@ -26,7 +26,7 @@ export default function UserPage() {
     try {
       setIsLoading(true);
       const data = await getUsers();
-      setUsers(data);
+      setUsers(data as User[]);
     } catch {
       toast.error("Không thể tải danh sách tài khoản");
     } finally {

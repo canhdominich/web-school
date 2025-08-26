@@ -3,7 +3,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import CouncilDataTable from "@/components/council/CouncilDataTable";
 import { getCouncils } from "@/services/councilService";
-import { Council } from "@/types/council";
+import { Council } from "@/types/common";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 

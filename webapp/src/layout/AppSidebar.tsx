@@ -94,36 +94,6 @@ const AppSidebar: React.FC = () => {
     path: "/user",
     requiredRole: [UserRole.Admin],
   },
-  // {
-  //   icon: <CalenderIcon />,
-  //   name: "Đặt chỗ giữ xe",
-  //   path: "/booking",
-  //   requiredRole: [UserRole.Admin],
-  // },
-  // {
-  //   icon: <ListIcon />,
-  //   name: hasRole(user, UserRole.Student) ? "Lịch sử đặt chỗ" : "Quản lý vào ra",
-  //   path: "/booking-status",
-  //   requiredRole: [UserRole.Admin],
-  // },
-  // {
-  //   icon: <ListIcon />,
-  //   name: "Quản lý bãi xe",
-  //   path: "/parking-lot",
-  //   requiredRole: [UserRole.Admin],
-  // },
-  // {
-  //   icon: <TableIcon />,
-  //   name: "Quản lý chỗ đỗ",
-  //   path: "/parking-slot",
-  //   requiredRole: [UserRole.Admin],
-  // },
-  // {
-  //   icon: <ListIcon />,
-  //   name: "Quản lý xe cá nhân",
-  //   path: "/vehicle",
-  //   requiredRole: [UserRole.Admin],
-  // },
   {
     icon: <UserCircleIcon />,
     name: "Trang cá nhân",

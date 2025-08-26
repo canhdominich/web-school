@@ -1,15 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-import { Department, Faculty, IUserRole, Major } from "@/types/common";
-
-export interface User {
-  id: number;
-  code: string;
-  name: string;
-  email: string;
-  phone: string;
-  avatar?: string;
-  userRoles: IUserRole[];
-}
+import { Department, Faculty, IUserRole, Major, User } from "@/types/common";
 
 export const getUsers = async (): Promise<User[]> => {
     const res = await httpClient.get('/users');
@@ -21,7 +11,7 @@ export const getLecturers = async (): Promise<User[]> => {
     const users = res.data;
     // Filter only lecturers
     return users.filter((user: User) => 
-        user.userRoles.some((userRole: IUserRole) => userRole.role.name === 'Lecturer')
+        (user.userRoles ?? []).some((userRole: IUserRole) => userRole.role.name === 'Lecturer')
     );
 };
 

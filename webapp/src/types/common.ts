@@ -16,7 +16,7 @@ export interface Team {
     images: string[];
 }
 
-export interface User {
+export interface User extends RowData {
     id: number;
     code: string;
     name: string;
@@ -46,7 +46,7 @@ export interface User {
     }>;
 }
 
-export interface Faculty {
+export interface Faculty extends RowData {
     id: number;
     code: string;
     name: string;
@@ -55,7 +55,7 @@ export interface Faculty {
     updatedAt: string;
 }
 
-export interface Department {
+export interface Department extends RowData {
     id: number;
     code: string;
     name: string;
@@ -66,7 +66,7 @@ export interface Department {
     updatedAt: string;
 }
 
-export interface Major {
+export interface Major extends RowData {
     id: number;
     code: string;
     name: string;
@@ -96,7 +96,7 @@ export interface TermMilestone {
 
 export type TermStatus = 'open' | 'closed' | 'archived';
 
-export interface Term {
+export interface Term extends RowData {
     id: number;
     code: string;
     name: string;
@@ -140,4 +140,43 @@ export interface IUserRole {
   updatedAt: string; // ISO datetime
 }
 
+// Council types
+export interface CouncilMember {
+    id: number;
+    code: string;
+    name: string;
+    email: string;
+    phone: string;
+    avatar?: string;
+}
+
+export type CouncilStatus = 'active' | 'inactive' | 'archived';
+
+export interface Council extends RowData {
+    id: number;
+    name: string;
+    description?: string;
+    status: CouncilStatus;
+    facultyId?: number;
+    faculty?: Faculty | null;
+    createdAt: string;
+    updatedAt: string;
+    members: CouncilMember[];
+}
+
+export interface CreateCouncilDto {
+    name: string;
+    description?: string;
+    status?: CouncilStatus;
+    facultyId?: number;
+    memberIds: number[];
+}
+
+export interface UpdateCouncilDto {
+    name?: string;
+    description?: string;
+    status?: CouncilStatus;
+    facultyId?: number;
+    memberIds?: number[];
+}
   

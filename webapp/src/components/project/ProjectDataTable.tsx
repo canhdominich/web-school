@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
 import { Header, Term, Major, Faculty, Department, User, IUserRole, IMilestoneSubmissions } from "@/types/common";
 import { Modal } from "../ui/modal";
@@ -29,7 +29,7 @@ import { getRolesObject } from "@/utils/user.utils";
 import { PencilIcon } from "@/icons";
 import { createMilestoneSubmissionSimple, getMilestoneSubmissionsByMilestoneId } from "@/services/milestoneSubmissionService";
 import { gradeProject, getProjectGrades, getCouncilsForProjectGrading } from "@/services/councilService";
-import { Council } from "@/types/council";
+import { Council } from "@/types/common";
 
 interface ProjectDataTableProps {
   onRefresh: () => void;
@@ -81,7 +81,6 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [showGradingModal, setShowGradingModal] = useState(false);
   const [selectedProjectForGrading, setSelectedProjectForGrading] = useState<ProjectEntity | null>(null);
-  const [councils, setCouncils] = useState<Council[]>([]);
   const [selectedCouncil, setSelectedCouncil] = useState<Council | null>(null);
   const [gradingForm, setGradingForm] = useState({
     score: '',
@@ -114,7 +113,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   };
 
   // Load council information for all projects
-  const loadProjectCouncils = async () => {
+  const loadProjectCouncils = useCallback(async () => {
     if (items.length === 0) return;
     
     try {
@@ -135,7 +134,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     } catch (error) {
       console.error('Error loading project councils:', error);
     }
-  };
+  }, [items]);
 
   const canChangeProjectStatus = (): boolean => {
     return rolesObject[UserRole.Admin] || 
@@ -171,9 +170,9 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
         ]);
         setTerms(termList);
         setMajors(majorList);
-        setFaculties(facultyList as any);
+        setFaculties(facultyList);
         setDepartments(departmentList);
-        setUsers(userList as any);
+        setUsers(userList);
       } catch (e) {
         console.error(e);
         toast.error("Không thể tải dữ liệu chọn");
@@ -184,7 +183,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
   // Load project councils when items change
   useEffect(() => {
     loadProjectCouncils();
-  }, [items]);
+  }, [loadProjectCouncils]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -412,13 +411,11 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
         // Since each project belongs to only one council, take the first one
         const projectCouncil = councilsData[0];
         setSelectedCouncil(projectCouncil);
-        setCouncils([projectCouncil]);
         
         // Load existing grades for this council and project
         const grades = await getProjectGrades(projectCouncil.id.toString(), project.id.toString());
         setProjectGrades(grades);
       } else {
-        setCouncils([]);
         toast.error('Dự án này chưa được gán cho hội đồng nào');
         return;
       }

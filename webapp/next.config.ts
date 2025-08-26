@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
         hostname: "**", 
       },
     ],
-    domains: ["static.vecteezy.com"]
   },
   
   /* config options here */

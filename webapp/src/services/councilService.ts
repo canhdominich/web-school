@@ -1,5 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-import { Council, CreateCouncilDto, UpdateCouncilDto } from "@/types/council";
+import { Council, CreateCouncilDto, UpdateCouncilDto } from "@/types/common";
 import { ProjectEntity } from "@/services/projectService";
 
 export const getCouncils = async (): Promise<Council[]> => {

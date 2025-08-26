@@ -24,7 +24,7 @@ export default function FacultyPage() {
     try {
       setIsLoading(true);
       const data = await getFaculties();
-      setFaculties(data);
+      setFaculties(data as Faculty[]);
     } catch {
       toast.error("Không thể tải danh sách khoa");
     } finally {

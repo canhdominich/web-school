@@ -1,10 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-
-export interface Faculty {
-  id: number;
-  name: string;
-  description?: string;
-}
+import type { Faculty } from "@/types/common";
 
 export const getFaculties = async (): Promise<Faculty[]> => {
     const res = await httpClient.get('/users/academic/faculties');
