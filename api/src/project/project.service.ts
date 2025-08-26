@@ -689,9 +689,10 @@ export class ProjectService {
       return uniqueProjects;
     }
 
-    // Lecturer: Return projects where user is supervisor
+    // Lecturer: Return projects where user is supervisor + projects in councils where user is member
     if (roles.includes(UserRole.Lecturer)) {
-      return this.projectRepository.find({
+      // Get projects where user is supervisor
+      const supervisorProjects = await this.projectRepository.find({
         where: { supervisorId: user.id },
         relations: [
           'faculty',
@@ -705,38 +706,139 @@ export class ProjectService {
           'projectMilestones',
         ],
       });
+
+      // Get projects in councils where user is a member
+      const councilProjects = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.faculty', 'faculty')
+        .leftJoinAndSelect('project.department', 'department')
+        .leftJoinAndSelect('project.major', 'major')
+        .leftJoinAndSelect('project.term', 'term')
+        .leftJoinAndSelect('project.createdByUser', 'createdByUser')
+        .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .leftJoinAndSelect('project.projectMilestones', 'projectMilestones')
+        .innerJoin('council_projects', 'cp', 'cp.projectId = project.id')
+        .innerJoin('council_members', 'cm', 'cm.councilId = cp.councilId')
+        .where('cm.userId = :userId', { userId: user.id })
+        .getMany();
+
+      // Combine and remove duplicates
+      const allProjects = [...supervisorProjects, ...councilProjects];
+      const uniqueProjects = allProjects.filter(
+        (project, index, self) =>
+          index === self.findIndex((p) => p.id === project.id),
+      );
+
+      return uniqueProjects;
     }
 
-    // DepartmentHead: Return projects in user's department
+    // DepartmentHead: Return projects in user's department + projects in councils where user is member
     if (roles.includes(UserRole.DepartmentHead)) {
+      let departmentProjects: Project[] = [];
+
       // Note: This assumes the user object has departmentId property
       // If the user entity doesn't have this property, you may need to:
       // 1. Add departmentId to User entity, or
       // 2. Create a separate query to find user's department, or
       // 3. Pass departmentId as a separate parameter
       if (user?.departmentId) {
-        return this.findByDepartment(user.departmentId);
+        departmentProjects = await this.findByDepartment(user.departmentId);
+      } else {
+        // If no departmentId, log warning
+        console.warn(
+          `DepartmentHead user ${user.id} has no departmentId property`,
+        );
       }
-      // If no departmentId, return empty array
-      console.warn(
-        `DepartmentHead user ${user.id} has no departmentId property`,
+
+      // Get projects in councils where user is a member
+      const councilProjects = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.faculty', 'faculty')
+        .leftJoinAndSelect('project.department', 'department')
+        .leftJoinAndSelect('project.major', 'major')
+        .leftJoinAndSelect('project.term', 'term')
+        .leftJoinAndSelect('project.createdByUser', 'createdByUser')
+        .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .leftJoinAndSelect('project.projectMilestones', 'projectMilestones')
+        .innerJoin('council_projects', 'cp', 'cp.projectId = project.id')
+        .innerJoin('council_members', 'cm', 'cm.councilId = cp.councilId')
+        .where('cm.userId = :userId', { userId: user.id })
+        .getMany();
+
+      // Combine and remove duplicates
+      const allProjects = [...departmentProjects, ...councilProjects];
+      const uniqueProjects = allProjects.filter(
+        (project, index, self) =>
+          index === self.findIndex((p) => p.id === project.id),
       );
-      return [];
+
+      return uniqueProjects;
     }
 
-    // FacultyDean: Return projects in user's faculty
+    // FacultyDean: Return projects in user's faculty + projects in councils where user is member
     if (roles.includes(UserRole.FacultyDean)) {
+      let facultyProjects: Project[] = [];
+
       // Note: This assumes the user object has facultyId property
       // If the user entity doesn't have this property, you may need to:
       // 1. Add facultyId to User entity, or
       // 2. Create a separate query to find user's faculty, or
       // 3. Pass facultyId as a separate parameter
       if (user.facultyId) {
-        return this.findByFaculty(user.facultyId);
+        facultyProjects = await this.findByFaculty(user.facultyId);
+      } else {
+        // If no facultyId, log warning
+        console.warn(`FacultyDean user ${user.id} has no facultyId property`);
       }
-      // If no facultyId, return empty array
-      console.warn(`FacultyDean user ${user.id} has no facultyId property`);
-      return [];
+
+      // Get projects in councils where user is a member
+      const councilProjects = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.faculty', 'faculty')
+        .leftJoinAndSelect('project.department', 'department')
+        .leftJoinAndSelect('project.major', 'major')
+        .leftJoinAndSelect('project.term', 'term')
+        .leftJoinAndSelect('project.createdByUser', 'createdByUser')
+        .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .leftJoinAndSelect('project.projectMilestones', 'projectMilestones')
+        .innerJoin('council_projects', 'cp', 'cp.projectId = project.id')
+        .innerJoin('council_members', 'cm', 'cm.councilId = cp.councilId')
+        .where('cm.userId = :userId', { userId: user.id })
+        .getMany();
+
+      // Combine and remove duplicates
+      const allProjects = [...facultyProjects, ...councilProjects];
+      const uniqueProjects = allProjects.filter(
+        (project, index, self) =>
+          index === self.findIndex((p) => p.id === project.id),
+      );
+
+      return uniqueProjects;
+    }
+
+    // Council: Return projects in councils where user is member
+    if (roles.includes(UserRole.Council)) {
+      return this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.faculty', 'faculty')
+        .leftJoinAndSelect('project.department', 'department')
+        .leftJoinAndSelect('project.major', 'major')
+        .leftJoinAndSelect('project.term', 'term')
+        .leftJoinAndSelect('project.createdByUser', 'createdByUser')
+        .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .leftJoinAndSelect('project.projectMilestones', 'projectMilestones')
+        .innerJoin('council_projects', 'cp', 'cp.projectId = project.id')
+        .innerJoin('council_members', 'cm', 'cm.councilId = cp.councilId')
+        .where('cm.userId = :userId', { userId: user.id })
+        .getMany();
     }
 
     // Default: Return empty array for unknown roles

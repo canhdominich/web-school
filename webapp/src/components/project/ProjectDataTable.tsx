@@ -113,6 +113,11 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     return true; // Các role khác được chỉnh sửa
   };
 
+  // Helper function để kiểm tra quyền xóa project (chỉ Admin)
+  const canDeleteProject = (): boolean => {
+    return rolesObject[UserRole.Admin];
+  };
+
   // Load council information for all projects
   const loadProjectCouncils = useCallback(async () => {
     if (items.length === 0) return;
@@ -248,6 +253,13 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
 
   const handleDelete = async (id: number) => {
     if (isSubmitting) return;
+    
+    // Kiểm tra quyền xóa trước khi thực hiện
+    if (!canDeleteProject()) {
+      toast.error("Bạn không có quyền xóa dự án");
+      return;
+    }
+    
     const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa dự án này?");
     if (!isConfirmed) return;
     try {
@@ -699,12 +711,14 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                       >
                         Sửa
                       </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
-                      >
-                        Xóa
-                      </button>
+                      {canDeleteProject() && (
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
+                        >
+                          Xóa
+                        </button>
+                      )}
                       <button
                         onClick={() => openGradingModal(item)}
                         className="btn btn-info btn-update-event flex w-full justify-center rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 sm:w-auto"

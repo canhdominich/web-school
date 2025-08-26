@@ -1,0 +1,246 @@
+MÔ TẢ DỰ ÁN WEB-SCHOOL
+=====================================
+
+TỔNG QUAN DỰ ÁN
+-----------------
+Web-School là một hệ thống quản lý dự án học tập và nghiên cứu dành cho các trường đại học, 
+được xây dựng với kiến trúc microservice gồm backend API (NestJS) và frontend web app (React/Next.js).
+
+MỤC TIÊU DỰ ÁN
+----------------
+- Quản lý toàn diện các dự án học tập và nghiên cứu của sinh viên
+- Hỗ trợ quy trình chấm điểm và đánh giá dự án
+- Quản lý hội đồng chấm điểm và thành viên
+- Cung cấp giao diện quản trị cho các vai trò khác nhau
+- Tích hợp hệ thống thông báo và theo dõi tiến độ
+
+KIẾN TRÚC HỆ THỐNG
+--------------------
+1. BACKEND API (NestJS)
+   - Sử dụng TypeScript và NestJS framework
+   - Database: MySQL với TypeORM
+   - JWT Authentication và Role-based Authorization
+   - RESTful API endpoints
+
+2. FRONTEND WEB APP (React/Next.js)
+   - Sử dụng TypeScript và React
+   - Next.js App Router
+   - Tailwind CSS cho styling
+   - Responsive design cho mobile và desktop
+
+3. DATABASE
+   - MySQL database
+   - Docker containerization
+   - Migration system
+
+CÁC MODULE CHÍNH
+-----------------
+
+1. AUTHENTICATION & AUTHORIZATION
+   - JWT token authentication
+   - Role-based access control
+   - Guards và decorators cho bảo mật
+   - Các vai trò: Admin, Student, Lecturer, DepartmentHead, FacultyDean, Council
+
+2. USER MANAGEMENT
+   - Quản lý người dùng (sinh viên, giảng viên, admin)
+   - Phân quyền theo vai trò
+   - Quản lý thông tin cá nhân
+
+3. FACULTY & DEPARTMENT
+   - Quản lý khoa và bộ môn
+   - Phân cấp tổ chức trường học
+   - Liên kết với dự án và người dùng
+
+4. MAJOR & TERM
+   - Quản lý ngành học
+   - Quản lý học kỳ và mốc thời gian
+   - Cấu hình milestone cho từng học kỳ
+
+5. PROJECT MANAGEMENT
+   - Tạo và quản lý dự án học tập
+   - Quản lý thành viên dự án
+   - Theo dõi tiến độ và trạng thái
+   - Quản lý milestone và deadline
+
+6. COUNCIL SYSTEM
+   - Quản lý hội đồng chấm điểm
+   - Phân công thành viên hội đồng
+   - Gán dự án cho hội đồng
+   - Hệ thống chấm điểm và đánh giá
+
+7. MILESTONE & SUBMISSION
+   - Quản lý các mốc quan trọng của dự án
+   - Hệ thống nộp bài và theo dõi
+   - Lịch sử nộp bài và đánh giá
+
+8. NOTIFICATION SYSTEM
+   - Thông báo real-time
+   - Email notifications
+   - Theo dõi trạng thái dự án
+
+9. STATISTICS & REPORTING
+   - Báo cáo thống kê dự án
+   - Dashboard cho admin và giảng viên
+   - Biểu đồ và phân tích dữ liệu
+
+CÁC VAI TRÒ VÀ QUYỀN HẠN
+---------------------------
+
+1. ADMIN (Quản trị viên)
+   - Quyền truy cập toàn bộ hệ thống
+   - Quản lý tất cả dự án, người dùng, hội đồng
+   - Có thể xóa dự án và thực hiện các thao tác quản trị
+
+2. STUDENT (Sinh viên)
+   - Tạo và quản lý dự án của mình
+   - Nộp bài theo milestone
+   - Xem thông tin dự án và tiến độ
+   - Chỉnh sửa dự án khi ở trạng thái draft/pending
+
+3. LECTURER (Giảng viên)
+   - Quản lý dự án mà họ là supervisor
+   - Xem dự án trong hội đồng mà họ là thành viên
+   - Chấm điểm và đánh giá dự án
+   - Quản lý milestone và deadline
+
+4. DEPARTMENT HEAD (Chủ nhiệm bộ môn)
+   - Quản lý dự án trong bộ môn của mình
+   - Xem dự án trong hội đồng mà họ là thành viên
+   - Phê duyệt và giám sát dự án
+
+5. FACULTY DEAN (Trưởng khoa)
+   - Quản lý dự án trong khoa của mình
+   - Xem dự án trong hội đồng mà họ là thành viên
+   - Giám sát tổng thể hoạt động khoa
+
+6. COUNCIL (Hội đồng)
+   - Xem dự án được gán cho hội đồng
+   - Tham gia chấm điểm và đánh giá
+   - Quản lý quy trình chấm điểm
+
+TÍNH NĂNG NỔI BẬT
+-------------------
+
+1. QUẢN LÝ DỰ ÁN THÔNG MINH
+   - Hệ thống milestone tự động
+   - Theo dõi tiến độ real-time
+   - Quản lý deadline và nhắc nhở
+
+2. HỆ THỐNG HỘI ĐỒNG LINH HOẠT
+   - Tạo và quản lý hội đồng
+   - Phân công thành viên và dự án
+   - Quy trình chấm điểm chuẩn hóa
+
+3. BẢO MẬT VÀ PHÂN QUYỀN
+   - JWT authentication
+   - Role-based access control
+   - Kiểm tra quyền ở nhiều lớp (UI, Service, API)
+
+4. GIAO DIỆN NGƯỜI DÙNG
+   - Responsive design
+   - Dark/Light theme
+   - Dashboard trực quan
+   - Data tables với sorting và filtering
+
+5. TÍCH HỢP VÀ MỞ RỘNG
+   - API RESTful chuẩn
+   - Modular architecture
+   - Dễ dàng thêm tính năng mới
+
+CÔNG NGHỆ SỬ DỤNG
+-------------------
+
+BACKEND:
+- NestJS (Node.js framework)
+- TypeScript
+- TypeORM (database ORM)
+- MySQL database
+- JWT authentication
+- Docker containerization
+
+FRONTEND:
+- React 18
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- React Hook Form
+- React Hot Toast
+- Chart.js cho biểu đồ
+
+DEVELOPMENT TOOLS:
+- ESLint cho code quality
+- Prettier cho code formatting
+- Git version control
+- Docker Compose cho development environment
+
+QUY TRÌNH PHÁT TRIỂN
+---------------------
+1. Phát triển theo mô hình Agile
+2. Code review và testing
+3. Continuous Integration/Deployment
+4. Database migration management
+5. API documentation
+
+TÍNH NĂNG BẢO MẬT
+-------------------
+- JWT token authentication
+- Role-based authorization
+- Input validation và sanitization
+- SQL injection protection
+- CORS configuration
+- Rate limiting
+
+HIỆU SUẤT VÀ SCALABILITY
+--------------------------
+- Database indexing optimization
+- Lazy loading cho large datasets
+- Caching strategies
+- Pagination cho data tables
+- Optimized database queries
+
+TÍNH NĂNG ĐẶC BIỆT
+--------------------
+1. HỆ THỐNG CHẤM ĐIỂM
+   - Chấm điểm theo thang 0-10
+   - Tính điểm trung bình tự động
+   - Lưu trữ comment và feedback
+
+2. QUẢN LÝ MILESTONE
+   - Tạo milestone từ term
+   - Theo dõi deadline
+   - Hệ thống nộp bài
+
+3. THÔNG BÁO THÔNG MINH
+   - Thông báo deadline
+   - Thông báo điểm số
+   - Thông báo thay đổi trạng thái
+
+4. BÁO CÁO VÀ THỐNG KÊ
+   - Dashboard tổng quan
+   - Biểu đồ tiến độ
+   - Export dữ liệu
+
+HƯỚNG PHÁT TRIỂN TƯƠNG LAI
+------------------------------
+1. Mobile app (React Native)
+2. Real-time collaboration
+3. AI-powered project recommendations
+4. Advanced analytics và machine learning
+5. Integration với LMS systems
+6. Multi-language support
+7. Advanced reporting tools
+
+KẾT LUẬN
+----------
+Web-School là một hệ thống quản lý dự án học tập toàn diện, được thiết kế với kiến trúc hiện đại 
+và khả năng mở rộng cao. Hệ thống cung cấp giải pháp hoàn chỉnh cho việc quản lý dự án, 
+hội đồng chấm điểm và theo dõi tiến độ học tập của sinh viên trong môi trường giáo dục đại học.
+
+Với giao diện thân thiện, tính năng phong phú và bảo mật cao, Web-School giúp nâng cao hiệu quả 
+quản lý giáo dục và tạo môi trường học tập tốt hơn cho sinh viên và giảng viên.
+
+---
+Ngày tạo: $(date)
+Phiên bản: 1.0
+Tác giả: Development Team
