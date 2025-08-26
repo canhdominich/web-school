@@ -98,6 +98,9 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     updatedAt: string;
   }>>([]);
 
+  // Add state to store council information for each project
+  const [projectCouncils, setProjectCouncils] = useState<Record<number, Council | null>>({});
+
 
   // Helper function để kiểm tra quyền chỉnh sửa project
   const canEditProject = (project: ProjectEntity | null): boolean => {
@@ -108,6 +111,30 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       return project.status === 'draft' || project.status === 'pending';
     }
     return true; // Các role khác được chỉnh sửa
+  };
+
+  // Load council information for all projects
+  const loadProjectCouncils = async () => {
+    if (items.length === 0) return;
+    
+    try {
+      const councilsData: Record<number, Council | null> = {};
+      
+      // Load council for each project
+      for (const project of items) {
+        try {
+          const councils = await getCouncilsForProjectGrading(project.id.toString());
+          councilsData[project.id] = councils.length > 0 ? councils[0] : null;
+        } catch (error) {
+          console.error(`Error loading council for project ${project.id}:`, error);
+          councilsData[project.id] = null;
+        }
+      }
+      
+      setProjectCouncils(councilsData);
+    } catch (error) {
+      console.error('Error loading project councils:', error);
+    }
   };
 
   const canChangeProjectStatus = (): boolean => {
@@ -153,6 +180,11 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       }
     })();
   }, []);
+
+  // Load project councils when items change
+  useEffect(() => {
+    loadProjectCouncils();
+  }, [items]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -308,6 +340,8 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       }
       closeModal();
       onRefresh();
+      // Refresh project council information after creating/updating project
+      setTimeout(() => loadProjectCouncils(), 100);
     } catch (error: unknown) {
       console.error("Error in handleSubmit:", error);
       toast.error(selectedProject?.id ? "Không thể cập nhật dự án" : "Không thể thêm dự án");
@@ -371,13 +405,27 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     setSelectedCouncil(null);
     setProjectGrades([]);
     
-    // Fetch councils that can grade this project
+    // Fetch the single council assigned to this project
     try {
       const councilsData = await getCouncilsForProjectGrading(project.id.toString());
-      setCouncils(councilsData);
+      if (councilsData.length > 0) {
+        // Since each project belongs to only one council, take the first one
+        const projectCouncil = councilsData[0];
+        setSelectedCouncil(projectCouncil);
+        setCouncils([projectCouncil]);
+        
+        // Load existing grades for this council and project
+        const grades = await getProjectGrades(projectCouncil.id.toString(), project.id.toString());
+        setProjectGrades(grades);
+      } else {
+        setCouncils([]);
+        toast.error('Dự án này chưa được gán cho hội đồng nào');
+        return;
+      }
     } catch (error) {
-      console.error('Error fetching councils for grading:', error);
-      setCouncils([]);
+      console.error('Error fetching council for grading:', error);
+      toast.error('Không thể tải thông tin hội đồng');
+      return;
     }
     
     setShowGradingModal(true);
@@ -385,7 +433,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
 
   const handleGradingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProjectForGrading || !selectedCouncil || !gradingForm.score) return;
+    if (!selectedProjectForGrading || !gradingForm.score) return;
 
     try {
       setIsGrading(true);
@@ -409,7 +457,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       }
 
       await gradeProject(
-        selectedCouncil.id.toString(),
+        selectedCouncil!.id.toString(),
         selectedProjectForGrading.id.toString(),
         score,
         gradingForm.comment || undefined,
@@ -419,6 +467,8 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
       toast.success('Chấm điểm thành công');
       setShowGradingModal(false);
       onRefresh(); // Refresh to get updated average score
+      // Refresh project council information after grading
+      setTimeout(() => loadProjectCouncils(), 100);
     } catch (error: unknown) {
       console.error('Error in grading:', error);
       if (error instanceof Error && error.message) {
@@ -431,20 +481,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
     }
   };
 
-  const handleCouncilChange = async (councilId: string) => {
-    const council = councils.find(c => c.id.toString() === councilId);
-    setSelectedCouncil(council || null);
-    
-    if (council && selectedProjectForGrading) {
-      try {
-        const grades = await getProjectGrades(council.id.toString(), selectedProjectForGrading.id.toString());
-        setProjectGrades(grades);
-      } catch (error) {
-        console.error('Error fetching grades:', error);
-        setProjectGrades([]);
-      }
-    }
-  };
+
 
   const getEducationLevelLabel = (value: string): string => {
     switch (value) {
@@ -520,7 +557,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
         </button>
       </div>
       <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[1100px]">
+        <div className="min-w-[1200px]">
           <Table>
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
@@ -578,6 +615,22 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-800 text-start text-theme-sm dark:text-gray-200">
                     {typeof item.averageScore === 'number' ? item.averageScore.toFixed(2) : '-'}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                    {projectCouncils[item.id] ? (
+                      <div className="flex items-center gap-2">
+                        <Badge size="sm" color="success">
+                          {projectCouncils[item.id]?.name}
+                        </Badge>
+                        {projectCouncils[item.id]?.faculty?.name && (
+                          <Badge size="sm" color="light">
+                            {projectCouncils[item.id]!.faculty!.name}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-xs">Chưa gán hội đồng</span>
+                    )}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     <div className="space-y-2">
@@ -1100,25 +1153,20 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
           </div>
 
           <form onSubmit={handleGradingSubmit} className="mt-8 space-y-6">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Chọn hội đồng
-              </label>
-              <select
-                value={selectedCouncil?.id || ''}
-                onChange={(e) => handleCouncilChange(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
-                required
-              >
-                <option value="">Chọn hội đồng</option>
-                {councils
-                  .map(council => (
-                    <option key={council.id} value={council.id}>
-                      {council.name} - {council.faculty?.name || 'N/A'}
-                    </option>
-                  ))}
-              </select>
-            </div>
+            {selectedCouncil ? (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Hội đồng chấm điểm
+                </label>
+                <div className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                  {selectedCouncil.name} - {selectedCouncil.faculty?.name || 'N/A'}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <div className="text-red-500 dark:text-red-400">Không tìm thấy hội đồng cho dự án này</div>
+              </div>
+            )}
 
             {selectedCouncil && (
               <>
@@ -1181,7 +1229,7 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
               </button>
               <button
                 type="submit"
-                disabled={isGrading || !selectedCouncil || !gradingForm.score}
+                disabled={isGrading || !gradingForm.score}
                 className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto disabled:opacity-50"
               >
                 {isGrading ? "Đang chấm điểm..." : "Chấm điểm"}

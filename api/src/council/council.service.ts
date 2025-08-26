@@ -446,7 +446,7 @@ export class CouncilService {
       throw new BadRequestException('Thiếu lecturerId');
     }
     const cm = await this.councilMemberRepository.findOne({
-      where: { councilId, userId: lecturerId },
+      where: { councilId, userId: Number(lecturerId) },
     });
     if (!cm) {
       throw new BadRequestException('Giảng viên không thuộc hội đồng này');
