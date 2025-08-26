@@ -429,6 +429,28 @@ export class CouncilService {
     comment?: string,
     lecturerId?: number,
   ) {
+    // Validate project status is IN_PROGRESS before grading
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId as any },
+    });
+    if (project) {
+      // Import types lazily to avoid circular dependencies at top-level
+      const { ProjectStatus } = await import('../project/project.entity');
+      const { getProjectStatusLabel } = await import(
+        '../project/project.utils'
+      );
+      if (
+        ![ProjectStatus.APPROVED, ProjectStatus.IN_PROGRESS].includes(
+          project.status,
+        )
+      ) {
+        const label = getProjectStatusLabel(project.status);
+        throw new BadRequestException(
+          `Không thể thực hiện chấm điểm khi dự án đang ở trạng thái ${label}`,
+        );
+      }
+    }
+
     if (score == null || isNaN(Number(score)) || score < 0 || score > 10) {
       throw new BadRequestException('Điểm phải trong khoảng 0-10');
     }
