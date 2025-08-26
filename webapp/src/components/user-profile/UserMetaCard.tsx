@@ -8,6 +8,8 @@ import Label from "../form/Label";
 import Image from "next/image";
 import { updateUser } from "@/services/userService";
 import { User } from "@/types/common";
+import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 const UserMetaCard = () => {
   const { isOpen, openModal, closeModal } = useModal();
@@ -49,11 +51,11 @@ const UserMetaCard = () => {
     if (!user) return;
 
     if (formData.password && formData.password.length < 6) {
-      alert("Mật khẩu tối thiểu 6 ký tự");
+      toast.error("Mật khẩu tối thiểu 6 ký tự");
       return;
     }
     if (formData.password && formData.password !== formData.confirmPassword) {
-      alert("Xác nhận mật khẩu không khớp");
+      toast.error("Xác nhận mật khẩu không khớp");
       return;
     }
 
@@ -73,10 +75,11 @@ const UserMetaCard = () => {
       const updatedUser = await updateUser(user.id.toString(), payload as unknown as User);
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast.success("Cập nhật thông tin thành công");
       closeModal();
     } catch (error: unknown) {
       console.log(error);
-      alert("Cập nhật thông tin thất bại");
+      toast.error(getErrorMessage(error, "Cập nhật thông tin thất bại"));
     }
   };
 
