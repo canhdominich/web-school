@@ -613,8 +613,8 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {item.supervisorUser?.name}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-800 text-start text-theme-sm dark:text-gray-200">
-                    {typeof item.averageScore === 'number' ? item.averageScore.toFixed(2) : '-'}
+                  <TableCell className="px-4 py-3 text-gray-800 text-center text-theme-sm dark:text-gray-200">
+                    {item.averageScore ? (parseFloat(item.averageScore.toString())?.toFixed(1)) : '-'}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                     {projectCouncils[item.id] ? (
