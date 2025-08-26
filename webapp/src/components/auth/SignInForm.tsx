@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { login } from "@/services/authService";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -74,23 +75,13 @@ export default function SignUpForm() {
       toast.success("Đăng nhập thành công!");
       router.push("/project");
     } catch (error) {
-      if (error instanceof Error) {
-        // Handle specific error messages from API
-        if (error.message.includes("Invalid credentials")) {
-          setErrors({
-            general: "Email hoặc mật khẩu không đúng",
-          });
-        } else {
-          setErrors({
-            general: error.message,
-          });
-        }
-        toast.error(error.message);
+      const message = getErrorMessage(error, "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      if (message.toLowerCase().includes("invalid")) {
+        setErrors({ general: "Email hoặc mật khẩu không đúng" });
+        toast.error("Email hoặc mật khẩu không đúng");
       } else {
-        setErrors({
-          general: "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-        });
-        toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+        setErrors({ general: message });
+        toast.error(message);
       }
     } finally {
       setIsLoading(false);
@@ -107,7 +98,7 @@ export default function SignUpForm() {
             </h1>
           </div>
           <div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="space-y-5">
                 {/* <!-- Email --> */}
                 <div>
@@ -120,7 +111,6 @@ export default function SignUpForm() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
                     className={errors.email ? "border-error-500" : ""}
                   />
                   {errors.email && (
@@ -139,7 +129,6 @@ export default function SignUpForm() {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      required
                       className={errors.password ? "border-error-500" : ""}
                     />
                     <span

@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { createUser } from "@/services/userService";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 import { UserRole } from "@/constants/user.constant";
 
 export default function SignUpForm() {
@@ -88,23 +89,13 @@ export default function SignUpForm() {
       toast.success("Đăng ký thành công!");
       router.push("/signin"); // Redirect to login page after successful registration
     } catch (error) {
-      if (error instanceof Error) {
-        // Handle specific error messages from API
-        if (error.message.includes("Email already exists")) {
-          setErrors({
-            email: "Email đã tồn tại",
-          });
-        } else {
-          setErrors({
-            general: error.message,
-          });
-        }
-        toast.error(error.message);
+      const message = getErrorMessage(error, "Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      if (message.toLowerCase().includes("exists") || message.toLowerCase().includes("đã tồn tại")) {
+        setErrors({ email: "Email đã tồn tại" });
+        toast.error("Email đã tồn tại");
       } else {
-        setErrors({
-          general: "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-        });
-        toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+        setErrors({ general: message });
+        toast.error(message);
       }
     } finally {
       setIsLoading(false);
@@ -121,7 +112,7 @@ export default function SignUpForm() {
             </h1>
           </div>
           <div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="space-y-5">
                 <div>
                   <Label>
@@ -133,7 +124,6 @@ export default function SignUpForm() {
                       name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    required
                     className={errors.name ? "border-error-500" : ""}
                   />
                   {errors.name && (
@@ -151,7 +141,6 @@ export default function SignUpForm() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    required
                     className={errors.phone ? "border-error-500" : ""}
                   />
                   {errors.phone && (
@@ -169,7 +158,6 @@ export default function SignUpForm() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
                     className={errors.email ? "border-error-500" : ""}
                   />
                   {errors.email && (
@@ -188,7 +176,6 @@ export default function SignUpForm() {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      required
                       className={errors.password ? "border-error-500" : ""}
                     />
                     <span
