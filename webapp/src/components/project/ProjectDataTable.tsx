@@ -1196,12 +1196,12 @@ export default function ProjectDataTable({ headers, items, onRefresh }: ProjectD
 
                 {projectGrades.length > 0 && (
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                    <label className="mb-1.5 block text-base font-medium text-gray-700 dark:text-gray-400">
                       Điểm đã chấm
                     </label>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
                       {projectGrades.map(grade => (
-                        <div key={grade.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                        <div key={grade.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 p-2 rounded">
                           <span>{grade.lecturerName}</span>
                           <span className="font-medium">{grade.score}</span>
                           {grade.comment && <span className="text-gray-500">({grade.comment})</span>}
