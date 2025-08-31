@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FacultyService } from './faculty.service';
 import { CreateFacultyDto } from './dto/create-faculty.dto';
 import { UpdateFacultyDto } from './dto/update-faculty.dto';
 import { Faculty } from './faculty.entity';
+import { SearchFacultyDto } from './dto/search-faculty.dto';
 
 @ApiTags('faculties')
 @Controller('faculties')
@@ -32,14 +34,21 @@ export class FacultyController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all faculties' })
+  @ApiOperation({
+    summary: 'Get all faculties with optional search and pagination',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Return all faculties.',
-    type: [Faculty],
+    description: 'Return faculties (all or filtered with pagination).',
+    schema: {
+      oneOf: [
+        { type: 'array', items: { $ref: '#/components/schemas/Faculty' } },
+        { $ref: '#/components/schemas/PaginatedFacultyResponseDto' },
+      ],
+    },
   })
-  findAll() {
-    return this.facultyService.findAll();
+  findAll(@Query() searchDto?: SearchFacultyDto) {
+    return this.facultyService.findAll(searchDto);
   }
 
   @Get(':id')

@@ -8,6 +8,8 @@ import { Repository } from 'typeorm';
 import { Faculty } from './faculty.entity';
 import { CreateFacultyDto } from './dto/create-faculty.dto';
 import { UpdateFacultyDto } from './dto/update-faculty.dto';
+import { SearchFacultyDto } from './dto/search-faculty.dto';
+import { PaginatedFacultyResponseDto } from './dto/paginated-faculty-response.dto';
 
 @Injectable()
 export class FacultyService {
@@ -29,8 +31,73 @@ export class FacultyService {
     return this.facultyRepository.save(faculty);
   }
 
-  async findAll(): Promise<Faculty[]> {
-    return this.facultyRepository.find();
+  async findAll(
+    searchDto?: SearchFacultyDto,
+  ): Promise<Faculty[] | PaginatedFacultyResponseDto> {
+    if (!searchDto || Object.keys(searchDto).length === 0) {
+      return this.facultyRepository.find();
+    }
+
+    const { name, code, description, page, limit, sortBy, sortOrder } =
+      searchDto;
+
+    const queryBuilder = this.facultyRepository.createQueryBuilder('faculty');
+
+    if (name) {
+      queryBuilder.andWhere('faculty.name LIKE :name', { name: `%${name}%` });
+    }
+
+    if (code) {
+      queryBuilder.andWhere('faculty.code LIKE :code', { code: `%${code}%` });
+    }
+
+    if (description) {
+      queryBuilder.andWhere('faculty.description LIKE :description', {
+        description: `%${description}%`,
+      });
+    }
+
+    if (sortBy) {
+      const allowedSortFields = [
+        'id',
+        'name',
+        'code',
+        'createdAt',
+        'updatedAt',
+      ];
+      const sortField = allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'createdAt';
+      const order = sortOrder || 'DESC';
+      queryBuilder.orderBy(`faculty.${sortField}`, order);
+    } else {
+      queryBuilder.orderBy('faculty.createdAt', 'DESC');
+    }
+
+    if (page && limit) {
+      const total = await queryBuilder.getCount();
+
+      const skip = (page - 1) * limit;
+      queryBuilder.skip(skip).take(limit);
+
+      const data = await queryBuilder.getMany();
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      };
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Faculty> {

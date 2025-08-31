@@ -1,8 +1,41 @@
 import { httpClient } from "@/lib/httpClient";
 import type { Faculty } from "@/types/common";
 
-export const getFaculties = async (): Promise<Faculty[]> => {
-    const res = await httpClient.get('/users/academic/faculties');
+export interface SearchFacultyDto {
+  name?: string;
+  code?: string;
+  description?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedFacultyResponse {
+  data: Faculty[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export const getFaculties = async (searchParams?: SearchFacultyDto): Promise<Faculty[] | PaginatedFacultyResponse> => {
+    const params = new URLSearchParams();
+    
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/faculties?${queryString}` : '/faculties';
+    
+    const res = await httpClient.get(url);
     return res.data;
 };
 
