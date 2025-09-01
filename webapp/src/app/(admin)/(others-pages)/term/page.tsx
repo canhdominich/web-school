@@ -91,17 +91,10 @@ export default function TermPage() {
     }
   }, [searchTerm, fetchTerms]);
 
-  // Initial load
+  // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchTerms({});
   }, [fetchTerms]);
-
-  // Fetch data when pagination changes
-  useEffect(() => {
-    if (!isLoading) {
-      fetchTerms({});
-    }
-  }, [currentPage, itemsPerPage]);
 
   return (
     <div>

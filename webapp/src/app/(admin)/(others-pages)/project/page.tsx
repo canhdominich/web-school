@@ -2,10 +2,11 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ProjectDataTable from "@/components/project/ProjectDataTable";
-import { getProjects, ProjectEntity, SearchProjectDto, PaginatedProjectResponse } from "@/services/projectService";
+import { getProjects, ProjectEntity, SearchProjectDto } from "@/services/projectService";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
 
 export default function ProjectPage() {
   const headers = [
@@ -24,6 +25,18 @@ export default function ProjectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    itemsPerPage,
+    paginationInfo,
+    handlePageChange,
+    handleItemsPerPageChange,
+    setTotalItems,
+    setTotalPages,
+    resetToFirstPage,
+  } = usePagination();
 
   const fetchProjects = useCallback(async (params?: SearchProjectDto, isSearch = false) => {
     try {
@@ -33,15 +46,19 @@ export default function ProjectPage() {
         setIsLoading(true);
       }
       
-      const data = await getProjects(params);
+      // Always include pagination parameters
+      const searchParams: SearchProjectDto = {
+        ...params,
+        page: currentPage,
+        limit: itemsPerPage,
+      };
       
-      // Handle both array and paginated response
-      if (Array.isArray(data)) {
-        setProjects(data);
-      } else {
-        const paginatedData = data as PaginatedProjectResponse;
-        setProjects(paginatedData.data);
-      }
+      const data = await getProjects(searchParams);
+      
+      // API now always returns paginated response
+      setProjects(data.data);
+      setTotalItems(data.total);
+      setTotalPages(data.totalPages);
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách dự án"));
     } finally {
@@ -51,11 +68,12 @@ export default function ProjectPage() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
+    resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
       fetchProjects({ title: trimmedQuery }, true);
@@ -63,10 +81,10 @@ export default function ProjectPage() {
       // If no search term, fetch all projects
       fetchProjects({}, true);
     }
-  }, [fetchProjects]);
+  }, [fetchProjects, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term
+    // Refresh with current search term and pagination
     if (searchTerm.trim()) {
       fetchProjects({ title: searchTerm.trim() }, true);
     } else {
@@ -74,7 +92,7 @@ export default function ProjectPage() {
     }
   }, [searchTerm, fetchProjects]);
 
-  // Initial load
+  // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchProjects({});
   }, [fetchProjects]);
@@ -93,11 +111,14 @@ export default function ProjectPage() {
           ) : (
             <ProjectDataTable
               headers={headers}
-              items={projects as unknown as ProjectEntity[]}
+              items={projects}
               onRefresh={handleRefresh}
               searchTerm={searchTerm}
               onSearch={handleSearch}
               isSearching={isSearching}
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </ComponentCard>

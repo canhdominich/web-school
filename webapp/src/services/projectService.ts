@@ -1,5 +1,5 @@
 import { httpClient } from "@/lib/httpClient";
-import type { User } from "@/types/common";
+import type { User, RowData } from "@/types/common";
 
 export type ProjectStatus =
 	| "draft"
@@ -26,7 +26,7 @@ export interface ProjectMemberEntity {
 	student?: User;
 }
 
-export interface ProjectEntity {
+export interface ProjectEntity extends RowData {
 	id: number;
 	code: string;
 	title: string;
@@ -123,7 +123,7 @@ export interface PaginatedProjectResponse {
 	hasPrev: boolean;
 }
 
-export const getProjects = async (searchParams?: SearchProjectDto): Promise<ProjectEntity[] | PaginatedProjectResponse> => {
+export const getProjects = async (searchParams?: SearchProjectDto): Promise<PaginatedProjectResponse> => {
 	const params = new URLSearchParams();
 	
 	if (searchParams) {
@@ -132,6 +132,14 @@ export const getProjects = async (searchParams?: SearchProjectDto): Promise<Proj
 				params.append(key, value.toString());
 			}
 		});
+	}
+	
+	// Always include default pagination if not provided
+	if (!searchParams?.page) {
+		params.set('page', '1');
+	}
+	if (!searchParams?.limit) {
+		params.set('limit', '10');
 	}
 	
 	const queryString = params.toString();

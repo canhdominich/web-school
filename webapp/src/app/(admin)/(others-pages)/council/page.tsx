@@ -91,17 +91,10 @@ export default function CouncilPage() {
     }
   }, [searchTerm, fetchCouncils]);
 
-  // Initial load
+  // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchCouncils({});
   }, [fetchCouncils]);
-
-  // Fetch data when pagination changes
-  useEffect(() => {
-    if (!isLoading) {
-      fetchCouncils({});
-    }
-  }, [currentPage, itemsPerPage]);
 
   return (
     <div>

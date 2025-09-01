@@ -93,17 +93,10 @@ export default function DepartmentPage() {
     }
   }, [searchTerm, fetchDepartments]);
 
-  // Initial load
+  // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchDepartments({});
   }, [fetchDepartments]);
-
-  // Fetch data when pagination changes
-  useEffect(() => {
-    if (!isLoading) {
-      fetchDepartments({});
-    }
-  }, [currentPage, itemsPerPage]);
 
   return (
     <div>

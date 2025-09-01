@@ -93,17 +93,10 @@ export default function MajorPage() {
     }
   }, [searchTerm, fetchMajors]);
 
-  // Initial load
+  // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchMajors({});
   }, [fetchMajors]);
-
-  // Fetch data when pagination changes
-  useEffect(() => {
-    if (!isLoading) {
-      fetchMajors({});
-    }
-  }, [currentPage, itemsPerPage]);
 
   return (
     <div>

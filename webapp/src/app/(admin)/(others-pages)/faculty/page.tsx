@@ -33,7 +33,6 @@ export default function FacultyPage() {
     handleItemsPerPageChange,
     setTotalItems,
     setTotalPages,
-    setCurrentPage,
     resetToFirstPage,
   } = usePagination();
 
@@ -58,7 +57,6 @@ export default function FacultyPage() {
       setFaculties(data.data);
       setTotalItems(data.total);
       setTotalPages(data.totalPages);
-      setCurrentPage(data.page);
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách khoa"));
     } finally {
@@ -68,7 +66,7 @@ export default function FacultyPage() {
         setIsLoading(false);
       }
     }
-  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages, setCurrentPage]);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
@@ -92,17 +90,10 @@ export default function FacultyPage() {
     }
   }, [searchTerm, fetchFaculties]);
 
-  // Initial load
+  // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchFaculties({});
   }, [fetchFaculties]);
-
-  // Fetch data when pagination changes
-  useEffect(() => {
-    if (!isLoading) {
-      fetchFaculties({});
-    }
-  }, [currentPage, itemsPerPage, fetchFaculties, isLoading]);
 
   return (
     <div>
@@ -132,4 +123,4 @@ export default function FacultyPage() {
       </div>
     </div>
   );
-} 
+}

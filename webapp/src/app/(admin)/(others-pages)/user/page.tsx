@@ -100,17 +100,10 @@ export default function UserPage() {
     }
   }, [searchTerm, fetchUsers]);
 
-  // Initial load
+  // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchUsers({});
   }, [fetchUsers]);
-
-  // Fetch data when pagination changes
-  useEffect(() => {
-    if (!isLoading) {
-      fetchUsers({});
-    }
-  }, [currentPage, itemsPerPage]);
 
   return (
     <div>
