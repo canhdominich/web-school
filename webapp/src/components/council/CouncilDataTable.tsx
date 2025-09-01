@@ -22,8 +22,8 @@ import {
   removeCouncilProjects,
   getCouncilProjects,
 } from "@/services/councilService";
-import { getProjects, type ProjectEntity } from "@/services/projectService";
-import { getFaculties } from "@/services/facultyService";
+import { getProjects, type ProjectEntity, type PaginatedProjectResponse } from "@/services/projectService";
+import { getFaculties, type PaginatedFacultyResponse } from "@/services/facultyService";
 import { getLecturers } from "@/services/userService";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
@@ -83,10 +83,20 @@ export default function CouncilDataTable({
           getFaculties(),
           getLecturers(),
           getProjects(),
-        ]);
-        setFaculties(facultiesData);
+        ]) as [Faculty[] | PaginatedFacultyResponse, User[], ProjectEntity[] | PaginatedProjectResponse];
+        // Handle both array and paginated response for faculties
+        if (Array.isArray(facultiesData)) {
+          setFaculties(facultiesData);
+        } else {
+          setFaculties(facultiesData.data);
+        }
         setLecturers(lecturersData);
-        setProjects(projectsData);
+        // Handle both array and paginated response for projects
+        if (Array.isArray(projectsData)) {
+          setProjects(projectsData);
+        } else {
+          setProjects(projectsData.data);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }

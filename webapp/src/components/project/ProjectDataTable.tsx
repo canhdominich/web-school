@@ -191,7 +191,7 @@ export default function ProjectDataTable({
         setMajors(Array.isArray(majorList) ? majorList : majorList.data);
         setFaculties(Array.isArray(facultyList) ? facultyList : facultyList.data);
         setDepartments(Array.isArray(departmentList) ? departmentList : departmentList.data);
-        setUsers(userList);
+        setUsers(Array.isArray(userList) ? userList : userList.data);
       } catch (e) {
         console.error(e);
         toast.error(getErrorMessage(e, "Không thể tải dữ liệu chọn"));

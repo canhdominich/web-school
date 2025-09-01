@@ -48,7 +48,12 @@ export default function MajorDataTable({
     const fetchDepartments = async () => {
       try {
         const data = await getDepartments();
-        setDepartments(data);
+        // Handle both array and paginated response
+        if (Array.isArray(data)) {
+          setDepartments(data);
+        } else {
+          setDepartments(data.data);
+        }
       } catch (error) {
         console.error('Error fetching departments:', error);
       }

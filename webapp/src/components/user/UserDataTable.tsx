@@ -13,6 +13,9 @@ import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import MultiSelect from "../form/MultiSelect";
 import { CreateUserDto, createUser, deleteUser, updateUser, UpdateUserDto, getFaculties, getDepartments, getMajors } from "@/services/userService";
+import { type PaginatedFacultyResponse } from "@/services/facultyService";
+import { type PaginatedDepartmentResponse } from "@/services/departmentService";
+import { type PaginatedMajorResponse } from "@/services/majorService";
 import { toast } from "react-hot-toast";
 import { UserRole, UserRoleOptions } from "@/constants/user.constant";
 import SearchBox from "../common/SearchBox";
@@ -77,10 +80,25 @@ export default function UserDataTable({
           getFaculties(),
           getDepartments(),
           getMajors(),
-        ]);
-        setFaculties(facultiesData);
-        setDepartments(departmentsData);
-        setMajors(majorsData);
+        ]) as [Faculty[] | PaginatedFacultyResponse, Department[] | PaginatedDepartmentResponse, Major[] | PaginatedMajorResponse];
+        // Handle both array and paginated response for faculties
+        if (Array.isArray(facultiesData)) {
+          setFaculties(facultiesData);
+        } else {
+          setFaculties(facultiesData.data);
+        }
+        // Handle both array and paginated response for departments
+        if (Array.isArray(departmentsData)) {
+          setDepartments(departmentsData);
+        } else {
+          setDepartments(departmentsData.data);
+        }
+        // Handle both array and paginated response for majors
+        if (Array.isArray(majorsData)) {
+          setMajors(majorsData);
+        } else {
+          setMajors(majorsData.data);
+        }
       } catch (error) {
         console.error('Error loading academic data:', error);
       }
@@ -135,8 +153,13 @@ export default function UserDataTable({
     
     // Load departments for selected faculty
     try {
-      const departmentsData = await getDepartments(facultyId);
-      setDepartments(departmentsData);
+      const departmentsData = await getDepartments(facultyId) as Department[] | PaginatedDepartmentResponse;
+      // Handle both array and paginated response
+      if (Array.isArray(departmentsData)) {
+        setDepartments(departmentsData);
+      } else {
+        setDepartments(departmentsData.data);
+      }
       setMajors([]); // Reset majors
     } catch (error) {
       console.error('Error loading departments:', error);
@@ -152,8 +175,13 @@ export default function UserDataTable({
     
     // Load majors for selected department
     try {
-      const majorsData = await getMajors(departmentId);
-      setMajors(majorsData);
+      const majorsData = await getMajors(departmentId) as Major[] | PaginatedMajorResponse;
+      // Handle both array and paginated response
+      if (Array.isArray(majorsData)) {
+        setMajors(majorsData);
+      } else {
+        setMajors(majorsData.data);
+      }
     } catch (error) {
       console.error('Error loading majors:', error);
     }
@@ -246,7 +274,7 @@ export default function UserDataTable({
         {onSearch && (
           <div className="flex-1 max-w-2xl ml-auto">
             <SearchBox
-              placeholder="Tìm kiếm theo tên, mã, email, số điện thoại, vai trò..."
+              placeholder="Tìm kiếm theo tên..."
               onSearch={onSearch}
               defaultValue={searchTerm}
             />
