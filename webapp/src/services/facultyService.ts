@@ -21,7 +21,7 @@ export interface PaginatedFacultyResponse {
   hasPrev: boolean;
 }
 
-export const getFaculties = async (searchParams?: SearchFacultyDto): Promise<Faculty[] | PaginatedFacultyResponse> => {
+export const getFaculties = async (searchParams?: SearchFacultyDto): Promise<PaginatedFacultyResponse> => {
     const params = new URLSearchParams();
     
     if (searchParams) {
@@ -30,6 +30,14 @@ export const getFaculties = async (searchParams?: SearchFacultyDto): Promise<Fac
           params.append(key, value.toString());
         }
       });
+    }
+    
+    // Always include default pagination if not provided
+    if (!searchParams?.page) {
+      params.set('page', '1');
+    }
+    if (!searchParams?.limit) {
+      params.set('limit', '10');
     }
     
     const queryString = params.toString();

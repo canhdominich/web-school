@@ -2,11 +2,12 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import FacultyDataTable from "@/components/faculty/FacultyDataTable";
-import { getFaculties, SearchFacultyDto, PaginatedFacultyResponse } from "@/services/facultyService";
+import { getFaculties, SearchFacultyDto } from "@/services/facultyService";
 import { Faculty } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
 
 export default function FacultyPage() {
   const headers = [
@@ -22,6 +23,19 @@ export default function FacultyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    itemsPerPage,
+    paginationInfo,
+    handlePageChange,
+    handleItemsPerPageChange,
+    setTotalItems,
+    setTotalPages,
+    setCurrentPage,
+    resetToFirstPage,
+  } = usePagination();
 
   const fetchFaculties = useCallback(async (params?: SearchFacultyDto, isSearch = false) => {
     try {
@@ -31,15 +45,20 @@ export default function FacultyPage() {
         setIsLoading(true);
       }
       
-      const data = await getFaculties(params);
+      // Always include pagination parameters
+      const searchParams: SearchFacultyDto = {
+        ...params,
+        page: currentPage,
+        limit: itemsPerPage,
+      };
       
-      // Handle both array and paginated response
-      if (Array.isArray(data)) {
-        setFaculties(data);
-      } else {
-        const paginatedData = data as PaginatedFacultyResponse;
-        setFaculties(paginatedData.data);
-      }
+      const data = await getFaculties(searchParams);
+      
+      // API now always returns paginated response
+      setFaculties(data.data);
+      setTotalItems(data.total);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.page);
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách khoa"));
     } finally {
@@ -49,11 +68,12 @@ export default function FacultyPage() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages, setCurrentPage]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
+    resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
       fetchFaculties({ name: trimmedQuery }, true);
@@ -61,10 +81,10 @@ export default function FacultyPage() {
       // If no search term, fetch all faculties
       fetchFaculties({}, true);
     }
-  }, [fetchFaculties]);
+  }, [fetchFaculties, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term
+    // Refresh with current search term and pagination
     if (searchTerm.trim()) {
       fetchFaculties({ name: searchTerm.trim() }, true);
     } else {
@@ -76,6 +96,13 @@ export default function FacultyPage() {
   useEffect(() => {
     fetchFaculties({});
   }, [fetchFaculties]);
+
+  // Fetch data when pagination changes
+  useEffect(() => {
+    if (!isLoading) {
+      fetchFaculties({});
+    }
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>
@@ -97,6 +124,9 @@ export default function FacultyPage() {
               searchTerm={searchTerm}
               onSearch={handleSearch}
               isSearching={isSearching}
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </ComponentCard>
