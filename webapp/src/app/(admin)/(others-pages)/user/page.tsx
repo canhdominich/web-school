@@ -2,9 +2,9 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import UserDataTable from "@/components/user/UserDataTable";
-import { getUsers } from "@/services/userService";
+import { getUsers, SearchUserDto, PaginatedUserResponse } from "@/services/userService";
 import { User } from "@/types/common";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -22,22 +22,68 @@ export default function UserPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (params?: SearchUserDto, isSearch = false) => {
     try {
-      setIsLoading(true);
-      const data = await getUsers();
-      setUsers(data as User[]);
+      if (isSearch) {
+        setIsSearching(true);
+      } else {
+        setIsLoading(true);
+      }
+      
+      const data = await getUsers(params);
+      
+      // Handle both array and paginated response
+      if (Array.isArray(data)) {
+        setUsers(data);
+      } else {
+        const paginatedData = data as PaginatedUserResponse;
+        setUsers(paginatedData.data);
+      }
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách tài khoản"));
     } finally {
-      setIsLoading(false);
+      if (isSearch) {
+        setIsSearching(false);
+      } else {
+        setIsLoading(false);
+      }
     }
-  };
-
-  useEffect(() => {
-    fetchUsers();
   }, []);
+
+  const handleSearch = useCallback((query: string) => {
+    const trimmedQuery = query.trim();
+    setSearchTerm(trimmedQuery);
+    
+    if (trimmedQuery) {
+      // Search by multiple fields
+      fetchUsers({ 
+        name: trimmedQuery,
+      }, true);
+    } else {
+      // If no search term, fetch all users
+      fetchUsers({}, true);
+    }
+  }, [fetchUsers]);
+
+  const handleRefresh = useCallback(() => {
+    // Refresh with current search term
+    if (searchTerm.trim()) {
+      // Search by multiple fields
+      fetchUsers({ 
+        name: searchTerm.trim(),
+      }, true);
+    } else {
+      fetchUsers({}, true);
+    }
+  }, [searchTerm, fetchUsers]);
+
+  // Initial load
+  useEffect(() => {
+    fetchUsers({});
+  }, [fetchUsers]);
 
   return (
     <div>
@@ -46,13 +92,19 @@ export default function UserPage() {
         <ComponentCard title="">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Đang tải danh sách tài khoản...</p>
+              </div>
             </div>
           ) : (
             <UserDataTable 
               headers={headers} 
               items={users} 
-              onRefresh={fetchUsers}
+              onRefresh={handleRefresh}
+              searchTerm={searchTerm}
+              onSearch={handleSearch}
+              isSearching={isSearching}
             />
           )}
         </ComponentCard>

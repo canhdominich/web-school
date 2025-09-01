@@ -1,8 +1,46 @@
 import { httpClient } from "@/lib/httpClient";
 import { Department, Faculty, IUserRole, Major, User } from "@/types/common";
 
-export const getUsers = async (): Promise<User[]> => {
-    const res = await httpClient.get('/users');
+export interface SearchUserDto {
+  name?: string;
+  code?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  facultyId?: number;
+  departmentId?: number;
+  majorId?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedUserResponse {
+  data: User[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export const getUsers = async (searchParams?: SearchUserDto): Promise<User[] | PaginatedUserResponse> => {
+    const params = new URLSearchParams();
+    
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/users?${queryString}` : '/users';
+    
+    const res = await httpClient.get(url);
     return res.data;
 };
 
