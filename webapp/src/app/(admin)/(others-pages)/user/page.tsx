@@ -35,7 +35,6 @@ export default function UserPage() {
     handleItemsPerPageChange,
     setTotalItems,
     setTotalPages,
-    setCurrentPage,
     resetToFirstPage,
   } = usePagination();
 
@@ -111,7 +110,7 @@ export default function UserPage() {
     if (!isLoading) {
       fetchUsers({});
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, fetchUsers, isLoading]);
 
   return (
     <div>

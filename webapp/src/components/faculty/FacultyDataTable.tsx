@@ -203,7 +203,6 @@ export default function FacultyDataTable({
         onPageChange={onPageChange}
         onItemsPerPageChange={onItemsPerPageChange}
         actionButton={actionButton}
-        onRefresh={onRefresh}
       />
 
       <Modal

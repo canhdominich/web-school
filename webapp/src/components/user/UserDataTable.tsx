@@ -330,7 +330,6 @@ export default function UserDataTable({
         onPageChange={onPageChange}
         onItemsPerPageChange={onItemsPerPageChange}
         actionButton={actionButton}
-        onRefresh={onRefresh}
       />
 
       <Modal

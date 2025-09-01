@@ -22,7 +22,7 @@ export interface PaginatedMajorResponse {
   hasPrev: boolean;
 }
 
-export const getMajors = async (searchParams?: SearchMajorDto): Promise<Major[] | PaginatedMajorResponse> => {
+export const getMajors = async (searchParams?: SearchMajorDto): Promise<PaginatedMajorResponse> => {
     const params = new URLSearchParams();
     
     if (searchParams) {
@@ -31,6 +31,14 @@ export const getMajors = async (searchParams?: SearchMajorDto): Promise<Major[] 
           params.append(key, value.toString());
         }
       });
+    }
+    
+    // Always include default pagination if not provided
+    if (!searchParams?.page) {
+      params.set('page', '1');
+    }
+    if (!searchParams?.limit) {
+      params.set('limit', '10');
     }
     
     const queryString = params.toString();

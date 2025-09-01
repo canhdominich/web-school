@@ -102,7 +102,7 @@ export default function FacultyPage() {
     if (!isLoading) {
       fetchFaculties({});
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, fetchFaculties, isLoading]);
 
   return (
     <div>

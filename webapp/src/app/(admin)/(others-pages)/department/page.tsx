@@ -34,7 +34,6 @@ export default function DepartmentPage() {
     handleItemsPerPageChange,
     setTotalItems,
     setTotalPages,
-    setCurrentPage,
     resetToFirstPage,
   } = usePagination();
 
@@ -104,7 +103,7 @@ export default function DepartmentPage() {
     if (!isLoading) {
       fetchDepartments({});
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, fetchDepartments, isLoading]);
 
   return (
     <div>

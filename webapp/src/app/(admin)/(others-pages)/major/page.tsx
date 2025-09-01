@@ -2,11 +2,12 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import MajorDataTable from "@/components/major/MajorDataTable";
-import { getMajors, SearchMajorDto, PaginatedMajorResponse } from "@/services/majorService";
+import { getMajors, SearchMajorDto } from "@/services/majorService";
 import { Major } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
 
 export default function MajorPage() {
   const headers = [
@@ -23,6 +24,18 @@ export default function MajorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    itemsPerPage,
+    paginationInfo,
+    handlePageChange,
+    handleItemsPerPageChange,
+    setTotalItems,
+    setTotalPages,
+    resetToFirstPage,
+  } = usePagination();
 
   const fetchMajors = useCallback(async (params?: SearchMajorDto, isSearch = false) => {
     try {
@@ -32,15 +45,21 @@ export default function MajorPage() {
         setIsLoading(true);
       }
       
-      const data = await getMajors(params);
+      // Always include pagination parameters
+      const searchParams: SearchMajorDto = {
+        ...params,
+        page: currentPage,
+        limit: itemsPerPage,
+      };
       
-      // Handle both array and paginated response
-      if (Array.isArray(data)) {
-        setMajors(data);
-      } else {
-        const paginatedData = data as PaginatedMajorResponse;
-        setMajors(paginatedData.data);
-      }
+      const data = await getMajors(searchParams);
+      
+      // API now always returns paginated response
+      setMajors(data.data);
+      setTotalItems(data.total);
+      setTotalPages(data.totalPages);
+      // Don't override currentPage from API response, let the pagination hook handle it
+      // setCurrentPage(data.page); // Remove this line
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách ngành học"));
     } finally {
@@ -50,11 +69,12 @@ export default function MajorPage() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
+    resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
       fetchMajors({ name: trimmedQuery }, true);
@@ -62,10 +82,10 @@ export default function MajorPage() {
       // If no search term, fetch all majors
       fetchMajors({}, true);
     }
-  }, [fetchMajors]);
+  }, [fetchMajors, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term
+    // Refresh with current search term and pagination
     if (searchTerm.trim()) {
       fetchMajors({ name: searchTerm.trim() }, true);
     } else {
@@ -77,6 +97,13 @@ export default function MajorPage() {
   useEffect(() => {
     fetchMajors({});
   }, [fetchMajors]);
+
+  // Fetch data when pagination changes
+  useEffect(() => {
+    if (!isLoading) {
+      fetchMajors({});
+    }
+  }, [currentPage, itemsPerPage, fetchMajors, isLoading]);
 
   return (
     <div>
@@ -97,6 +124,9 @@ export default function MajorPage() {
               searchTerm={searchTerm}
               onSearch={handleSearch}
               isSearching={isSearching}
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </ComponentCard>

@@ -3,7 +3,7 @@ import React from "react";
 import { BasicTableProps, Header, RowData } from "@/types/common";
 import DataTable from "./DataTable";
 import SearchBox from "./SearchBox";
-import Pagination, { PaginationInfo } from "./Pagination";
+import { PaginationInfo } from "./Pagination";
 
 export interface SearchableDataTableProps<T extends RowData> extends BasicTableProps {
   headers: Header[];
@@ -23,7 +23,6 @@ export interface SearchableDataTableProps<T extends RowData> extends BasicTableP
   
   // Action props
   actionButton?: React.ReactNode;
-  onRefresh?: () => void;
   
   // Customization
   emptyState?: React.ReactNode;
@@ -50,7 +49,6 @@ export default function SearchableDataTable<T extends RowData>({
   
   // Action props
   actionButton,
-  onRefresh,
   
   // Customization
   emptyState,

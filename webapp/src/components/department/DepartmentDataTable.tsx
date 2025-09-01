@@ -234,7 +234,6 @@ export default function DepartmentDataTable({
         onPageChange={onPageChange}
         onItemsPerPageChange={onItemsPerPageChange}
         actionButton={actionButton}
-        onRefresh={onRefresh}
       />
 
       <Modal
