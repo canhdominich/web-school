@@ -2,11 +2,12 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import DepartmentDataTable from "@/components/department/DepartmentDataTable";
-import { getDepartments, SearchDepartmentDto, PaginatedDepartmentResponse } from "@/services/departmentService";
+import { getDepartments, SearchDepartmentDto } from "@/services/departmentService";
 import { Department } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
 
 export default function DepartmentPage() {
   const headers = [
@@ -23,6 +24,19 @@ export default function DepartmentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    itemsPerPage,
+    paginationInfo,
+    handlePageChange,
+    handleItemsPerPageChange,
+    setTotalItems,
+    setTotalPages,
+    setCurrentPage,
+    resetToFirstPage,
+  } = usePagination();
 
   const fetchDepartments = useCallback(async (params?: SearchDepartmentDto, isSearch = false) => {
     try {
@@ -32,15 +46,21 @@ export default function DepartmentPage() {
         setIsLoading(true);
       }
       
-      const data = await getDepartments(params);
+      // Always include pagination parameters
+      const searchParams: SearchDepartmentDto = {
+        ...params,
+        page: currentPage,
+        limit: itemsPerPage,
+      };
       
-      // Handle both array and paginated response
-      if (Array.isArray(data)) {
-        setDepartments(data);
-      } else {
-        const paginatedData = data as PaginatedDepartmentResponse;
-        setDepartments(paginatedData.data);
-      }
+      const data = await getDepartments(searchParams);
+      
+      // API now always returns paginated response
+      setDepartments(data.data);
+      setTotalItems(data.total);
+      setTotalPages(data.totalPages);
+      // Don't override currentPage from API response, let the pagination hook handle it
+      // setCurrentPage(data.page); // Remove this line
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách bộ môn"));
     } finally {
@@ -50,11 +70,12 @@ export default function DepartmentPage() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
+    resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
       fetchDepartments({ name: trimmedQuery }, true);
@@ -62,10 +83,10 @@ export default function DepartmentPage() {
       // If no search term, fetch all departments
       fetchDepartments({}, true);
     }
-  }, [fetchDepartments]);
+  }, [fetchDepartments, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term
+    // Refresh with current search term and pagination
     if (searchTerm.trim()) {
       fetchDepartments({ name: searchTerm.trim() }, true);
     } else {
@@ -77,6 +98,13 @@ export default function DepartmentPage() {
   useEffect(() => {
     fetchDepartments({});
   }, [fetchDepartments]);
+
+  // Fetch data when pagination changes
+  useEffect(() => {
+    if (!isLoading) {
+      fetchDepartments({});
+    }
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>
@@ -97,6 +125,9 @@ export default function DepartmentPage() {
               searchTerm={searchTerm}
               onSearch={handleSearch}
               isSearching={isSearching}
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </ComponentCard>

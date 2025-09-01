@@ -22,7 +22,7 @@ export interface PaginatedDepartmentResponse {
   hasPrev: boolean;
 }
 
-export const getDepartments = async (searchParams?: SearchDepartmentDto): Promise<Department[] | PaginatedDepartmentResponse> => {
+export const getDepartments = async (searchParams?: SearchDepartmentDto): Promise<PaginatedDepartmentResponse> => {
     const params = new URLSearchParams();
     
     if (searchParams) {
@@ -31,6 +31,14 @@ export const getDepartments = async (searchParams?: SearchDepartmentDto): Promis
           params.append(key, value.toString());
         }
       });
+    }
+    
+    // Always include default pagination if not provided
+    if (!searchParams?.page) {
+      params.set('page', '1');
+    }
+    if (!searchParams?.limit) {
+      params.set('limit', '10');
     }
     
     const queryString = params.toString();
