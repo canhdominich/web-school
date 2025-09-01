@@ -268,10 +268,21 @@ export class UserService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       userRoles:
-        user.userRoles?.map((ur) => ({
-          id: ur.role.id,
-          name: ur.role.name,
-        })) || [],
+        user.userRoles
+          ?.filter((userRole) => userRole.role)
+          .map((userRole) => ({
+            id: userRole.id,
+            userId: userRole.userId,
+            roleId: userRole.roleId,
+            createdAt: userRole.createdAt,
+            updatedAt: userRole.updatedAt,
+            role: {
+              id: userRole.role.id,
+              name: userRole.role.name,
+              createdAt: userRole.role.createdAt,
+              updatedAt: userRole.role.updatedAt,
+            },
+          })) || [],
     };
   }
 
