@@ -49,14 +49,11 @@ export default function DepartmentDataTable({
     const fetchFaculties = async () => {
       try {
         const data = await getFaculties();
-        // Handle both array and paginated response
-        if (Array.isArray(data)) {
-          setFaculties(data);
-        } else {
-          setFaculties(data.data);
-        }
+        // API now always returns paginated response
+        setFaculties(data.data);
       } catch (error) {
         console.error('Error fetching faculties:', error);
+        setFaculties([]);
       }
     };
     fetchFaculties();

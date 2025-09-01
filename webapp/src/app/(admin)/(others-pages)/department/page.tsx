@@ -69,7 +69,7 @@ export default function DepartmentPage() {
         setIsLoading(false);
       }
     }
-  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
+  }, [currentPage, itemsPerPage]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
@@ -103,7 +103,7 @@ export default function DepartmentPage() {
     if (!isLoading) {
       fetchDepartments({});
     }
-  }, [currentPage, itemsPerPage, fetchDepartments, isLoading]);
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>

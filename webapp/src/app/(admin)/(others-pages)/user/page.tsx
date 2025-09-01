@@ -70,7 +70,7 @@ export default function UserPage() {
         setIsLoading(false);
       }
     }
-  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
+  }, [currentPage, itemsPerPage]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
@@ -110,7 +110,7 @@ export default function UserPage() {
     if (!isLoading) {
       fetchUsers({});
     }
-  }, [currentPage, itemsPerPage, fetchUsers, isLoading]);
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>

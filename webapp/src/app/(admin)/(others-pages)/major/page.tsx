@@ -69,7 +69,7 @@ export default function MajorPage() {
         setIsLoading(false);
       }
     }
-  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
+  }, [currentPage, itemsPerPage]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
@@ -103,7 +103,7 @@ export default function MajorPage() {
     if (!isLoading) {
       fetchMajors({});
     }
-  }, [currentPage, itemsPerPage, fetchMajors, isLoading]);
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>
