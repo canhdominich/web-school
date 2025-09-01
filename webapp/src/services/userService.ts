@@ -1,5 +1,8 @@
 import { httpClient } from "@/lib/httpClient";
-import { Department, Faculty, IUserRole, Major, User } from "@/types/common";
+import { IUserRole, User } from "@/types/common";
+import { PaginatedFacultyResponse } from "./facultyService";
+import { PaginatedDepartmentResponse } from "./departmentService";
+import { PaginatedMajorResponse } from "./majorService";
 
 export interface SearchUserDto {
   name?: string;
@@ -26,7 +29,7 @@ export interface PaginatedUserResponse {
   hasPrev: boolean;
 }
 
-export const getUsers = async (searchParams?: SearchUserDto): Promise<User[] | PaginatedUserResponse> => {
+export const getUsers = async (searchParams?: SearchUserDto): Promise<PaginatedUserResponse> => {
     const params = new URLSearchParams();
     
     if (searchParams) {
@@ -35,6 +38,14 @@ export const getUsers = async (searchParams?: SearchUserDto): Promise<User[] | P
           params.append(key, value.toString());
         }
       });
+    }
+    
+    // Always include default pagination if not provided
+    if (!searchParams?.page) {
+      params.set('page', '1');
+    }
+    if (!searchParams?.limit) {
+      params.set('limit', '10');
     }
     
     const queryString = params.toString();
@@ -92,18 +103,18 @@ export const deleteUser = async (id: string): Promise<void> => {
 }
 
 // Academic information APIs
-export const getFaculties = async (): Promise<Faculty[]> => {
+export const getFaculties = async (): Promise<PaginatedFacultyResponse> => {
     const res = await httpClient.get('/users/academic/faculties');
     return res.data;
 };
 
-export const getDepartments = async (facultyId?: number): Promise<Department[]> => {
+export const getDepartments = async (facultyId?: number): Promise<PaginatedDepartmentResponse> => {
     const params = facultyId ? { facultyId } : {};
     const res = await httpClient.get('/users/academic/departments', { params });
     return res.data;
 };
 
-export const getMajors = async (departmentId?: number): Promise<Major[]> => {
+export const getMajors = async (departmentId?: number): Promise<PaginatedMajorResponse> => {
     const params = departmentId ? { departmentId } : {};
     const res = await httpClient.get('/users/academic/majors', { params });
     return res.data;

@@ -2,11 +2,12 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import UserDataTable from "@/components/user/UserDataTable";
-import { getUsers, SearchUserDto, PaginatedUserResponse } from "@/services/userService";
+import { getUsers, SearchUserDto } from "@/services/userService";
 import { User } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
 
 export default function UserPage() {
   const headers = [
@@ -24,6 +25,19 @@ export default function UserPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    itemsPerPage,
+    paginationInfo,
+    handlePageChange,
+    handleItemsPerPageChange,
+    setTotalItems,
+    setTotalPages,
+    setCurrentPage,
+    resetToFirstPage,
+  } = usePagination();
 
   const fetchUsers = useCallback(async (params?: SearchUserDto, isSearch = false) => {
     try {
@@ -33,15 +47,21 @@ export default function UserPage() {
         setIsLoading(true);
       }
       
-      const data = await getUsers(params);
+      // Always include pagination parameters
+      const searchParams: SearchUserDto = {
+        ...params,
+        page: currentPage,
+        limit: itemsPerPage,
+      };
       
-      // Handle both array and paginated response
-      if (Array.isArray(data)) {
-        setUsers(data);
-      } else {
-        const paginatedData = data as PaginatedUserResponse;
-        setUsers(paginatedData.data);
-      }
+      const data = await getUsers(searchParams);
+      
+      // API now always returns paginated response
+      setUsers(data.data);
+      setTotalItems(data.total);
+      setTotalPages(data.totalPages);
+      // Don't override currentPage from API response, let the pagination hook handle it
+      // setCurrentPage(data.page); // Remove this line
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách tài khoản"));
     } finally {
@@ -51,11 +71,12 @@ export default function UserPage() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
+    resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
       // Search by multiple fields
@@ -66,10 +87,10 @@ export default function UserPage() {
       // If no search term, fetch all users
       fetchUsers({}, true);
     }
-  }, [fetchUsers]);
+  }, [fetchUsers, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term
+    // Refresh with current search term and pagination
     if (searchTerm.trim()) {
       // Search by multiple fields
       fetchUsers({ 
@@ -85,6 +106,13 @@ export default function UserPage() {
     fetchUsers({});
   }, [fetchUsers]);
 
+  // Fetch data when pagination changes
+  useEffect(() => {
+    if (!isLoading) {
+      fetchUsers({});
+    }
+  }, [currentPage, itemsPerPage]);
+
   return (
     <div>
       <PageBreadcrumb pageTitle="Quản lý tài khoản" />
@@ -94,7 +122,6 @@ export default function UserPage() {
             <div className="flex justify-center items-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-400">Đang tải danh sách tài khoản...</p>
               </div>
             </div>
           ) : (
@@ -105,6 +132,9 @@ export default function UserPage() {
               searchTerm={searchTerm}
               onSearch={handleSearch}
               isSearching={isSearching}
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </ComponentCard>
