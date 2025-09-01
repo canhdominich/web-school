@@ -24,7 +24,7 @@ export interface PaginatedTermResponse {
   hasPrev: boolean;
 }
 
-export const getTerms = async (searchParams?: SearchTermDto): Promise<Term[] | PaginatedTermResponse> => {
+export const getTerms = async (searchParams?: SearchTermDto): Promise<PaginatedTermResponse> => {
     const params = new URLSearchParams();
     
     if (searchParams) {
@@ -33,6 +33,14 @@ export const getTerms = async (searchParams?: SearchTermDto): Promise<Term[] | P
           params.append(key, value.toString());
         }
       });
+    }
+    
+    // Always include default pagination if not provided
+    if (!searchParams?.page) {
+      params.set('page', '1');
+    }
+    if (!searchParams?.limit) {
+      params.set('limit', '10');
     }
     
     const queryString = params.toString();

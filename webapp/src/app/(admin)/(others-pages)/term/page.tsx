@@ -2,11 +2,12 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import TermDataTable from "@/components/term/TermDataTable";
-import { getTerms, SearchTermDto, PaginatedTermResponse } from "@/services/termService";
+import { getTerms, SearchTermDto } from "@/services/termService";
 import { Term } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
 
 export default function TermPage() {
   const headers = [
@@ -23,6 +24,18 @@ export default function TermPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    itemsPerPage,
+    paginationInfo,
+    handlePageChange,
+    handleItemsPerPageChange,
+    setTotalItems,
+    setTotalPages,
+    resetToFirstPage,
+  } = usePagination();
 
   const fetchTerms = useCallback(async (params?: SearchTermDto, isSearch = false) => {
     try {
@@ -32,15 +45,19 @@ export default function TermPage() {
         setIsLoading(true);
       }
       
-      const data = await getTerms(params);
+      // Always include pagination parameters
+      const searchParams: SearchTermDto = {
+        ...params,
+        page: currentPage,
+        limit: itemsPerPage,
+      };
       
-      // Handle both array and paginated response
-      if (Array.isArray(data)) {
-        setTerms(data);
-      } else {
-        const paginatedData = data as PaginatedTermResponse;
-        setTerms(paginatedData.data);
-      }
+      const data = await getTerms(searchParams);
+      
+      // API now always returns paginated response
+      setTerms(data.data);
+      setTotalItems(data.total);
+      setTotalPages(data.totalPages);
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách sự kiện"));
     } finally {
@@ -50,11 +67,12 @@ export default function TermPage() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
+    resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
       fetchTerms({ name: trimmedQuery }, true);
@@ -62,10 +80,10 @@ export default function TermPage() {
       // If no search term, fetch all terms
       fetchTerms({}, true);
     }
-  }, [fetchTerms]);
+  }, [fetchTerms, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term
+    // Refresh with current search term and pagination
     if (searchTerm.trim()) {
       fetchTerms({ name: searchTerm.trim() }, true);
     } else {
@@ -77,6 +95,13 @@ export default function TermPage() {
   useEffect(() => {
     fetchTerms({});
   }, [fetchTerms]);
+
+  // Fetch data when pagination changes
+  useEffect(() => {
+    if (!isLoading) {
+      fetchTerms({});
+    }
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>
@@ -97,6 +122,9 @@ export default function TermPage() {
               searchTerm={searchTerm}
               onSearch={handleSearch}
               isSearching={isSearching}
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </ComponentCard>
