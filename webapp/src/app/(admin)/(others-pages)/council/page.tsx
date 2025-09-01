@@ -2,11 +2,12 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import CouncilDataTable from "@/components/council/CouncilDataTable";
-import { getCouncils, SearchCouncilDto, PaginatedCouncilResponse } from "@/services/councilService";
+import { getCouncils, SearchCouncilDto } from "@/services/councilService";
 import { Council } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
 
 export default function CouncilPage() {
   const headers = [
@@ -23,6 +24,18 @@ export default function CouncilPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    itemsPerPage,
+    paginationInfo,
+    handlePageChange,
+    handleItemsPerPageChange,
+    setTotalItems,
+    setTotalPages,
+    resetToFirstPage,
+  } = usePagination();
 
   const fetchCouncils = useCallback(async (params?: SearchCouncilDto, isSearch = false) => {
     try {
@@ -32,15 +45,19 @@ export default function CouncilPage() {
         setIsLoading(true);
       }
       
-      const data = await getCouncils(params);
+      // Always include pagination parameters
+      const searchParams: SearchCouncilDto = {
+        ...params,
+        page: currentPage,
+        limit: itemsPerPage,
+      };
       
-      // Handle both array and paginated response
-      if (Array.isArray(data)) {
-        setCouncils(data);
-      } else {
-        const paginatedData = data as PaginatedCouncilResponse;
-        setCouncils(paginatedData.data);
-      }
+      const data = await getCouncils(searchParams);
+      
+      // API now always returns paginated response
+      setCouncils(data.data);
+      setTotalItems(data.total);
+      setTotalPages(data.totalPages);
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách hội đồng"));
     } finally {
@@ -50,11 +67,12 @@ export default function CouncilPage() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [currentPage, itemsPerPage]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
+    resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
       fetchCouncils({ name: trimmedQuery }, true);
@@ -62,10 +80,10 @@ export default function CouncilPage() {
       // If no search term, fetch all councils
       fetchCouncils({}, true);
     }
-  }, [fetchCouncils]);
+  }, [fetchCouncils, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term
+    // Refresh with current search term and pagination
     if (searchTerm.trim()) {
       fetchCouncils({ name: searchTerm.trim() }, true);
     } else {
@@ -77,6 +95,13 @@ export default function CouncilPage() {
   useEffect(() => {
     fetchCouncils({});
   }, [fetchCouncils]);
+
+  // Fetch data when pagination changes
+  useEffect(() => {
+    if (!isLoading) {
+      fetchCouncils({});
+    }
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>
@@ -97,6 +122,9 @@ export default function CouncilPage() {
               searchTerm={searchTerm}
               onSearch={handleSearch}
               isSearching={isSearching}
+              pagination={paginationInfo}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
             />
           )}
         </ComponentCard>

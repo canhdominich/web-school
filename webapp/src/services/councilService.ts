@@ -24,7 +24,7 @@ export interface PaginatedCouncilResponse {
   hasPrev: boolean;
 }
 
-export const getCouncils = async (searchParams?: SearchCouncilDto): Promise<Council[] | PaginatedCouncilResponse> => {
+export const getCouncils = async (searchParams?: SearchCouncilDto): Promise<PaginatedCouncilResponse> => {
     const params = new URLSearchParams();
     
     if (searchParams) {
@@ -33,6 +33,14 @@ export const getCouncils = async (searchParams?: SearchCouncilDto): Promise<Coun
           params.append(key, value.toString());
         }
       });
+    }
+    
+    // Always include default pagination if not provided
+    if (!searchParams?.page) {
+      params.set('page', '1');
+    }
+    if (!searchParams?.limit) {
+      params.set('limit', '10');
     }
     
     const queryString = params.toString();
