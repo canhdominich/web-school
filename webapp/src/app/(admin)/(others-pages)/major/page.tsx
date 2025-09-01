@@ -2,9 +2,9 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import MajorDataTable from "@/components/major/MajorDataTable";
-import { getMajors } from "@/services/majorService";
+import { getMajors, SearchMajorDto, PaginatedMajorResponse } from "@/services/majorService";
 import { Major } from "@/types/common";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -21,22 +21,62 @@ export default function MajorPage() {
 
   const [majors, setMajors] = useState<Major[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchMajors = async () => {
+  const fetchMajors = useCallback(async (params?: SearchMajorDto, isSearch = false) => {
     try {
-      setIsLoading(true);
-      const data = await getMajors();
-      setMajors(data);
+      if (isSearch) {
+        setIsSearching(true);
+      } else {
+        setIsLoading(true);
+      }
+      
+      const data = await getMajors(params);
+      
+      // Handle both array and paginated response
+      if (Array.isArray(data)) {
+        setMajors(data);
+      } else {
+        const paginatedData = data as PaginatedMajorResponse;
+        setMajors(paginatedData.data);
+      }
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách ngành học"));
     } finally {
-      setIsLoading(false);
+      if (isSearch) {
+        setIsSearching(false);
+      } else {
+        setIsLoading(false);
+      }
     }
-  };
-
-  useEffect(() => {
-    fetchMajors();
   }, []);
+
+  const handleSearch = useCallback((query: string) => {
+    const trimmedQuery = query.trim();
+    setSearchTerm(trimmedQuery);
+    
+    if (trimmedQuery) {
+      fetchMajors({ name: trimmedQuery }, true);
+    } else {
+      // If no search term, fetch all majors
+      fetchMajors({}, true);
+    }
+  }, [fetchMajors]);
+
+  const handleRefresh = useCallback(() => {
+    // Refresh with current search term
+    if (searchTerm.trim()) {
+      fetchMajors({ name: searchTerm.trim() }, true);
+    } else {
+      fetchMajors({}, true);
+    }
+  }, [searchTerm, fetchMajors]);
+
+  // Initial load
+  useEffect(() => {
+    fetchMajors({});
+  }, [fetchMajors]);
 
   return (
     <div>
@@ -45,13 +85,19 @@ export default function MajorPage() {
         <ComponentCard title="">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Đang tải danh sách ngành học...</p>
+              </div>
             </div>
           ) : (
             <MajorDataTable 
               headers={headers} 
               items={majors} 
-              onRefresh={fetchMajors}
+              onRefresh={handleRefresh}
+              searchTerm={searchTerm}
+              onSearch={handleSearch}
+              isSearching={isSearching}
             />
           )}
         </ComponentCard>

@@ -1,8 +1,42 @@
 import { httpClient } from "@/lib/httpClient";
 import { Major } from "@/types/common";
 
-export const getMajors = async (): Promise<Major[]> => {
-    const res = await httpClient.get('/majors');
+export interface SearchMajorDto {
+  name?: string;
+  code?: string;
+  description?: string;
+  departmentId?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedMajorResponse {
+  data: Major[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export const getMajors = async (searchParams?: SearchMajorDto): Promise<Major[] | PaginatedMajorResponse> => {
+    const params = new URLSearchParams();
+    
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/majors?${queryString}` : '/majors';
+    
+    const res = await httpClient.get(url);
     return res.data;
 };
 

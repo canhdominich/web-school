@@ -6,7 +6,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Major } from './major.entity';
-import { CreateMajorDto, UpdateMajorDto, SearchMajorDto, PaginatedMajorResponseDto } from './dto';
+import {
+  CreateMajorDto,
+  UpdateMajorDto,
+  SearchMajorDto,
+  PaginatedMajorResponseDto,
+} from './dto';
 import { Department } from '../department/department.entity';
 
 @Injectable()
@@ -50,10 +55,20 @@ export class MajorService {
       });
     }
 
-    const { name, code, description, facultyId, departmentId, page, limit, sortBy, sortOrder } =
-      searchDto;
+    const {
+      name,
+      code,
+      description,
+      facultyId,
+      departmentId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = searchDto;
 
-    const queryBuilder = this.majorRepository.createQueryBuilder('major')
+    const queryBuilder = this.majorRepository
+      .createQueryBuilder('major')
       .leftJoinAndSelect('major.department', 'department')
       .leftJoinAndSelect('department.faculty', 'faculty');
 
@@ -76,7 +91,9 @@ export class MajorService {
     }
 
     if (departmentId) {
-      queryBuilder.andWhere('major.departmentId = :departmentId', { departmentId });
+      queryBuilder.andWhere('major.departmentId = :departmentId', {
+        departmentId,
+      });
     }
 
     if (sortBy) {
@@ -180,4 +197,4 @@ export class MajorService {
     await this.majorRepository.remove(major);
     return major;
   }
-} 
+}
