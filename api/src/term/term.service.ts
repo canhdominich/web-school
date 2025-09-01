@@ -6,9 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Term } from './term.entity';
-import { CreateTermDto } from './dto/create-term.dto';
-import { UpdateTermDto } from './dto/update-term.dto';
-import { TermResponseDto } from './dto/term-response.dto';
+import { CreateTermDto, UpdateTermDto, TermResponseDto, SearchTermDto, PaginatedTermResponseDto } from './dto';
 
 @Injectable()
 export class TermService {
@@ -36,18 +34,91 @@ export class TermService {
     };
   }
 
-  async findAll(): Promise<TermResponseDto[]> {
-    const terms = await this.termRepository.find({
-      relations: ['termMilestones'],
-      order: {
-        createdAt: 'DESC',
-        termMilestones: {
-          orderIndex: 'ASC',
+  async findAll(
+    searchDto?: SearchTermDto,
+  ): Promise<TermResponseDto[] | PaginatedTermResponseDto> {
+    if (!searchDto || Object.keys(searchDto).length === 0) {
+      const terms = await this.termRepository.find({
+        relations: ['termMilestones'],
+        order: {
+          createdAt: 'DESC',
+          termMilestones: {
+            orderIndex: 'ASC',
+          },
         },
-      },
-    });
+      });
 
-    return terms;
+      return terms;
+    }
+
+    const { name, description, academicYear, status, page, limit, sortBy, sortOrder } =
+      searchDto;
+
+    const queryBuilder = this.termRepository.createQueryBuilder('term')
+      .leftJoinAndSelect('term.termMilestones', 'termMilestones');
+
+    if (name) {
+      queryBuilder.andWhere('term.name LIKE :name', { name: `%${name}%` });
+    }
+
+    if (description) {
+      queryBuilder.andWhere('term.description LIKE :description', {
+        description: `%${description}%`,
+      });
+    }
+
+    if (academicYear) {
+      queryBuilder.andWhere('term.academicYear LIKE :academicYear', {
+        academicYear: `%${academicYear}%`,
+      });
+    }
+
+    if (status) {
+      queryBuilder.andWhere('term.status = :status', { status });
+    }
+
+    if (sortBy) {
+      const allowedSortFields = [
+        'id',
+        'name',
+        'academicYear',
+        'status',
+        'createdAt',
+        'updatedAt',
+      ];
+      const sortField = allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'createdAt';
+      const order = sortOrder || 'DESC';
+      queryBuilder.orderBy(`term.${sortField}`, order);
+    } else {
+      queryBuilder.orderBy('term.createdAt', 'DESC');
+    }
+
+    if (page && limit) {
+      const total = await queryBuilder.getCount();
+
+      const skip = (page - 1) * limit;
+      queryBuilder.skip(skip).take(limit);
+
+      const data = await queryBuilder.getMany();
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      };
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<TermResponseDto> {

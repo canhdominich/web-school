@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Council } from './council.entity';
 import { CouncilMember } from './council-member.entity';
-import { CreateCouncilDto, UpdateCouncilDto, CouncilStatus } from './dto';
+import { CreateCouncilDto, UpdateCouncilDto, CouncilStatus, SearchCouncilDto, PaginatedCouncilResponseDto } from './dto';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
 import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
@@ -124,11 +124,84 @@ export class CouncilService {
     return this.findOne(savedCouncil.id);
   }
 
-  async findAll(): Promise<Council[]> {
-    return this.councilRepository.find({
-      relations: ['councilMembers', 'councilMembers.user', 'faculty'],
-      order: { createdAt: 'DESC' },
-    });
+  async findAll(
+    searchDto?: SearchCouncilDto,
+  ): Promise<Council[] | PaginatedCouncilResponseDto> {
+    if (!searchDto || Object.keys(searchDto).length === 0) {
+      return this.councilRepository.find({
+        relations: ['councilMembers', 'councilMembers.user', 'faculty'],
+        order: { createdAt: 'DESC' },
+      });
+    }
+
+    const { name, description, facultyId, status, page, limit, sortBy, sortOrder } =
+      searchDto;
+
+    const queryBuilder = this.councilRepository.createQueryBuilder('council')
+      .leftJoinAndSelect('council.councilMembers', 'councilMembers')
+      .leftJoinAndSelect('councilMembers.user', 'user')
+      .leftJoinAndSelect('council.faculty', 'faculty');
+
+    if (name) {
+      queryBuilder.andWhere('council.name LIKE :name', { name: `%${name}%` });
+    }
+
+    if (description) {
+      queryBuilder.andWhere('council.description LIKE :description', {
+        description: `%${description}%`,
+      });
+    }
+
+    if (facultyId) {
+      queryBuilder.andWhere('council.facultyId = :facultyId', { facultyId });
+    }
+
+    if (status) {
+      queryBuilder.andWhere('council.status = :status', { status });
+    }
+
+    if (sortBy) {
+      const allowedSortFields = [
+        'id',
+        'name',
+        'facultyId',
+        'status',
+        'createdAt',
+        'updatedAt',
+      ];
+      const sortField = allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'createdAt';
+      const order = sortOrder || 'DESC';
+      queryBuilder.orderBy(`council.${sortField}`, order);
+    } else {
+      queryBuilder.orderBy('council.createdAt', 'DESC');
+    }
+
+    if (page && limit) {
+      const total = await queryBuilder.getCount();
+
+      const skip = (page - 1) * limit;
+      queryBuilder.skip(skip).take(limit);
+
+      const data = await queryBuilder.getMany();
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      };
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Council> {

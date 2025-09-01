@@ -7,11 +7,14 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { SearchDepartmentDto } from './dto/search-department.dto';
+import { PaginatedDepartmentResponseDto } from './dto/paginated-department-response.dto';
 import { Department } from './department.entity';
 
 @ApiTags('departments')
@@ -37,8 +40,13 @@ export class DepartmentController {
     description: 'Return all departments.',
     type: [Department],
   })
-  findAll() {
-    return this.departmentService.findAll();
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated departments.',
+    type: PaginatedDepartmentResponseDto,
+  })
+  findAll(@Query() searchDto: SearchDepartmentDto) {
+    return this.departmentService.findAll(searchDto);
   }
 
   @Get(':id')

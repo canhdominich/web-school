@@ -7,12 +7,15 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { TermService } from './term.service';
 import { CreateTermDto } from './dto/create-term.dto';
 import { UpdateTermDto } from './dto/update-term.dto';
 import { TermResponseDto } from './dto/term-response.dto';
+import { SearchTermDto } from './dto/search-term.dto';
+import { PaginatedTermResponseDto } from './dto/paginated-term-response.dto';
 
 @ApiTags('terms')
 @Controller('terms')
@@ -38,8 +41,13 @@ export class TermController {
     description: 'Return all terms.',
     type: [TermResponseDto],
   })
-  findAll() {
-    return this.termService.findAll();
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated terms.',
+    type: PaginatedTermResponseDto,
+  })
+  findAll(@Query() searchDto: SearchTermDto) {
+    return this.termService.findAll(searchDto);
   }
 
   @Get(':id')

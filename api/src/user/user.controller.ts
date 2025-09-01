@@ -12,6 +12,8 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
+import { PaginatedUserResponseDto } from './dto/paginated-user-response.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { User } from './user.entity';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -39,8 +41,9 @@ export class UserController {
   @Get()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Return all users.', type: [UserResponseDto] })
-  findAll() {
-    return this.userService.findAll();
+  @ApiResponse({ status: 200, description: 'Return paginated users.', type: PaginatedUserResponseDto })
+  findAll(@Query() searchDto: SearchUserDto) {
+    return this.userService.findAll(searchDto);
   }
 
   @Get(':id')

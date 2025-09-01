@@ -1,8 +1,42 @@
 import { httpClient } from "@/lib/httpClient";
 import { Department } from "@/types/common";
 
-export const getDepartments = async (): Promise<Department[]> => {
-    const res = await httpClient.get('/departments');
+export interface SearchDepartmentDto {
+  name?: string;
+  code?: string;
+  description?: string;
+  facultyId?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedDepartmentResponse {
+  data: Department[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export const getDepartments = async (searchParams?: SearchDepartmentDto): Promise<Department[] | PaginatedDepartmentResponse> => {
+    const params = new URLSearchParams();
+    
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/departments?${queryString}` : '/departments';
+    
+    const res = await httpClient.get(url);
     return res.data;
 };
 

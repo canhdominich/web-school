@@ -7,8 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, EntityManager } from 'typeorm';
 import { User } from './user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  SearchUserDto,
+  PaginatedUserResponseDto,
+  UserResponseDto,
+} from './dto';
 import { hash } from 'bcrypt';
 import { Role } from '../role/role.entity';
 import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
@@ -198,16 +203,208 @@ export class UserService {
     return result;
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find({
-      relations: [
-        'userRoles',
-        'userRoles.role',
-        'faculty',
-        'department',
-        'major',
-      ],
-    });
+  private mapUserToResponse(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      code: user.code,
+      name: user.name,
+      avatar: user.avatar,
+      phone: user.phone,
+      email: user.email,
+      facultyId: user.facultyId,
+      faculty: user.faculty
+        ? {
+            id: user.faculty.id,
+            code: user.faculty.code,
+            name: user.faculty.name,
+            description: user.faculty.description,
+          }
+        : undefined,
+      departmentId: user.departmentId,
+      department: user.department
+        ? {
+            id: user.department.id,
+            code: user.department.code,
+            name: user.department.name,
+            description: user.department.description,
+            facultyId: user.department.facultyId,
+            faculty: user.department.faculty
+              ? {
+                  id: user.department.faculty.id,
+                  code: user.department.faculty.code,
+                  name: user.department.faculty.name,
+                  description: user.department.faculty.description,
+                }
+              : undefined,
+          }
+        : undefined,
+      majorId: user.majorId,
+      major: user.major
+        ? {
+            id: user.major.id,
+            code: user.major.code,
+            name: user.major.name,
+            description: user.major.description,
+            departmentId: user.major.departmentId,
+            department: user.major.department
+              ? {
+                  id: user.major.department.id,
+                  code: user.major.department.code,
+                  name: user.major.department.name,
+                  description: user.major.department.description,
+                  facultyId: user.major.department.facultyId,
+                  faculty: user.major.department.faculty
+                    ? {
+                        id: user.major.department.faculty.id,
+                        code: user.major.department.faculty.code,
+                        name: user.major.department.faculty.name,
+                        description: user.major.department.faculty.description,
+                      }
+                    : undefined,
+                }
+              : undefined,
+          }
+        : undefined,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      userRoles:
+        user.userRoles?.map((ur) => ({
+          id: ur.role.id,
+          name: ur.role.name,
+        })) || [],
+    };
+  }
+
+  async findAll(
+    searchDto?: SearchUserDto,
+  ): Promise<UserResponseDto[] | PaginatedUserResponseDto> {
+    if (!searchDto || Object.keys(searchDto).length === 0) {
+      const users = await this.userRepository.find({
+        relations: [
+          'userRoles',
+          'userRoles.role',
+          'faculty',
+          'department',
+          'department.faculty',
+          'major',
+          'major.department',
+          'major.department.faculty',
+        ],
+      });
+
+      return users.map((user) => this.mapUserToResponse(user));
+    }
+
+    const {
+      name,
+      code,
+      email,
+      phone,
+      facultyId,
+      departmentId,
+      majorId,
+      roles,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = searchDto;
+
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.userRoles', 'userRoles')
+      .leftJoinAndSelect('userRoles.role', 'role')
+      .leftJoinAndSelect('user.faculty', 'faculty')
+      .leftJoinAndSelect('user.department', 'department')
+      .leftJoinAndSelect('department.faculty', 'departmentFaculty')
+      .leftJoinAndSelect('user.major', 'major')
+      .leftJoinAndSelect('major.department', 'majorDepartment')
+      .leftJoinAndSelect('majorDepartment.faculty', 'majorDepartmentFaculty');
+
+    if (name) {
+      queryBuilder.andWhere('user.name LIKE :name', { name: `%${name}%` });
+    }
+
+    if (code) {
+      queryBuilder.andWhere('user.code LIKE :code', { code: `%${code}%` });
+    }
+
+    if (email) {
+      queryBuilder.andWhere('user.email LIKE :email', { email: `%${email}%` });
+    }
+
+    if (phone) {
+      queryBuilder.andWhere('user.phone LIKE :phone', { phone: `%${phone}%` });
+    }
+
+    if (facultyId) {
+      queryBuilder.andWhere('user.facultyId = :facultyId', { facultyId });
+    }
+
+    if (departmentId) {
+      queryBuilder.andWhere('user.departmentId = :departmentId', {
+        departmentId,
+      });
+    }
+
+    if (majorId) {
+      queryBuilder.andWhere('user.majorId = :majorId', { majorId });
+    }
+
+    if (roles && roles.length > 0) {
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user_roles ur INNER JOIN roles r ON ur.roleId = r.id WHERE ur.userId = user.id AND r.name IN (:...roles))',
+        { roles },
+      );
+    }
+
+    if (sortBy) {
+      const allowedSortFields = [
+        'id',
+        'name',
+        'code',
+        'email',
+        'phone',
+        'facultyId',
+        'departmentId',
+        'majorId',
+        'createdAt',
+        'updatedAt',
+      ];
+      const sortField = allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'createdAt';
+      const order = sortOrder || 'DESC';
+      queryBuilder.orderBy(`user.${sortField}`, order);
+    } else {
+      queryBuilder.orderBy('user.createdAt', 'DESC');
+    }
+
+    if (page && limit) {
+      const total = await queryBuilder.getCount();
+
+      const skip = (page - 1) * limit;
+      queryBuilder.skip(skip).take(limit);
+
+      const data = await queryBuilder.getMany();
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+
+      return {
+        data: data.map((user) => this.mapUserToResponse(user)),
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      };
+    }
+
+    const users = await queryBuilder.getMany();
+    return users.map((user) => this.mapUserToResponse(user));
   }
 
   async findOne(id: number): Promise<User> {

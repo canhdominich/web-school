@@ -9,16 +9,20 @@ import {
   ParseIntPipe,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import {
   ApiOperation,
   ApiResponse,
   ApiTags,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { SearchProjectDto } from './dto/search-project.dto';
+import { PaginatedProjectResponseDto } from './dto/paginated-project-response.dto';
 import { Project, ProjectStatus } from './project.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -48,7 +52,15 @@ export class ProjectController {
     description: 'Return projects based on user role.',
     type: [Project],
   })
-  findAll(@Req() req: any) {
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated projects based on user role.',
+    type: PaginatedProjectResponseDto,
+  })
+  findAll(@Query() searchDto: SearchProjectDto, @Req() req: any) {
+    if (searchDto && Object.keys(searchDto).length > 0) {
+      return this.projectService.findAllWithSearch(searchDto, req.user);
+    }
     return this.projectService.findAll(req.user);
   }
 

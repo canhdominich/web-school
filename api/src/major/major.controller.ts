@@ -7,11 +7,14 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { MajorService } from './major.service';
 import { CreateMajorDto } from './dto/create-major.dto';
 import { UpdateMajorDto } from './dto/update-major.dto';
+import { SearchMajorDto } from './dto/search-major.dto';
+import { PaginatedMajorResponseDto } from './dto/paginated-major-response.dto';
 import { Major } from './major.entity';
 
 @ApiTags('majors')
@@ -37,8 +40,13 @@ export class MajorController {
     description: 'Return all majors.',
     type: [Major],
   })
-  findAll() {
-    return this.majorService.findAll();
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated majors.',
+    type: PaginatedMajorResponseDto,
+  })
+  findAll(@Query() searchDto: SearchMajorDto) {
+    return this.majorService.findAll(searchDto);
   }
 
   @Get(':id')

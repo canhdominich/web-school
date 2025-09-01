@@ -6,8 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Department } from './department.entity';
-import { CreateDepartmentDto } from './dto/create-department.dto';
-import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { CreateDepartmentDto, UpdateDepartmentDto, SearchDepartmentDto, PaginatedDepartmentResponseDto } from './dto';
 import { Faculty } from '../faculty/faculty.entity';
 
 @Injectable()
@@ -42,10 +41,81 @@ export class DepartmentService {
     return this.departmentRepository.save(department);
   }
 
-  async findAll(): Promise<Department[]> {
-    return this.departmentRepository.find({
-      relations: ['faculty'],
-    });
+  async findAll(
+    searchDto?: SearchDepartmentDto,
+  ): Promise<Department[] | PaginatedDepartmentResponseDto> {
+    if (!searchDto || Object.keys(searchDto).length === 0) {
+      return this.departmentRepository.find({
+        relations: ['faculty'],
+      });
+    }
+
+    const { name, code, description, facultyId, page, limit, sortBy, sortOrder } =
+      searchDto;
+
+    const queryBuilder = this.departmentRepository.createQueryBuilder('department')
+      .leftJoinAndSelect('department.faculty', 'faculty');
+
+    if (name) {
+      queryBuilder.andWhere('department.name LIKE :name', { name: `%${name}%` });
+    }
+
+    if (code) {
+      queryBuilder.andWhere('department.code LIKE :code', { code: `%${code}%` });
+    }
+
+    if (description) {
+      queryBuilder.andWhere('department.description LIKE :description', {
+        description: `%${description}%`,
+      });
+    }
+
+    if (facultyId) {
+      queryBuilder.andWhere('department.facultyId = :facultyId', { facultyId });
+    }
+
+    if (sortBy) {
+      const allowedSortFields = [
+        'id',
+        'name',
+        'code',
+        'facultyId',
+        'createdAt',
+        'updatedAt',
+      ];
+      const sortField = allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'createdAt';
+      const order = sortOrder || 'DESC';
+      queryBuilder.orderBy(`department.${sortField}`, order);
+    } else {
+      queryBuilder.orderBy('department.createdAt', 'DESC');
+    }
+
+    if (page && limit) {
+      const total = await queryBuilder.getCount();
+
+      const skip = (page - 1) * limit;
+      queryBuilder.skip(skip).take(limit);
+
+      const data = await queryBuilder.getMany();
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      };
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<Department> {

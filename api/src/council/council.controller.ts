@@ -17,6 +17,8 @@ import {
   CouncilResponseDto,
   CouncilStatus,
 } from './dto';
+import { SearchCouncilDto } from './dto/search-council.dto';
+import { PaginatedCouncilResponseDto } from './dto/paginated-council-response.dto';
 import { Council } from './council.entity';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -84,8 +86,22 @@ export class CouncilController {
     description: 'Trả về danh sách hội đồng.',
     type: [CouncilResponseDto],
   })
-  async findAll() {
-    const councils = await this.councilService.findAll();
+  @ApiResponse({
+    status: 200,
+    description: 'Trả về danh sách hội đồng có phân trang.',
+    type: PaginatedCouncilResponseDto,
+  })
+  async findAll(@Query() searchDto: SearchCouncilDto) {
+    const councils = await this.councilService.findAll(searchDto);
+    
+    // Handle pagination response
+    if ('data' in councils) {
+      return {
+        ...councils,
+        data: councils.data.map((c) => this.mapCouncilToResponse(c)),
+      };
+    }
+    
     return councils.map((c) => this.mapCouncilToResponse(c));
   }
 

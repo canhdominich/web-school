@@ -8,8 +8,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Project } from './project.entity';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+  SearchProjectDto,
+  PaginatedProjectResponseDto,
+} from './dto';
 import { ProjectStatus } from './project.entity';
 import { ProjectMilestoneService } from '../project-milestone/project-milestone.service';
 import { ProjectMember } from './project-member.entity';
@@ -605,6 +609,195 @@ export class ProjectService {
       // Log error but don't fail the project update
       console.error('Error creating level change notification:', error);
     }
+  }
+
+  async findAllWithSearch(
+    searchDto?: SearchProjectDto,
+    user?: RequestUser,
+  ): Promise<Project[] | PaginatedProjectResponseDto> {
+    if (!searchDto || Object.keys(searchDto).length === 0) {
+      return this.findAll(user);
+    }
+
+    const {
+      title,
+      code,
+      facultyId,
+      departmentId,
+      majorId,
+      termId,
+      status,
+      level,
+      createdBy,
+      supervisorId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = searchDto;
+
+    const queryBuilder = this.projectRepository
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.faculty', 'faculty')
+      .leftJoinAndSelect('project.department', 'department')
+      .leftJoinAndSelect('project.major', 'major')
+      .leftJoinAndSelect('project.term', 'term')
+      .leftJoinAndSelect('project.createdByUser', 'createdByUser')
+      .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
+      .leftJoinAndSelect('project.members', 'members')
+      .leftJoinAndSelect('members.student', 'student')
+      .leftJoinAndSelect('project.projectMilestones', 'projectMilestones');
+
+    // Apply search filters
+    if (title) {
+      queryBuilder.andWhere('project.title LIKE :title', {
+        title: `%${title}%`,
+      });
+    }
+
+    if (code) {
+      queryBuilder.andWhere('project.code LIKE :code', { code: `%${code}%` });
+    }
+
+    if (facultyId) {
+      queryBuilder.andWhere('project.facultyId = :facultyId', { facultyId });
+    }
+
+    if (departmentId) {
+      queryBuilder.andWhere('project.departmentId = :departmentId', {
+        departmentId,
+      });
+    }
+
+    if (majorId) {
+      queryBuilder.andWhere('project.majorId = :majorId', { majorId });
+    }
+
+    if (termId) {
+      queryBuilder.andWhere('project.termId = :termId', { termId });
+    }
+
+    if (status) {
+      queryBuilder.andWhere('project.status = :status', { status });
+    }
+
+    if (level) {
+      queryBuilder.andWhere('project.level = :level', { level });
+    }
+
+    if (createdBy) {
+      queryBuilder.andWhere('project.createdBy = :createdBy', { createdBy });
+    }
+
+    if (supervisorId) {
+      queryBuilder.andWhere('project.supervisorId = :supervisorId', {
+        supervisorId,
+      });
+    }
+
+    // Apply user role-based filtering
+    if (user) {
+      const roles = user.roles || [];
+
+      // Admin: No additional filtering needed
+      if (!roles.includes(UserRole.Admin)) {
+        // Student: Return projects created by user or where user is a member
+        if (roles.includes(UserRole.Student)) {
+          queryBuilder.andWhere(
+            '(project.createdBy = :userId OR EXISTS (SELECT 1 FROM project_members pm WHERE pm.projectId = project.id AND pm.studentId = :userId))',
+            { userId: user.id },
+          );
+        }
+
+        // Lecturer: Return projects where user is supervisor + projects in councils where user is member
+        if (roles.includes(UserRole.Lecturer)) {
+          queryBuilder.andWhere(
+            '(project.supervisorId = :userId OR EXISTS (SELECT 1 FROM council_projects cp INNER JOIN council_members cm ON cp.councilId = cm.councilId WHERE cp.projectId = project.id AND cm.userId = :userId))',
+            { userId: user.id },
+          );
+        }
+
+        // DepartmentHead: Return projects in user's department + projects in councils where user is member
+        if (roles.includes(UserRole.DepartmentHead)) {
+          if (user?.departmentId) {
+            queryBuilder.andWhere(
+              '(project.departmentId = :departmentId OR EXISTS (SELECT 1 FROM council_projects cp INNER JOIN council_members cm ON cp.councilId = cm.councilId WHERE cp.projectId = project.id AND cm.userId = :userId))',
+              { departmentId: user.departmentId, userId: user.id },
+            );
+          } else {
+            queryBuilder.andWhere(
+              'EXISTS (SELECT 1 FROM council_projects cp INNER JOIN council_members cm ON cp.councilId = cm.councilId WHERE cp.projectId = project.id AND cm.userId = :userId)',
+              { userId: user.id },
+            );
+          }
+        }
+
+        // FacultyDean: Return projects in user's faculty + projects in councils where user is member
+        if (roles.includes(UserRole.FacultyDean)) {
+          if (user?.facultyId) {
+            queryBuilder.andWhere(
+              '(project.facultyId = :facultyId OR EXISTS (SELECT 1 FROM council_projects cp INNER JOIN council_members cm ON cp.councilId = cm.councilId WHERE cp.projectId = project.id AND cm.userId = :userId))',
+              { facultyId: user.facultyId, userId: user.id },
+            );
+          } else {
+            queryBuilder.andWhere(
+              'EXISTS (SELECT 1 FROM council_projects cp INNER JOIN council_members cm ON cp.councilId = cm.councilId WHERE cp.projectId = project.id AND cm.userId = :userId)',
+              { userId: user.id },
+            );
+          }
+        }
+      }
+    }
+
+    // Apply sorting
+    if (sortBy) {
+      const allowedSortFields = [
+        'id',
+        'title',
+        'code',
+        'facultyId',
+        'departmentId',
+        'majorId',
+        'termId',
+        'status',
+        'level',
+        'createdAt',
+        'updatedAt',
+      ];
+      const sortField = allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'createdAt';
+      const order = sortOrder || 'DESC';
+      queryBuilder.orderBy(`project.${sortField}`, order);
+    } else {
+      queryBuilder.orderBy('project.createdAt', 'DESC');
+    }
+
+    // Apply pagination
+    if (page && limit) {
+      const total = await queryBuilder.getCount();
+
+      const skip = (page - 1) * limit;
+      queryBuilder.skip(skip).take(limit);
+
+      const data = await queryBuilder.getMany();
+
+      const totalPages = Math.ceil(total / limit);
+      const hasNext = page < totalPages;
+      const hasPrev = page > 1;
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNext,
+        hasPrev,
+      };
+    }
+
+    return queryBuilder.getMany();
   }
 
   async findAll(user?: RequestUser): Promise<Project[]> {

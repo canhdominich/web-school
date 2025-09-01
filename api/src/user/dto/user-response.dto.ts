@@ -31,8 +31,8 @@ export class DepartmentResponseDto {
   @ApiProperty({ example: 1 })
   facultyId: number;
 
-  @ApiProperty({ type: FacultyResponseDto })
-  faculty: FacultyResponseDto;
+  @ApiPropertyOptional({ type: FacultyResponseDto })
+  faculty?: FacultyResponseDto;
 }
 
 export class MajorResponseDto {
@@ -51,8 +51,8 @@ export class MajorResponseDto {
   @ApiProperty({ example: 1 })
   departmentId: number;
 
-  @ApiProperty({ type: DepartmentResponseDto })
-  department: DepartmentResponseDto;
+  @ApiPropertyOptional({ type: DepartmentResponseDto })
+  department?: DepartmentResponseDto;
 }
 
 export class UserRoleResponseDto {
