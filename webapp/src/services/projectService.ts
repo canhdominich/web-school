@@ -96,8 +96,48 @@ export interface CreateProjectDto {
 
 export type UpdateProjectDto = Partial<CreateProjectDto>;
 
-export const getProjects = async (): Promise<ProjectEntity[]> => {
-	const res = await httpClient.get("/projects");
+export interface SearchProjectDto {
+	title?: string;
+	code?: string;
+	status?: ProjectStatus;
+	level?: ProjectLevel;
+	facultyId?: number;
+	departmentId?: number;
+	majorId?: number;
+	termId?: number;
+	supervisorId?: number;
+	createdBy?: number;
+	page?: number;
+	limit?: number;
+	sortBy?: string;
+	sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedProjectResponse {
+	data: ProjectEntity[];
+	total: number;
+	page: number;
+	limit: number;
+	totalPages: number;
+	hasNext: boolean;
+	hasPrev: boolean;
+}
+
+export const getProjects = async (searchParams?: SearchProjectDto): Promise<ProjectEntity[] | PaginatedProjectResponse> => {
+	const params = new URLSearchParams();
+	
+	if (searchParams) {
+		Object.entries(searchParams).forEach(([key, value]) => {
+			if (value !== undefined && value !== null && value !== '') {
+				params.append(key, value.toString());
+			}
+		});
+	}
+	
+	const queryString = params.toString();
+	const url = queryString ? `/projects?${queryString}` : '/projects';
+	
+	const res = await httpClient.get(url);
 	return res.data;
 };
 
