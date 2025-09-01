@@ -11,7 +11,7 @@ export const getLecturers = async (): Promise<User[]> => {
     const users = res.data;
     // Filter only lecturers
     return users.filter((user: User) => 
-        (user.userRoles ?? []).some((userRole: IUserRole) => userRole.role.name === 'Lecturer')
+        (user.userRoles ?? []).some((userRole: IUserRole) => userRole?.role?.name === 'Lecturer')
     );
 };
 

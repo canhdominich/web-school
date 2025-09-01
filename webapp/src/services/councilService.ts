@@ -2,8 +2,43 @@ import { httpClient } from "@/lib/httpClient";
 import { Council, CreateCouncilDto, UpdateCouncilDto } from "@/types/common";
 import { ProjectEntity } from "@/services/projectService";
 
-export const getCouncils = async (): Promise<Council[]> => {
-    const res = await httpClient.get('/councils');
+export interface SearchCouncilDto {
+  name?: string;
+  description?: string;
+  facultyId?: number;
+  status?: string;
+  memberId?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedCouncilResponse {
+  data: Council[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export const getCouncils = async (searchParams?: SearchCouncilDto): Promise<Council[] | PaginatedCouncilResponse> => {
+    const params = new URLSearchParams();
+    
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/councils?${queryString}` : '/councils';
+    
+    const res = await httpClient.get(url);
     return res.data;
 };
 

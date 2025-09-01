@@ -28,14 +28,25 @@ import { getLecturers } from "@/services/userService";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
 import Badge from "../ui/badge/Badge";
+import SearchBox from "../common/SearchBox";
 
 interface CouncilDataTableProps extends BasicTableProps {
   onRefresh: () => void;
   items: Council[];
   headers: Header[];
+  searchTerm?: string;
+  onSearch?: (query: string) => void;
+  isSearching?: boolean;
 }
 
-export default function CouncilDataTable({ headers, items, onRefresh }: CouncilDataTableProps) {
+export default function CouncilDataTable({ 
+  headers, 
+  items, 
+  onRefresh, 
+  searchTerm = "", 
+  onSearch,
+  isSearching = false
+}: CouncilDataTableProps) {
   const [selectedCouncil, setSelectedCouncil] = useState<Council | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
@@ -281,16 +292,36 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
   };
 
   return (
-    <div className="overflow-hidden rounded-xl bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="mb-6 px-5 flex items-center gap-3 modal-footer sm:justify-start">
+    <div className="overflow-hidden rounded-xl bg-white dark:border-white/[0.05] dark:bg-white/[0.03] relative">
+      <div className="mb-6 px-5 flex items-center justify-between gap-4">
         <button
           onClick={openModal}
           type="button"
-          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+          className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
         >
           Thêm hội đồng
         </button>
+        
+        {onSearch && (
+          <div className="flex-1 max-w-2xl ml-auto">
+            <SearchBox
+              placeholder="Tìm kiếm theo tên hội đồng..."
+              onSearch={onSearch}
+              defaultValue={searchTerm}
+            />
+          </div>
+        )}
       </div>
+      
+      {/* Search Loading Overlay */}
+      {isSearching && (
+        <div className="absolute inset-0 bg-white/90 dark:bg-gray-900/90 flex items-center justify-center z-10 rounded-lg">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Đang tìm kiếm...</p>
+          </div>
+        </div>
+      )}
       <div className="max-w-full overflow-x-auto">
         <div className="min-w-[1000px]">
           <Table>
@@ -311,115 +342,170 @@ export default function CouncilDataTable({ headers, items, onRefresh }: CouncilD
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {items.map((item: Council) => (
-                <TableRow key={item.id}>
-                  <TableCell className="px-5 py-4 sm:px-6 text-start">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <span className="block text-gray-500 text-theme-sm dark:text-gray-400">
-                          {item.name}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.description || "Không có mô tả"}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.faculty?.name || "Không thuộc khoa"}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <Badge
-                      size="sm"
-                      color={getStatusColor(item.status)}
-                    >
-                      {getStatusText(item.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium">Giảng viên ({item.members?.length || 0})</div>
-                      {item.members && item.members.length > 0 && (
-                        <div className="space-y-1">
-                          {item.members.map((member) => (
-                            <div key={member.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                              <div className="flex items-center gap-2">
-                                <span>{member.name}</span>
-                                <span className="text-gray-500">({member.code})</span>
-                                <span className="text-gray-500">({member.email})</span>
-                              </div>
-                            </div>
-                          ))}
+              {items.length === 0 && !isSearching ? (
+                <TableRow>
+                <TableCell colSpan={7}>
+                  <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 min-h-[200px] w-full">
+                    {searchTerm ? (
+                      <>
+                        <svg
+                          className="w-12 h-12 text-gray-400 dark:text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                        <div className="text-center max-w-md mt-2">
+                          <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Không tìm thấy kết quả
+                          </p>
                         </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <button
-                          title="Thêm giảng viên"
-                          onClick={() => handleManageMembers(item, 'add')}
-                          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-4 py-0.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-12 h-12 text-gray-400 dark:text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <span className="text-xl">+</span>
-                        </button>
-                        <button
-                          title="Xóa giảng viên"
-                          onClick={() => handleManageMembers(item, 'remove')}
-                          className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-4 py-0.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
-                        >
-                          <span className="text-xl">-</span>
-                        </button>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        <div className="text-center max-w-md mt-2">
+                          <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Chưa có dữ liệu
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Hãy thêm hội đồng đầu tiên để bắt đầu
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+              ) : (
+                items.map((item: Council) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="px-5 py-4 sm:px-6 text-start">
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <span className="block text-gray-500 text-theme-sm dark:text-gray-400">
+                            {item.name}
+                          </span>
+                        </div>
                       </div>
-                      <div className="pt-3 space-y-1">
-                        <div className="text-sm font-medium">Dự án ({(projectsByCouncil[item.id] || []).length})</div>
-                        {(projectsByCouncil[item.id] || []).length > 0 && (
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {item.description || "Không có mô tả"}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {item.faculty?.name || "Không thuộc khoa"}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <Badge
+                        size="sm"
+                        color={getStatusColor(item.status)}
+                      >
+                        {getStatusText(item.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Giảng viên ({item.members?.length || 0})</div>
+                        {item.members && item.members.length > 0 && (
                           <div className="space-y-1">
-                            {(projectsByCouncil[item.id] || []).map((p) => (
-                              <div key={p.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                            {item.members.map((member) => (
+                              <div key={member.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
                                 <div className="flex items-center gap-2">
-                                  <span>{p.title}</span>
-                                  <span className="text-gray-500">({p.code})</span>
+                                  <span>{member.name}</span>
+                                  <span className="text-gray-500">({member.code})</span>
+                                  <span className="text-gray-500">({member.email})</span>
                                 </div>
                               </div>
                             ))}
                           </div>
                         )}
+                        <div className="flex items-center gap-2">
+                          <button
+                            title="Thêm giảng viên"
+                            onClick={() => handleManageMembers(item, 'add')}
+                            className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-4 py-0.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
+                          >
+                            <span className="text-xl">+</span>
+                          </button>
+                          <button
+                            title="Xóa giảng viên"
+                            onClick={() => handleManageMembers(item, 'remove')}
+                            className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-4 py-0.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
+                          >
+                            <span className="text-xl">-</span>
+                          </button>
+                        </div>
+                        <div className="pt-3 space-y-1">
+                          <div className="text-sm font-medium">Dự án ({(projectsByCouncil[item.id] || []).length})</div>
+                          {(projectsByCouncil[item.id] || []).length > 0 && (
+                            <div className="space-y-1">
+                              {(projectsByCouncil[item.id] || []).map((p) => (
+                                <div key={p.id} className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                  <div className="flex items-center gap-2">
+                                    <span>{p.title}</span>
+                                    <span className="text-gray-500">({p.code})</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {formatDate(item.createdAt)}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <div className="flex items-center gap-3">
-                      <button
-                        title="Gán dự án"
-                        onClick={() => handleManageProjects(item, 'add')}
-                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
-                      >
-                        Gán dự án
-                      </button>
-                      <button
-                        title="Gỡ dự án"
-                        onClick={() => handleManageProjects(item, 'remove')}
-                        className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
-                      >
-                        Gỡ dự án
-                      </button>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {formatDate(item.createdAt)}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <div className="flex items-center gap-3">
+                        <button
+                          title="Gán dự án"
+                          onClick={() => handleManageProjects(item, 'add')}
+                          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
+                        >
+                          Gán dự án
+                        </button>
+                        <button
+                          title="Gỡ dự án"
+                          onClick={() => handleManageProjects(item, 'remove')}
+                          className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
+                        >
+                          Gỡ dự án
+                        </button>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="btn btn-error btn-delete-event flex w-full justify-center rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600 sm:w-auto"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
 
