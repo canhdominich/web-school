@@ -20,6 +20,7 @@ import { getProjects, type ProjectEntity } from "@/services/projectService";
 import { getFaculties } from "@/services/facultyService";
 import { getLecturers } from "@/services/userService";
 import { toast } from "react-hot-toast";
+import { VERY_BIG_NUMBER } from "@/constants/common";
 import { getErrorMessage } from "@/lib/utils";
 import Badge from "../ui/badge/Badge";
 import SearchableDataTable from "../common/SearchableDataTable";
@@ -81,9 +82,9 @@ export default function CouncilDataTable({
     const fetchData = async () => {
       try {
         const [facultiesData, lecturersData, projectsData] = await Promise.all([
-          getFaculties(),
+          getFaculties({ limit: VERY_BIG_NUMBER }),
           getLecturers(),
-          getProjects(),
+          getProjects({ limit: VERY_BIG_NUMBER }),
         ]);
         
         // Handle different response types

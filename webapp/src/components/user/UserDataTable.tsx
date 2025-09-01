@@ -6,9 +6,13 @@ import { BasicTableProps, Header, User, Faculty, Department, Major } from "@/typ
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import MultiSelect from "../form/MultiSelect";
-import { CreateUserDto, createUser, deleteUser, updateUser, UpdateUserDto, getFaculties, getDepartments, getMajors } from "@/services/userService";
+import { CreateUserDto, createUser, deleteUser, updateUser, UpdateUserDto } from "@/services/userService";
+import { getFaculties } from "@/services/facultyService";
+import { getDepartments } from "@/services/departmentService";
+import { getMajors } from "@/services/majorService";
 import { toast } from "react-hot-toast";
 import { UserRole, UserRoleOptions } from "@/constants/user.constant";
+import { VERY_BIG_NUMBER } from "@/constants/common";
 import SearchableDataTable from "../common/SearchableDataTable";
 import { PaginationInfo } from "../common/Pagination";
 
@@ -75,9 +79,9 @@ export default function UserDataTable({
     const loadAcademicData = async () => {
       try {
         const [facultiesData, departmentsData, majorsData] = await Promise.all([
-          getFaculties(),
-          getDepartments(),
-          getMajors(),
+          getFaculties({ limit: VERY_BIG_NUMBER }),
+          getDepartments({ limit: VERY_BIG_NUMBER }),
+          getMajors({ limit: VERY_BIG_NUMBER }),
         ]);
         
         // All responses are now paginated
@@ -142,7 +146,7 @@ export default function UserDataTable({
     
     // Load departments for selected faculty
     try {
-      const departmentsData = await getDepartments(facultyId);
+      const departmentsData = await getDepartments({ facultyId, limit: VERY_BIG_NUMBER });
       // Response is now always paginated
       setDepartments(departmentsData?.data || []);
       setMajors([]); // Reset majors
@@ -162,7 +166,7 @@ export default function UserDataTable({
     
     // Load majors for selected department
     try {
-      const majorsData = await getMajors(departmentId);
+      const majorsData = await getMajors({ departmentId, limit: VERY_BIG_NUMBER });
       // Response is now always paginated
       setMajors(majorsData?.data || []);
     } catch (error) {

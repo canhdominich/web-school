@@ -9,3 +9,6 @@ export const ParkingSlotStatusOptions = [
     { value: ParkingSlotStatus.Occupied, label: "Đã được đặt" },
 ];
 
+// Constant for very large number to get all records
+export const VERY_BIG_NUMBER = 1000000;
+

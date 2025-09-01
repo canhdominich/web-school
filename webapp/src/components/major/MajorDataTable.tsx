@@ -7,6 +7,7 @@ import { useModal } from "@/hooks/useModal";
 import { CreateMajorDto, createMajor, deleteMajor, updateMajor, UpdateMajorDto } from "@/services/majorService";
 import { getDepartments } from "@/services/departmentService";
 import { toast } from "react-hot-toast";
+import { VERY_BIG_NUMBER } from "@/constants/common";
 import SearchableDataTable from "../common/SearchableDataTable";
 import { PaginationInfo } from "../common/Pagination";
 
@@ -48,7 +49,7 @@ export default function MajorDataTable({
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const data = await getDepartments();
+        const data = await getDepartments({ limit: VERY_BIG_NUMBER });
         // API now always returns paginated response
         setDepartments(data.data);
       } catch (error) {

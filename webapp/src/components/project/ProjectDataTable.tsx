@@ -15,6 +15,7 @@ import { getTerms } from "@/services/termService";
 import { getMajors } from "@/services/majorService";
 import { getFaculties } from "@/services/facultyService";
 import { getDepartments } from "@/services/departmentService";
+import { VERY_BIG_NUMBER } from "@/constants/common";
 import {
   createProject,
   updateProject,
@@ -186,11 +187,11 @@ export default function ProjectDataTable({
     (async () => {
       try {
         const [termList, majorList, facultyList, departmentList, userList] = await Promise.all([
-          getTerms(),
-          getMajors(),
-          getFaculties(),
-          getDepartments(),
-          getUsers(),
+          getTerms({ limit: VERY_BIG_NUMBER }),
+          getMajors({ limit: VERY_BIG_NUMBER }),
+          getFaculties({ limit: VERY_BIG_NUMBER }),
+          getDepartments({ limit: VERY_BIG_NUMBER }),
+          getUsers({ limit: VERY_BIG_NUMBER }),
         ]);
         
         // Handle both array and paginated response
