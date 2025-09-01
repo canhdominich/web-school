@@ -1,8 +1,44 @@
 import { httpClient } from "@/lib/httpClient";
 import { Term, TermStatus } from "@/types/common";
 
-export const getTerms = async (): Promise<Term[]> => {
-    const res = await httpClient.get('/terms');
+export interface SearchTermDto {
+  name?: string;
+  code?: string;
+  description?: string;
+  status?: TermStatus;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+export interface PaginatedTermResponse {
+  data: Term[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export const getTerms = async (searchParams?: SearchTermDto): Promise<Term[] | PaginatedTermResponse> => {
+    const params = new URLSearchParams();
+    
+    if (searchParams) {
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.append(key, value.toString());
+        }
+      });
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/terms?${queryString}` : '/terms';
+    
+    const res = await httpClient.get(url);
     return res.data;
 };
 

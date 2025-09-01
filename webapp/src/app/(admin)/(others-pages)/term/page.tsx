@@ -2,9 +2,9 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import TermDataTable from "@/components/term/TermDataTable";
-import { getTerms } from "@/services/termService";
+import { getTerms, SearchTermDto, PaginatedTermResponse } from "@/services/termService";
 import { Term } from "@/types/common";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
 
@@ -21,22 +21,62 @@ export default function TermPage() {
 
   const [terms, setTerms] = useState<Term[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchTerms = async () => {
+  const fetchTerms = useCallback(async (params?: SearchTermDto, isSearch = false) => {
     try {
-      setIsLoading(true);
-      const data = await getTerms();
-      setTerms(data);
+      if (isSearch) {
+        setIsSearching(true);
+      } else {
+        setIsLoading(true);
+      }
+      
+      const data = await getTerms(params);
+      
+      // Handle both array and paginated response
+      if (Array.isArray(data)) {
+        setTerms(data);
+      } else {
+        const paginatedData = data as PaginatedTermResponse;
+        setTerms(paginatedData.data);
+      }
     } catch (e) {
       toast.error(getErrorMessage(e, "Không thể tải danh sách sự kiện"));
     } finally {
-      setIsLoading(false);
+      if (isSearch) {
+        setIsSearching(false);
+      } else {
+        setIsLoading(false);
+      }
     }
-  };
-
-  useEffect(() => {
-    fetchTerms();
   }, []);
+
+  const handleSearch = useCallback((query: string) => {
+    const trimmedQuery = query.trim();
+    setSearchTerm(trimmedQuery);
+    
+    if (trimmedQuery) {
+      fetchTerms({ name: trimmedQuery }, true);
+    } else {
+      // If no search term, fetch all terms
+      fetchTerms({}, true);
+    }
+  }, [fetchTerms]);
+
+  const handleRefresh = useCallback(() => {
+    // Refresh with current search term
+    if (searchTerm.trim()) {
+      fetchTerms({ name: searchTerm.trim() }, true);
+    } else {
+      fetchTerms({}, true);
+    }
+  }, [searchTerm, fetchTerms]);
+
+  // Initial load
+  useEffect(() => {
+    fetchTerms({});
+  }, [fetchTerms]);
 
   return (
     <div>
@@ -45,13 +85,19 @@ export default function TermPage() {
         <ComponentCard title="">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Đang tải danh sách sự kiện...</p>
+              </div>
             </div>
           ) : (
             <TermDataTable 
               headers={headers} 
               items={terms} 
-              onRefresh={fetchTerms}
+              onRefresh={handleRefresh}
+              searchTerm={searchTerm}
+              onSearch={handleSearch}
+              isSearching={isSearching}
             />
           )}
         </ComponentCard>
