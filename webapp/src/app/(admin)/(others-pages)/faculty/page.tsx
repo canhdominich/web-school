@@ -14,6 +14,7 @@ export default function FacultyPage() {
     { key: "name", title: "Tên khoa" },
     { key: "code", title: "Mã khoa" },
     { key: "description", title: "Mô tả" },
+    { key: "school", title: "Trường" },
     { key: "createdAt", title: "Ngày tạo" },
     { key: "updatedAt", title: "Ngày cập nhật" },
     { key: "action", title: "Hành động" },

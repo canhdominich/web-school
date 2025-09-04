@@ -51,6 +51,8 @@ export interface Faculty extends RowData {
     code: string;
     name: string;
     description?: string;
+    schoolId: number;
+    school?: School;
     createdAt: string;
     updatedAt: string;
 }

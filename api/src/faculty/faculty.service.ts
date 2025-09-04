@@ -1,24 +1,32 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Faculty } from './faculty.entity';
+import { School } from '../school/school.entity';
 import { CreateFacultyDto } from './dto/create-faculty.dto';
 import { UpdateFacultyDto } from './dto/update-faculty.dto';
 import { SearchFacultyDto } from './dto/search-faculty.dto';
-import { PaginatedFacultyResponseDto } from './dto/paginated-faculty-response.dto';
+import { PaginatedFacultyResponseDto, FacultyResponseDto } from './dto';
 
 @Injectable()
 export class FacultyService {
   constructor(
     @InjectRepository(Faculty)
     private readonly facultyRepository: Repository<Faculty>,
+    @InjectRepository(School)
+    private readonly schoolRepository: Repository<School>,
   ) {}
 
-  async create(createFacultyDto: CreateFacultyDto): Promise<Faculty> {
+  async create(
+    createFacultyDto: CreateFacultyDto,
+  ): Promise<FacultyResponseDto> {
     // Check if faculty code already exists
     const existingFaculty = await this.facultyRepository.findOne({
       where: { code: createFacultyDto.code },
@@ -27,21 +35,35 @@ export class FacultyService {
       throw new ConflictException('Mã khoa đã tồn tại');
     }
 
+    // Check if school exists
+    const school = await this.schoolRepository.findOne({
+      where: { id: createFacultyDto.schoolId },
+    });
+    if (!school) {
+      throw new BadRequestException('Trường không tồn tại');
+    }
+
     const faculty = this.facultyRepository.create(createFacultyDto);
-    return this.facultyRepository.save(faculty);
+    const savedFaculty = await this.facultyRepository.save(faculty);
+    return this.findOneWithSchool(savedFaculty.id);
   }
 
   async findAll(
     searchDto?: SearchFacultyDto,
-  ): Promise<Faculty[] | PaginatedFacultyResponseDto> {
+  ): Promise<FacultyResponseDto[] | PaginatedFacultyResponseDto> {
     if (!searchDto || Object.keys(searchDto).length === 0) {
-      return this.facultyRepository.find();
+      const faculties = await this.facultyRepository.find({
+        relations: ['school'],
+      });
+      return faculties.map((faculty) => this.mapToResponseDto(faculty));
     }
 
     const { name, code, description, page, limit, sortBy, sortOrder } =
       searchDto;
 
-    const queryBuilder = this.facultyRepository.createQueryBuilder('faculty');
+    const queryBuilder = this.facultyRepository
+      .createQueryBuilder('faculty')
+      .leftJoinAndSelect('faculty.school', 'school');
 
     if (name) {
       queryBuilder.andWhere('faculty.name LIKE :name', { name: `%${name}%` });
@@ -87,7 +109,7 @@ export class FacultyService {
       const hasPrev = page > 1;
 
       return {
-        data,
+        data: data.map((faculty) => this.mapToResponseDto(faculty)),
         total,
         page,
         limit,
@@ -97,23 +119,31 @@ export class FacultyService {
       };
     }
 
-    return queryBuilder.getMany();
+    const faculties = await queryBuilder.getMany();
+    return faculties.map((faculty) => this.mapToResponseDto(faculty));
   }
 
-  async findOne(id: number): Promise<Faculty> {
-    const faculty = await this.facultyRepository.findOne({ where: { id } });
+  async findOne(id: number): Promise<FacultyResponseDto> {
+    return this.findOneWithSchool(id);
+  }
+
+  async findOneWithSchool(id: number): Promise<FacultyResponseDto> {
+    const faculty = await this.facultyRepository.findOne({
+      where: { id },
+      relations: ['school'],
+    });
 
     if (!faculty) {
       throw new NotFoundException(`Không tìm thấy khoa có ID ${id}`);
     }
 
-    return faculty;
+    return this.mapToResponseDto(faculty);
   }
 
   async update(
     id: number,
     updateFacultyDto: UpdateFacultyDto,
-  ): Promise<Faculty> {
+  ): Promise<FacultyResponseDto> {
     const faculty = await this.facultyRepository.findOne({ where: { id } });
 
     if (!faculty) {
@@ -130,18 +160,53 @@ export class FacultyService {
       }
     }
 
+    // Check if school exists (if schoolId is being updated)
+    if (updateFacultyDto.schoolId) {
+      const school = await this.schoolRepository.findOne({
+        where: { id: updateFacultyDto.schoolId },
+      });
+      if (!school) {
+        throw new BadRequestException('Trường không tồn tại');
+      }
+    }
+
     Object.assign(faculty, updateFacultyDto);
-    return this.facultyRepository.save(faculty);
+    const updatedFaculty = await this.facultyRepository.save(faculty);
+    return this.findOneWithSchool(updatedFaculty.id);
   }
 
-  async remove(id: number): Promise<Faculty> {
-    const faculty = await this.facultyRepository.findOne({ where: { id } });
+  async remove(id: number): Promise<FacultyResponseDto> {
+    const faculty = await this.facultyRepository.findOne({
+      where: { id },
+      relations: ['school'],
+    });
 
     if (!faculty) {
       throw new NotFoundException(`Không tìm thấy khoa có ID ${id}`);
     }
 
     await this.facultyRepository.remove(faculty);
-    return faculty;
+    return this.mapToResponseDto(faculty);
+  }
+
+  private mapToResponseDto(faculty: Faculty): FacultyResponseDto {
+    return {
+      id: faculty.id,
+      code: faculty.code,
+      name: faculty.name,
+      description: faculty.description,
+      schoolId: faculty.schoolId,
+      school: faculty.school
+        ? {
+            id: faculty.school.id,
+            code: faculty.school.code,
+            name: faculty.school.name,
+            description: faculty.school.description,
+            address: faculty.school.address,
+          }
+        : null,
+      createdAt: faculty.createdAt,
+      updatedAt: faculty.updatedAt,
+    };
   }
 }

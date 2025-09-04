@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { School } from '../school/school.entity';
 
 @Entity('faculties')
 export class Faculty {
@@ -19,6 +22,13 @@ export class Faculty {
 
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @Column({ type: 'bigint', nullable: true })
+  schoolId: number;
+
+  @ManyToOne(() => School, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'schoolId' })
+  school: School;
 
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;

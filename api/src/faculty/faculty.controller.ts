@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   Controller,
   Get,
@@ -13,7 +14,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FacultyService } from './faculty.service';
 import { CreateFacultyDto } from './dto/create-faculty.dto';
 import { UpdateFacultyDto } from './dto/update-faculty.dto';
-import { Faculty } from './faculty.entity';
+import { FacultyResponseDto, PaginatedFacultyResponseDto } from './dto';
 import { SearchFacultyDto } from './dto/search-faculty.dto';
 
 @ApiTags('faculties')
@@ -26,10 +27,12 @@ export class FacultyController {
   @ApiResponse({
     status: 201,
     description: 'Faculty successfully created.',
-    type: Faculty,
+    type: FacultyResponseDto,
   })
   @ApiResponse({ status: 409, description: 'Faculty code already exists.' })
-  create(@Body() createFacultyDto: CreateFacultyDto) {
+  create(
+    @Body() createFacultyDto: CreateFacultyDto,
+  ): Promise<FacultyResponseDto> {
     return this.facultyService.create(createFacultyDto);
   }
 
@@ -39,13 +42,13 @@ export class FacultyController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Return faculties (all or filtered with pagination).',
-    schema: {
-      oneOf: [
-        { type: 'array', items: { $ref: '#/components/schemas/Faculty' } },
-        { $ref: '#/components/schemas/PaginatedFacultyResponseDto' },
-      ],
-    },
+    description: 'Return all faculties.',
+    type: [FacultyResponseDto],
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated faculties.',
+    type: PaginatedFacultyResponseDto,
   })
   findAll(@Query() searchDto?: SearchFacultyDto) {
     return this.facultyService.findAll(searchDto);
@@ -56,10 +59,10 @@ export class FacultyController {
   @ApiResponse({
     status: 200,
     description: 'Return the faculty.',
-    type: Faculty,
+    type: FacultyResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Faculty not found.' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<FacultyResponseDto> {
     return this.facultyService.findOne(id);
   }
 
@@ -68,21 +71,25 @@ export class FacultyController {
   @ApiResponse({
     status: 200,
     description: 'Faculty successfully updated.',
-    type: Faculty,
+    type: FacultyResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Faculty not found.' })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateFacultyDto: UpdateFacultyDto,
-  ) {
+  ): Promise<FacultyResponseDto> {
     return this.facultyService.update(id, updateFacultyDto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a faculty' })
-  @ApiResponse({ status: 200, description: 'Faculty successfully deleted.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Faculty successfully deleted.',
+    type: FacultyResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Faculty not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseIntPipe) id: number): Promise<FacultyResponseDto> {
     return this.facultyService.remove(id);
   }
 }

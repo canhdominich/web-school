@@ -56,6 +56,7 @@ export const createFaculty = async (data: {
     name: string;
     code: string;
     description?: string;
+    schoolId: number;
 }): Promise<Faculty> => {
     const res = await httpClient.post('/faculties', data);
     return res.data;
@@ -65,6 +66,7 @@ export const updateFaculty = async (id: string, data: {
     name?: string;
     code?: string;
     description?: string;
+    schoolId?: number;
 }): Promise<Faculty> => {
     const res = await httpClient.patch(`/faculties/${id}`, data);
     return res.data;
@@ -78,10 +80,12 @@ export interface CreateFacultyDto {
     name: string;
     code: string;
     description?: string;
+    schoolId: number;
 }
 
 export interface UpdateFacultyDto {
     name?: string;
     code?: string;
     description?: string;
+    schoolId?: number;
 }

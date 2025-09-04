@@ -6,7 +6,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Department } from './department.entity';
-import { CreateDepartmentDto, UpdateDepartmentDto, SearchDepartmentDto, PaginatedDepartmentResponseDto } from './dto';
+import {
+  CreateDepartmentDto,
+  UpdateDepartmentDto,
+  SearchDepartmentDto,
+  PaginatedDepartmentResponseDto,
+} from './dto';
 import { Faculty } from '../faculty/faculty.entity';
 
 @Injectable()
@@ -50,18 +55,31 @@ export class DepartmentService {
       });
     }
 
-    const { name, code, description, facultyId, page, limit, sortBy, sortOrder } =
-      searchDto;
+    const {
+      name,
+      code,
+      description,
+      facultyId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = searchDto;
 
-    const queryBuilder = this.departmentRepository.createQueryBuilder('department')
+    const queryBuilder = this.departmentRepository
+      .createQueryBuilder('department')
       .leftJoinAndSelect('department.faculty', 'faculty');
 
     if (name) {
-      queryBuilder.andWhere('department.name LIKE :name', { name: `%${name}%` });
+      queryBuilder.andWhere('department.name LIKE :name', {
+        name: `%${name}%`,
+      });
     }
 
     if (code) {
-      queryBuilder.andWhere('department.code LIKE :code', { code: `%${code}%` });
+      queryBuilder.andWhere('department.code LIKE :code', {
+        code: `%${code}%`,
+      });
     }
 
     if (description) {

@@ -15,6 +15,7 @@ import { CreateSchoolDto } from './dto/create-school.dto';
 import { UpdateSchoolDto } from './dto/update-school.dto';
 import { School } from './school.entity';
 import { SearchSchoolDto } from './dto/search-school.dto';
+import { PaginatedSchoolResponseDto } from './dto/paginated-school-response.dto';
 
 @ApiTags('schools')
 @Controller('schools')

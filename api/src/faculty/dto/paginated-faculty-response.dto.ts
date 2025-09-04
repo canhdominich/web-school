@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Faculty } from '../faculty.entity';
+import { FacultyResponseDto } from './faculty-response.dto';
 
 export class PaginatedFacultyResponseDto {
   @ApiProperty({
     description: 'Danh sách khoa',
-    type: [Faculty],
+    type: [FacultyResponseDto],
   })
-  data: Faculty[];
+  data: FacultyResponseDto[];
 
   @ApiProperty({
     description: 'Tổng số khoa',

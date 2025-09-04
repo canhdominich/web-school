@@ -15,6 +15,7 @@ import { CreateAcademicYearDto } from './dto/create-academic-year.dto';
 import { UpdateAcademicYearDto } from './dto/update-academic-year.dto';
 import { AcademicYear } from './academic-year.entity';
 import { SearchAcademicYearDto } from './dto/search-academic-year.dto';
+import { PaginatedAcademicYearResponseDto } from './dto/paginated-academic-year-response.dto';
 
 @ApiTags('academic-years')
 @Controller('academic-years')

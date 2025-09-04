@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { TableCell, TableRow } from "../ui/table";
-import { BasicTableProps, Header, Faculty } from "@/types/common";
+import { BasicTableProps, Header, Faculty, School } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { CreateFacultyDto, createFaculty, deleteFaculty, updateFaculty, UpdateFacultyDto } from "@/services/facultyService";
+import { getSchools } from "@/services/schoolService";
 import { toast } from "react-hot-toast";
 import SearchableDataTable from "../common/SearchableDataTable";
 import { PaginationInfo } from "../common/Pagination";
@@ -34,12 +35,33 @@ export default function FacultyDataTable({
 }: FacultyDataTableProps) {
   const [selectedFaculty, setSelectedFaculty] = useState<Faculty | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [isLoadingSchools, setIsLoadingSchools] = useState(false);
   const [formData, setFormData] = useState<CreateFacultyDto | UpdateFacultyDto>({
     name: "",
     code: "",
     description: "",
+    schoolId: undefined,
   });
   const { isOpen, openModal, closeModal } = useModal();
+
+  // Load schools when component mounts
+  useEffect(() => {
+    const loadSchools = async () => {
+      try {
+        setIsLoadingSchools(true);
+        const response = await getSchools({ limit: 1000 }); // Get all schools
+        setSchools(response.data);
+      } catch (error) {
+        console.error('Error loading schools:', error);
+        toast.error('Không thể tải danh sách trường');
+      } finally {
+        setIsLoadingSchools(false);
+      }
+    };
+    
+    loadSchools();
+  }, []);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -49,6 +71,7 @@ export default function FacultyDataTable({
         name: "",
         code: "",
         description: "",
+        schoolId: undefined,
       });
     }
   }, [isOpen]);
@@ -60,6 +83,7 @@ export default function FacultyDataTable({
         name: selectedFaculty.name,
         code: selectedFaculty.code,
         description: selectedFaculty.description || "",
+        schoolId: selectedFaculty.schoolId,
       });
     }
   }, [selectedFaculty]);
@@ -72,6 +96,20 @@ export default function FacultyDataTable({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    // Validation
+    if (!formData.name?.trim()) {
+      toast.error("Vui lòng nhập tên khoa");
+      return;
+    }
+    if (!formData.code?.trim()) {
+      toast.error("Vui lòng nhập mã khoa");
+      return;
+    }
+    if (!formData.schoolId) {
+      toast.error("Vui lòng chọn trường");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -154,6 +192,18 @@ export default function FacultyDataTable({
         {faculty.description || "Không có mô tả"}
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {faculty.school?.name || "Chưa có trường"}
+          </span>
+          {faculty.school?.code && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {faculty.school.code}
+            </span>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         {new Date(faculty.createdAt).toLocaleString('vi-VN')}
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
@@ -219,7 +269,7 @@ export default function FacultyDataTable({
           <div className="mt-8">
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Tên khoa
+                Tên khoa <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
@@ -232,7 +282,7 @@ export default function FacultyDataTable({
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Mã khoa
+                Mã khoa <span className="text-red-500">*</span>
               </label>
               <input
                 id="code"
@@ -242,6 +292,25 @@ export default function FacultyDataTable({
                 className="dark:bg-gray-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                 placeholder="Nhập mã khoa"
               />
+            </div>
+            <div className="mb-3">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Trường <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="schoolId"
+                value={formData.schoolId || ""}
+                onChange={(e) => setFormData({ ...formData, schoolId: e.target.value ? Number(e.target.value) : undefined })}
+                className="dark:bg-gray-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                disabled={isLoadingSchools}
+              >
+                <option value="">Chọn trường</option>
+                {schools.map((school) => (
+                  <option key={school.id} value={school.id}>
+                    {school.name} ({school.code})
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
