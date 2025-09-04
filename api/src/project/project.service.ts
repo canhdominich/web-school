@@ -55,7 +55,7 @@ export class ProjectService {
       where: { code: createProjectDto.code },
     });
     if (existingProject) {
-      throw new ConflictException('Mã dự án đã tồn tại');
+      throw new ConflictException('Mã đề tài đã tồn tại');
     }
 
     // Check if all students exist
@@ -155,8 +155,8 @@ export class ProjectService {
       // Notification for supervisor
       if (project.supervisorUser) {
         await this.notificationService.create({
-          title: 'Dự án mới được giao',
-          body: `Bạn đã được yêu cầu làm giảng viên hướng dẫn cho dự án "${project.title}" (${project.code})`,
+          title: 'Đề tài mới được giao',
+          body: `Bạn đã được yêu cầu làm giảng viên hướng dẫn cho đề tài "${project.title}" (${project.code})`,
           userId: project.supervisorUser.id,
         });
       }
@@ -164,8 +164,8 @@ export class ProjectService {
       // Notifications for project members
       if (createProjectDto.members && createProjectDto.members.length > 0) {
         const memberNotifications = createProjectDto.members.map((member) => ({
-          title: 'Bạn đã được thêm vào dự án mới',
-          body: `Bạn đã được thêm vào dự án "${project.title}" (${project.code}) với vai trò ${member.roleInTeam}`,
+          title: 'Bạn đã được thêm vào đề tài mới',
+          body: `Bạn đã được thêm vào đề tài "${project.title}" (${project.code}) với vai trò ${member.roleInTeam}`,
           userId: member.studentId,
         }));
 
@@ -296,8 +296,8 @@ export class ProjectService {
             `📢 Creating removal notification for user ${member.studentId}`,
           );
           await this.notificationService.create({
-            title: 'Bạn đã bị loại khỏi dự án',
-            body: `Bạn đã bị loại khỏi dự án "${project.title}" (${project.code})`,
+            title: 'Bạn đã bị loại khỏi đề tài',
+            body: `Bạn đã bị loại khỏi đề tài "${project.title}" (${project.code})`,
             userId: member.studentId,
             link: undefined,
           });
@@ -312,8 +312,8 @@ export class ProjectService {
             `📢 Creating addition notification for user ${member.studentId}`,
           );
           await this.notificationService.create({
-            title: 'Bạn đã được thêm vào dự án',
-            body: `Bạn đã được thêm vào dự án "${project.title}" (${project.code}) với vai trò ${member.roleInTeam}`,
+            title: 'Bạn đã được thêm vào đề tài',
+            body: `Bạn đã được thêm vào đề tài "${project.title}" (${project.code}) với vai trò ${member.roleInTeam}`,
             userId: member.studentId,
             link: undefined,
           });
@@ -370,8 +370,8 @@ export class ProjectService {
 
             try {
               const notification = await this.notificationService.create({
-                title: 'Vai trò của bạn trong dự án đã thay đổi',
-                body: `Vai trò của bạn trong dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldMember.roleInTeam}" thành "${memberUpdate.roleInTeam}"`,
+                title: 'Vai trò của bạn trong đề tài đã thay đổi',
+                body: `Vai trò của bạn trong đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldMember.roleInTeam}" thành "${memberUpdate.roleInTeam}"`,
                 userId: memberUpdate.studentId,
                 link: undefined,
               });
@@ -403,8 +403,8 @@ export class ProjectService {
         );
         for (const member of removedMembers) {
           await this.notificationService.create({
-            title: 'Bạn đã bị loại khỏi dự án',
-            body: `Bạn đã bị loại khỏi dự án "${project.title}" (${project.code})`,
+            title: 'Bạn đã bị loại khỏi đề tài',
+            body: `Bạn đã bị loại khỏi đề tài "${project.title}" (${project.code})`,
             userId: member.studentId,
             link: undefined,
           });
@@ -416,8 +416,8 @@ export class ProjectService {
         );
         for (const member of addedMembers) {
           await this.notificationService.create({
-            title: 'Bạn đã được thêm vào dự án',
-            body: `Bạn đã được thêm vào dự án "${project.title}" (${project.code}) với vai trò ${member.roleInTeam}`,
+            title: 'Bạn đã được thêm vào đề tài',
+            body: `Bạn đã được thêm vào đề tài "${project.title}" (${project.code}) với vai trò ${member.roleInTeam}`,
             userId: member.studentId,
             link: undefined,
           });
@@ -433,8 +433,8 @@ export class ProjectService {
           );
           if (oldMember && oldMember.roleInTeam !== newMember.roleInTeam) {
             await this.notificationService.create({
-              title: 'Vai trò của bạn trong dự án đã thay đổi',
-              body: `Vai trò của bạn trong dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldMember.roleInTeam}" thành "${newMember.roleInTeam}"`,
+              title: 'Vai trò của bạn trong đề tài đã thay đổi',
+              body: `Vai trò của bạn trong đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldMember.roleInTeam}" thành "${newMember.roleInTeam}"`,
               userId: newMember.studentId,
               link: undefined,
             });
@@ -456,7 +456,7 @@ export class ProjectService {
       // Notification for old supervisor
       await this.notificationService.create({
         title: 'Bạn không còn là giảng viên hướng dẫn',
-        body: `Bạn không còn là giảng viên hướng dẫn cho dự án "${project.title}" (${project.code})`,
+        body: `Bạn không còn là giảng viên hướng dẫn cho đề tài "${project.title}" (${project.code})`,
         userId: oldSupervisorId,
         link: undefined,
       });
@@ -464,7 +464,7 @@ export class ProjectService {
       // Notification for new supervisor
       await this.notificationService.create({
         title: 'Bạn đã được giao làm giảng viên hướng dẫn',
-        body: `Bạn đã được giao làm giảng viên hướng dẫn cho dự án "${project.title}" (${project.code})`,
+        body: `Bạn đã được giao làm giảng viên hướng dẫn cho đề tài "${project.title}" (${project.code})`,
         userId: newSupervisorId,
         link: undefined,
       });
@@ -476,8 +476,8 @@ export class ProjectService {
 
       for (const member of projectMembers) {
         await this.notificationService.create({
-          title: 'Giảng viên hướng dẫn dự án đã thay đổi',
-          body: `Giảng viên hướng dẫn dự án "${project.title}" (${project.code}) đã thay đổi`,
+          title: 'Giảng viên hướng dẫn đề tài đã thay đổi',
+          body: `Giảng viên hướng dẫn đề tài "${project.title}" (${project.code}) đã thay đổi`,
           userId: member.studentId,
           link: undefined,
         });
@@ -512,8 +512,8 @@ export class ProjectService {
       // Notification for supervisor about status change
       if (project.supervisorUser) {
         await this.notificationService.create({
-          title: 'Trạng thái dự án đã thay đổi',
-          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
+          title: 'Trạng thái đề tài đã thay đổi',
+          body: `Đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
           userId: project.supervisorUser.id,
           link: undefined,
         });
@@ -526,8 +526,8 @@ export class ProjectService {
 
       for (const member of projectMembers) {
         await this.notificationService.create({
-          title: 'Trạng thái dự án đã thay đổi',
-          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
+          title: 'Trạng thái đề tài đã thay đổi',
+          body: `Đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
           userId: member.studentId,
           link: undefined,
         });
@@ -539,8 +539,8 @@ export class ProjectService {
         project.createdByUser.id !== project.supervisorUser?.id
       ) {
         await this.notificationService.create({
-          title: 'Trạng thái dự án đã thay đổi',
-          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
+          title: 'Trạng thái đề tài đã thay đổi',
+          body: `Đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldStatusLabel}" sang "${newStatusLabel}"`,
           userId: project.createdByUser.id,
           link: undefined,
         });
@@ -572,8 +572,8 @@ export class ProjectService {
       // Notification for supervisor about level change
       if (project.supervisorUser) {
         await this.notificationService.create({
-          title: 'Cấp độ dự án đã thay đổi',
-          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
+          title: 'Cấp độ đề tài đã thay đổi',
+          body: `Đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
           userId: project.supervisorUser.id,
           link: undefined,
         });
@@ -586,8 +586,8 @@ export class ProjectService {
 
       for (const member of projectMembers) {
         await this.notificationService.create({
-          title: 'Cấp độ dự án đã thay đổi',
-          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
+          title: 'Cấp độ đề tài đã thay đổi',
+          body: `Đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
           userId: member.studentId,
           link: undefined,
         });
@@ -599,8 +599,8 @@ export class ProjectService {
         project.createdByUser.id !== project.supervisorUser?.id
       ) {
         await this.notificationService.create({
-          title: 'Cấp độ dự án đã thay đổi',
-          body: `Dự án "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
+          title: 'Cấp độ đề tài đã thay đổi',
+          body: `Đề tài "${project.title}" (${project.code}) đã thay đổi từ "${oldLevelLabel}" sang "${newLevelLabel}"`,
           userId: project.createdByUser.id,
           link: undefined,
         });
@@ -1055,7 +1055,7 @@ export class ProjectService {
     });
 
     if (!project) {
-      throw new NotFoundException(`Không tìm thấy dự án có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy đề tài có ID ${id}`);
     }
 
     return project;
@@ -1073,7 +1073,7 @@ export class ProjectService {
     const project = await this.projectRepository.findOne({ where: { id } });
 
     if (!project) {
-      throw new NotFoundException(`Không tìm thấy dự án có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy đề tài có ID ${id}`);
     }
 
     // Check if project code already exists (if code is being updated)
@@ -1082,7 +1082,7 @@ export class ProjectService {
         where: { code: updateProjectDto.code },
       });
       if (existingProject) {
-        throw new ConflictException('Mã dự án đã tồn tại');
+        throw new ConflictException('Mã đề tài đã tồn tại');
       }
     }
 
@@ -1365,7 +1365,7 @@ export class ProjectService {
     });
 
     if (!project) {
-      throw new NotFoundException(`Không tìm thấy dự án có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy đề tài có ID ${id}`);
     }
 
     // Create notifications before removing the project
@@ -1382,8 +1382,8 @@ export class ProjectService {
       // Notification for supervisor
       if (project.supervisorUser) {
         await this.notificationService.create({
-          title: 'Dự án đã bị xóa',
-          body: `Dự án "${project.title}" (${project.code}) mà bạn đang hướng dẫn đã bị xóa`,
+          title: 'Đề tài đã bị xóa',
+          body: `Đề tài "${project.title}" (${project.code}) mà bạn đang hướng dẫn đã bị xóa`,
           userId: project.supervisorUser.id,
           link: undefined,
         });
@@ -1393,8 +1393,8 @@ export class ProjectService {
       if (project.members && project.members.length > 0) {
         for (const member of project.members) {
           await this.notificationService.create({
-            title: 'Dự án đã bị xóa',
-            body: `Dự án "${project.title}" (${project.code}) mà bạn đang tham gia đã bị xóa`,
+            title: 'Đề tài đã bị xóa',
+            body: `Đề tài "${project.title}" (${project.code}) mà bạn đang tham gia đã bị xóa`,
             userId: member.studentId,
             link: undefined,
           });

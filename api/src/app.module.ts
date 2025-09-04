@@ -17,6 +17,7 @@ import { ProjectMilestoneModule } from './project-milestone/project-milestone.mo
 import { MilestoneSubmissionModule } from './milestone-submission/milestone-submission.module';
 import { StatisticModule } from './statistic/statistic.module';
 import { CouncilModule } from './council/council.module';
+import { SchoolModule } from './school/school.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { CouncilModule } from './council/council.module';
     RoleModule,
     UserModule,
     UserRoleModule,
+    SchoolModule,
     FacultyModule,
     DepartmentModule,
     MajorModule,

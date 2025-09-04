@@ -1,27 +1,26 @@
 "use client";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import ProjectDataTable from "@/components/project/ProjectDataTable";
-import { getProjects, ProjectEntity, SearchProjectDto } from "@/services/projectService";
+import SchoolDataTable from "@/components/school/SchoolDataTable";
+import { getSchools, SearchSchoolDto } from "@/services/schoolService";
+import { School } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
 import { usePagination } from "@/hooks/usePagination";
 
-export default function ProjectPage() {
+export default function SchoolPage() {
   const headers = [
-    { key: "title", title: "Tên đề tài" },
-    { key: "lecturer", title: "Hướng dẫn" },
-    { key: "averageScore", title: "Điểm TB" },
-    { key: "council", title: "Hội đồng" },
-    { key: "milestone", title: "Cột mốc" },
-    { key: "level", title: "Cấp độ" },
-    { key: "members", title: "Thành viên" },
-    { key: "status", title: "Trạng thái" },
+    { key: "name", title: "Tên trường" },
+    { key: "code", title: "Mã trường" },
+    { key: "description", title: "Mô tả" },
+    { key: "address", title: "Địa chỉ" },
+    { key: "createdAt", title: "Ngày tạo" },
+    { key: "updatedAt", title: "Ngày cập nhật" },
     { key: "action", title: "Hành động" },
   ];
 
-  const [projects, setProjects] = useState<ProjectEntity[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,7 +37,7 @@ export default function ProjectPage() {
     resetToFirstPage,
   } = usePagination();
 
-  const fetchProjects = useCallback(async (params?: SearchProjectDto, isSearch = false) => {
+  const fetchSchools = useCallback(async (params?: SearchSchoolDto, isSearch = false) => {
     try {
       if (isSearch) {
         setIsSearching(true);
@@ -47,20 +46,20 @@ export default function ProjectPage() {
       }
       
       // Always include pagination parameters
-      const searchParams: SearchProjectDto = {
+      const searchParams: SearchSchoolDto = {
         ...params,
         page: currentPage,
         limit: itemsPerPage,
       };
       
-      const data = await getProjects(searchParams);
+      const data = await getSchools(searchParams);
       
       // API now always returns paginated response
-      setProjects(data.data);
+      setSchools(data.data);
       setTotalItems(data.total);
       setTotalPages(data.totalPages);
     } catch (e) {
-      toast.error(getErrorMessage(e, "Không thể tải danh sách đề tài"));
+      toast.error(getErrorMessage(e, "Không thể tải danh sách trường"));
     } finally {
       if (isSearch) {
         setIsSearching(false);
@@ -68,7 +67,7 @@ export default function ProjectPage() {
         setIsLoading(false);
       }
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
@@ -76,30 +75,30 @@ export default function ProjectPage() {
     resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
-      fetchProjects({ title: trimmedQuery }, true);
+      fetchSchools({ name: trimmedQuery }, true);
     } else {
-      // If no search term, fetch all projects
-      fetchProjects({}, true);
+      // If no search term, fetch all schools
+      fetchSchools({}, true);
     }
-  }, [fetchProjects, resetToFirstPage]);
+  }, [fetchSchools, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
     // Refresh with current search term and pagination
     if (searchTerm.trim()) {
-      fetchProjects({ title: searchTerm.trim() }, true);
+      fetchSchools({ name: searchTerm.trim() }, true);
     } else {
-      fetchProjects({}, true);
+      fetchSchools({}, true);
     }
-  }, [searchTerm, fetchProjects]);
+  }, [searchTerm, fetchSchools]);
 
   // Initial load and fetch data when pagination changes
   useEffect(() => {
-    fetchProjects({});
-  }, [fetchProjects]);
+    fetchSchools({});
+  }, [fetchSchools]);
 
   return (
     <div>
-      <PageBreadcrumb pageTitle="Quản lý đề tài" />
+      <PageBreadcrumb pageTitle="Quản lý trường" />
       <div className="space-y-6">
         <ComponentCard title="">
           {isLoading ? (
@@ -109,9 +108,9 @@ export default function ProjectPage() {
               </div>
             </div>
           ) : (
-            <ProjectDataTable
-              headers={headers}
-              items={projects}
+            <SchoolDataTable 
+              headers={headers} 
+              items={schools} 
               onRefresh={handleRefresh}
               searchTerm={searchTerm}
               onSearch={handleSearch}
@@ -125,4 +124,4 @@ export default function ProjectPage() {
       </div>
     </div>
   );
-} 
+}

@@ -606,7 +606,7 @@ export class UserService {
     if (projectMembers > 0) {
       violations.push({
         table: 'project_members',
-        detail: `${projectMembers} thành viên dự án`,
+        detail: `${projectMembers} thành viên đề tài`,
       });
     }
 
@@ -618,7 +618,7 @@ export class UserService {
     if (createdProjects > 0) {
       violations.push({
         table: 'projects',
-        detail: `${createdProjects} dự án đã tạo`,
+        detail: `${createdProjects} đề tài đã tạo`,
       });
     }
 
@@ -629,7 +629,7 @@ export class UserService {
     if (supervisedProjects > 0) {
       violations.push({
         table: 'projects',
-        detail: `${supervisedProjects} dự án đang giám sát`,
+        detail: `${supervisedProjects} đề tài đang giám sát`,
       });
     }
 

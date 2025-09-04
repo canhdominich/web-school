@@ -39,11 +39,11 @@ const StatisticsChart = () => {
 
   const series = [
     {
-      name: "Dự án",
+      name: "Đề tài",
       data: stats.projects.monthlyProjects,
     },
     {
-      name: "Dự án hoàn thành",
+      name: "Đề tài hoàn thành",
       data: stats.projects.monthlyCompletedProjects,
     },
   ];
@@ -91,13 +91,13 @@ const StatisticsChart = () => {
     yaxis: [
       {
         title: {
-          text: "Dự án",
+          text: "Đề tài",
         },
       },
       {
         opposite: true,
         title: {
-          text: "Dự án hoàn thành",
+          text: "Đề tài hoàn thành",
         },
       },
     ],
@@ -125,7 +125,7 @@ const StatisticsChart = () => {
     <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
       <div>
         <h3 className="text-xl font-semibold text-black dark:text-white">
-          Thống kê dự án
+          Thống kê đề tài
         </h3>
       </div>
 

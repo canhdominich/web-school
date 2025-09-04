@@ -3,13 +3,13 @@ MÔ TẢ DỰ ÁN WEB-SCHOOL
 
 TỔNG QUAN DỰ ÁN
 -----------------
-Web-School là một hệ thống quản lý dự án học tập và nghiên cứu dành cho các trường đại học, 
+Web-School là một hệ thống quản lý đề tài học tập và nghiên cứu dành cho các trường đại học, 
 được xây dựng với kiến trúc microservice gồm backend API (NestJS) và frontend web app (React/Next.js).
 
 MỤC TIÊU DỰ ÁN
 ----------------
-- Quản lý toàn diện các dự án học tập và nghiên cứu của sinh viên
-- Hỗ trợ quy trình chấm điểm và đánh giá dự án
+- Quản lý toàn diện các đề tài học tập và nghiên cứu của sinh viên
+- Hỗ trợ quy trình chấm điểm và đánh giá đề tài
 - Quản lý hội đồng chấm điểm và thành viên
 - Cung cấp giao diện quản trị cho các vai trò khác nhau
 - Tích hợp hệ thống thông báo và theo dõi tiến độ
@@ -50,7 +50,7 @@ CÁC MODULE CHÍNH
 3. FACULTY & DEPARTMENT
    - Quản lý khoa và bộ môn
    - Phân cấp tổ chức trường học
-   - Liên kết với dự án và người dùng
+   - Liên kết với đề tài và người dùng
 
 4. MAJOR & TERM
    - Quản lý ngành học
@@ -58,29 +58,29 @@ CÁC MODULE CHÍNH
    - Cấu hình milestone cho từng học kỳ
 
 5. PROJECT MANAGEMENT
-   - Tạo và quản lý dự án học tập
-   - Quản lý thành viên dự án
+   - Tạo và quản lý đề tài học tập
+   - Quản lý thành viên đề tài
    - Theo dõi tiến độ và trạng thái
    - Quản lý milestone và deadline
 
 6. COUNCIL SYSTEM
    - Quản lý hội đồng chấm điểm
    - Phân công thành viên hội đồng
-   - Gán dự án cho hội đồng
+   - Gán đề tài cho hội đồng
    - Hệ thống chấm điểm và đánh giá
 
 7. MILESTONE & SUBMISSION
-   - Quản lý các mốc quan trọng của dự án
+   - Quản lý các mốc quan trọng của đề tài
    - Hệ thống nộp bài và theo dõi
    - Lịch sử nộp bài và đánh giá
 
 8. NOTIFICATION SYSTEM
    - Thông báo real-time
    - Email notifications
-   - Theo dõi trạng thái dự án
+   - Theo dõi trạng thái đề tài
 
 9. STATISTICS & REPORTING
-   - Báo cáo thống kê dự án
+   - Báo cáo thống kê đề tài
    - Dashboard cho admin và giảng viên
    - Biểu đồ và phân tích dữ liệu
 
@@ -89,33 +89,33 @@ CÁC VAI TRÒ VÀ QUYỀN HẠN
 
 1. ADMIN (Quản trị viên)
    - Quyền truy cập toàn bộ hệ thống
-   - Quản lý tất cả dự án, người dùng, hội đồng
-   - Có thể xóa dự án và thực hiện các thao tác quản trị
+   - Quản lý tất cả đề tài, người dùng, hội đồng
+   - Có thể xóa đề tài và thực hiện các thao tác quản trị
 
 2. STUDENT (Sinh viên)
-   - Tạo và quản lý dự án của mình
+   - Tạo và quản lý đề tài của mình
    - Nộp bài theo milestone
-   - Xem thông tin dự án và tiến độ
-   - Chỉnh sửa dự án khi ở trạng thái draft/pending
+   - Xem thông tin đề tài và tiến độ
+   - Chỉnh sửa đề tài khi ở trạng thái draft/pending
 
 3. LECTURER (Giảng viên)
-   - Quản lý dự án mà họ là supervisor
-   - Xem dự án trong hội đồng mà họ là thành viên
-   - Chấm điểm và đánh giá dự án
+   - Quản lý đề tài mà họ là supervisor
+   - Xem đề tài trong hội đồng mà họ là thành viên
+   - Chấm điểm và đánh giá đề tài
    - Quản lý milestone và deadline
 
 4. DEPARTMENT HEAD (Chủ nhiệm bộ môn)
-   - Quản lý dự án trong bộ môn của mình
-   - Xem dự án trong hội đồng mà họ là thành viên
-   - Phê duyệt và giám sát dự án
+   - Quản lý đề tài trong bộ môn của mình
+   - Xem đề tài trong hội đồng mà họ là thành viên
+   - Phê duyệt và giám sát đề tài
 
 5. FACULTY DEAN (Trưởng khoa)
-   - Quản lý dự án trong khoa của mình
-   - Xem dự án trong hội đồng mà họ là thành viên
+   - Quản lý đề tài trong khoa của mình
+   - Xem đề tài trong hội đồng mà họ là thành viên
    - Giám sát tổng thể hoạt động khoa
 
 6. COUNCIL (Hội đồng)
-   - Xem dự án được gán cho hội đồng
+   - Xem đề tài được gán cho hội đồng
    - Tham gia chấm điểm và đánh giá
    - Quản lý quy trình chấm điểm
 
@@ -129,7 +129,7 @@ TÍNH NĂNG NỔI BẬT
 
 2. HỆ THỐNG HỘI ĐỒNG LINH HOẠT
    - Tạo và quản lý hội đồng
-   - Phân công thành viên và dự án
+   - Phân công thành viên và đề tài
    - Quy trình chấm điểm chuẩn hóa
 
 3. BẢO MẬT VÀ PHÂN QUYỀN
@@ -233,8 +233,8 @@ HƯỚNG PHÁT TRIỂN TƯƠNG LAI
 
 KẾT LUẬN
 ----------
-Web-School là một hệ thống quản lý dự án học tập toàn diện, được thiết kế với kiến trúc hiện đại 
-và khả năng mở rộng cao. Hệ thống cung cấp giải pháp hoàn chỉnh cho việc quản lý dự án, 
+Web-School là một hệ thống quản lý đề tài học tập toàn diện, được thiết kế với kiến trúc hiện đại 
+và khả năng mở rộng cao. Hệ thống cung cấp giải pháp hoàn chỉnh cho việc quản lý đề tài, 
 hội đồng chấm điểm và theo dõi tiến độ học tập của sinh viên trong môi trường giáo dục đại học.
 
 Với giao diện thân thiện, tính năng phong phú và bảo mật cao, Web-School giúp nâng cao hiệu quả 

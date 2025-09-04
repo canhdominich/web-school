@@ -404,7 +404,7 @@ export class CouncilService {
     }
 
     if (!projectIds || projectIds.length === 0) {
-      throw new BadRequestException('Danh sách dự án không được để trống');
+      throw new BadRequestException('Danh sách đề tài không được để trống');
     }
 
     const projects = await this.projectRepository.find({
@@ -414,7 +414,7 @@ export class CouncilService {
     const missing = projectIds.filter((id) => !foundIds.has(id));
     if (missing.length > 0) {
       throw new BadRequestException(
-        `Không tìm thấy dự án có ID: ${missing.join(', ')}`,
+        `Không tìm thấy đề tài có ID: ${missing.join(', ')}`,
       );
     }
 
@@ -426,7 +426,7 @@ export class CouncilService {
       if (invalid.length > 0) {
         const invalidCodes = invalid.map((p) => p.code || p.id).join(', ');
         throw new BadRequestException(
-          `Các dự án không thuộc cùng khoa với hội đồng (facultyId=${council.facultyId}): ${invalidCodes}`,
+          `Các đề tài không thuộc cùng khoa với hội đồng (facultyId=${council.facultyId}): ${invalidCodes}`,
         );
       }
     }
@@ -439,7 +439,7 @@ export class CouncilService {
 
     if (toCreate.length === 0) {
       throw new BadRequestException(
-        'Tất cả dự án đã được gán cho hội đồng này',
+        'Tất cả đề tài đã được gán cho hội đồng này',
       );
     }
 
@@ -466,7 +466,7 @@ export class CouncilService {
     }
 
     if (!projectIds || projectIds.length === 0) {
-      throw new BadRequestException('Danh sách dự án không được để trống');
+      throw new BadRequestException('Danh sách đề tài không được để trống');
     }
 
     await this.councilProjectRepository.delete({
@@ -521,7 +521,7 @@ export class CouncilService {
       ) {
         const label = getProjectStatusLabel(project.status);
         throw new BadRequestException(
-          `Không thể thực hiện chấm điểm khi dự án đang ở trạng thái ${label}`,
+          `Không thể thực hiện chấm điểm khi đề tài đang ở trạng thái ${label}`,
         );
       }
     }
@@ -535,7 +535,7 @@ export class CouncilService {
       where: { councilId, projectId },
     });
     if (!mapping) {
-      throw new BadRequestException('Hội đồng chưa được gán cho dự án này');
+      throw new BadRequestException('Hội đồng chưa được gán cho đề tài này');
     }
 
     // Ensure lecturer is member of council
@@ -593,11 +593,11 @@ export class CouncilService {
       });
       if (proj && proj.members && proj.members.length > 0) {
         const notifications = proj.members.map((m) => ({
-          title: 'Cập nhật điểm trung bình dự án',
+          title: 'Cập nhật điểm trung bình đề tài',
           body:
             avg == null
-              ? `Dự án của bạn hiện chưa có điểm trung bình`
-              : `Điểm trung bình mới của dự án là ${avg}`,
+              ? `Đề tài của bạn hiện chưa có điểm trung bình`
+              : `Điểm trung bình mới của đề tài là ${avg}`,
           userId: m.studentId,
         }));
         await Promise.all(

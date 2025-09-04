@@ -277,20 +277,20 @@ export default function ProjectDataTable({
     
     // Kiểm tra quyền xóa trước khi thực hiện
     if (!canDeleteProject()) {
-      toast.error("Bạn không có quyền xóa dự án");
+      toast.error("Bạn không có quyền xóa đề tài");
       return;
     }
     
-    const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa dự án này?");
+    const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa đề tài này?");
     if (!isConfirmed) return;
     try {
       setIsSubmitting(true);
       await deleteProject(id.toString());
-      toast.success("Xóa dự án thành công");
+      toast.success("Xóa đề tài thành công");
       onRefresh();
     } catch (error: unknown) {
       console.error("Error in handleDelete:", error);
-      toast.error(getErrorMessage(error, "Không thể xóa dự án"));
+      toast.error(getErrorMessage(error, "Không thể xóa đề tài"));
     } finally {
       setIsSubmitting(false);
     }
@@ -365,11 +365,11 @@ export default function ProjectDataTable({
       if (selectedProject?.id) {
         const payload: UpdateProjectDto = transformUpdatePayload(formData as UpdateProjectDto);
         await updateProject(selectedProject.id.toString(), payload);
-        toast.success("Cập nhật dự án thành công");
+        toast.success("Cập nhật đề tài thành công");
       } else {
         const payload: CreateProjectDto = transformCreatePayload(formData as CreateProjectDto);
         await createProject(payload);
-        toast.success("Thêm dự án thành công");
+        toast.success("Thêm đề tài thành công");
       }
       closeModal();
       onRefresh();
@@ -377,7 +377,7 @@ export default function ProjectDataTable({
       setTimeout(() => loadProjectCouncils(), 100);
     } catch (error: unknown) {
       console.error("Error in handleSubmit:", error);
-      toast.error(getErrorMessage(error, selectedProject?.id ? "Không thể cập nhật dự án" : "Không thể thêm dự án"));
+      toast.error(getErrorMessage(error, selectedProject?.id ? "Không thể cập nhật đề tài" : "Không thể thêm đề tài"));
     } finally {
       setIsSubmitting(false);
     }
@@ -450,7 +450,7 @@ export default function ProjectDataTable({
         const grades = await getProjectGrades(projectCouncil.id.toString(), project.id.toString());
         setProjectGrades(grades);
       } else {
-        toast.error('Dự án này chưa được gán cho hội đồng nào');
+        toast.error('Đề tài này chưa được gán cho hội đồng nào');
         return;
       }
     } catch (error) {
@@ -715,7 +715,7 @@ export default function ProjectDataTable({
           <button
             onClick={() => openGradingModal(item)}
             className="btn btn-info btn-update-event flex w-full justify-center rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 sm:w-auto"
-            title="Chấm điểm dự án"
+            title="Chấm điểm đề tài"
           >
             <PencilIcon />
           </button>
@@ -731,7 +731,7 @@ export default function ProjectDataTable({
       type="button"
       className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
     >
-      Thêm dự án
+      Thêm đề tài
     </button>
   );
 
@@ -743,7 +743,7 @@ export default function ProjectDataTable({
         renderRow={renderRow}
         searchTerm={searchTerm}
         onSearch={onSearch}
-        searchPlaceholder="Tìm kiếm theo tên dự án..."
+        searchPlaceholder="Tìm kiếm theo tên đề tài..."
         isSearching={isSearching}
         pagination={pagination}
         onPageChange={onPageChange}
@@ -761,15 +761,15 @@ export default function ProjectDataTable({
                 <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
                   {selectedProject
                     ? rolesObject[UserRole.Admin]
-                      ? "Chỉnh sửa dự án"
-                      : "Thông tin dự án"
-                    : "Thêm dự án"}
+                      ? "Chỉnh sửa đề tài"
+                      : "Thông tin đề tài"
+                    : "Thêm đề tài"}
                 </h5>
               </div>
 
               <div className="mt-8 grid grid-cols-2 gap-4">
                 <div className="mb-3">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Mã dự án</label>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Mã đề tài</label>
                   <input
                     id="code"
                     type="text"
@@ -777,11 +777,11 @@ export default function ProjectDataTable({
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                     disabled={!canEditProject(selectedProject)}
                     className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
-                    placeholder="Nhập mã dự án"
+                    placeholder="Nhập mã đề tài"
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Tên dự án</label>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Tên đề tài</label>
                   <input
                     id="title"
                     type="text"
@@ -789,7 +789,7 @@ export default function ProjectDataTable({
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     disabled={!canEditProject(selectedProject)}
                     className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 disabled:opacity-50"
-                    placeholder="Nhập tên dự án"
+                    placeholder="Nhập tên đề tài"
                   />
                 </div>
                 <div className="mb-3">
@@ -800,7 +800,7 @@ export default function ProjectDataTable({
                     value={formData?.abstract || ""}
                     onChange={(e) => setFormData({ ...formData, abstract: e.target.value })}
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                    placeholder="Nhập tóm tắt dự án"
+                    placeholder="Nhập tóm tắt đề tài"
                   />
                 </div>
                 <div className="mb-3">
@@ -900,11 +900,11 @@ export default function ProjectDataTable({
                 </div>
                 <div className="grid grid-cols-3 gap-4 col-span-2">
                   <div className="mb-3">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Sự kiện</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Tiến độ</label>
                     <Select
                       value={formData?.termId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, termId: parseInt(v, 10) })}
-                      options={[{ value: "0", label: "Chọn sự kiện" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
+                      options={[{ value: "0", label: "Chọn tiến độ" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
                       disabled={!canChangeProjectStatus()}
                     />
                   </div>
@@ -1030,7 +1030,7 @@ export default function ProjectDataTable({
             <div className="flex flex-col gap-4">
               <h5 className="font-semibold text-gray-800 text-theme-xl dark:text-white/90 lg:text-2xl">Nộp tài liệu mốc</h5>
               <p className="text-base text-gray-600 dark:text-gray-400">
-                Yêu cầu share tài liệu cho các mail của các thành viên trong dự án, giảng viên hướng dẫn:{" "}
+                Yêu cầu share tài liệu cho các mail của các thành viên trong đề tài, giảng viên hướng dẫn:{" "}
                 <span className="font-bold text-white">
                   {submitEmails.join(", ")}
                 </span>
@@ -1169,11 +1169,11 @@ export default function ProjectDataTable({
         <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
           <div>
             <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-              Chấm điểm dự án
+              Chấm điểm đề tài
             </h5>
             {selectedProjectForGrading && (
               <p className="text-base text-gray-600 dark:text-gray-400">
-                Dự án: {selectedProjectForGrading.title} ({selectedProjectForGrading.code})
+                Đề tài: {selectedProjectForGrading.title} ({selectedProjectForGrading.code})
               </p>
             )}
           </div>
@@ -1190,7 +1190,7 @@ export default function ProjectDataTable({
               </div>
             ) : (
               <div className="text-center py-4">
-                <div className="text-red-500 dark:text-red-400">Không tìm thấy hội đồng cho dự án này</div>
+                <div className="text-red-500 dark:text-red-400">Không tìm thấy hội đồng cho đề tài này</div>
               </div>
             )}
 

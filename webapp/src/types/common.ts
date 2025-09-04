@@ -55,6 +55,16 @@ export interface Faculty extends RowData {
     updatedAt: string;
 }
 
+export interface School extends RowData {
+    id: number;
+    code: string;
+    name: string;
+    description?: string;
+    address?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface Department extends RowData {
     id: number;
     code: string;

@@ -54,21 +54,47 @@ const AppSidebar: React.FC = () => {
   },
   {
     icon: <TableIcon />,
-    name: "Quản lý khoa",
-    path: "/faculty",
-    requiredRole: [UserRole.Admin],
-  },
-  {
-    icon: <TableIcon />,
-    name: "Quản lý bộ môn",
-    path: "/department",
-    requiredRole: [UserRole.Admin, UserRole.FacultyDean],
-  },
-  {
-    icon: <TableIcon />,
-    name: "Quản lý ngành học",
-    path: "/major",
+    name: "Quản lý cơ cấu tổ chức",
+    subItems: [
+      {
+        name: "Quản lý trường",
+        path: "/school",
+        role: [UserRole.Admin],
+      },
+      {
+        name: "Quản lý khoa",
+        path: "/faculty",
+        role: [UserRole.Admin],
+      },
+      {
+        name: "Quản lý bộ môn",
+        path: "/department",
+        role: [UserRole.Admin, UserRole.FacultyDean],
+      },
+      {
+        name: "Quản lý ngành học",
+        path: "/major",
+        role: [UserRole.Admin, UserRole.FacultyDean, UserRole.DepartmentHead],
+      },
+    ],
     requiredRole: [UserRole.Admin, UserRole.FacultyDean, UserRole.DepartmentHead],
+  },
+  {
+    icon: <TableIcon />,
+    name: "Quản lý người dùng",
+    subItems: [
+      {
+        name: "Quản lý sinh viên",
+        path: "/user",
+        role: [UserRole.Admin],
+      },
+      {
+        name: "Quản lý giảng viên",
+        path: "/user",
+        role: [UserRole.Admin],
+      },
+    ],
+    requiredRole: [UserRole.Admin],
   },
   {
     icon: <TableIcon />,
@@ -78,13 +104,13 @@ const AppSidebar: React.FC = () => {
   },
   {
     icon: <PaperPlaneIcon />,
-    name: "Quản lý sự kiện",
+    name: "Quản lý tiến độ",
     path: "/term",
     requiredRole: [UserRole.Admin],
   },
   {
     icon: <CalenderIcon />,
-    name: "Quản lý dự án",
+    name: "Đăng ký đề tài",
     path: "/project",
     requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council],
   },
@@ -301,29 +327,7 @@ const AppSidebar: React.FC = () => {
 
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
-  useEffect(() => {
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = navItems;
-      items.forEach((nav, index) => {
-        if ('subItems' in nav && Array.isArray(nav.subItems)) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
-    });
 
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [pathname, isActive, navItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {

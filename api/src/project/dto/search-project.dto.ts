@@ -5,7 +5,7 @@ import { ProjectStatus, ProjectLevel } from '../project.entity';
 
 export class SearchProjectDto {
   @ApiPropertyOptional({
-    description: 'Tiêu đề dự án để tìm kiếm',
+    description: 'Tiêu đề đề tài để tìm kiếm',
     example: '',
   })
   @IsOptional()
@@ -13,7 +13,7 @@ export class SearchProjectDto {
   title?: string;
 
   @ApiPropertyOptional({
-    description: 'Mã dự án để tìm kiếm',
+    description: 'Mã đề tài để tìm kiếm',
     example: '',
   })
   @IsOptional()
@@ -57,7 +57,7 @@ export class SearchProjectDto {
   termId?: number;
 
   @ApiPropertyOptional({
-    description: 'Trạng thái dự án',
+    description: 'Trạng thái đề tài',
     enum: ProjectStatus,
   })
   @IsOptional()
@@ -65,7 +65,7 @@ export class SearchProjectDto {
   status?: ProjectStatus;
 
   @ApiPropertyOptional({
-    description: 'Cấp độ dự án',
+    description: 'Cấp độ đề tài',
     enum: ProjectLevel,
   })
   @IsOptional()
@@ -73,7 +73,7 @@ export class SearchProjectDto {
   level?: ProjectLevel;
 
   @ApiPropertyOptional({
-    description: 'ID người tạo dự án',
+    description: 'ID người tạo đề tài',
     example: 1,
   })
   @IsOptional()

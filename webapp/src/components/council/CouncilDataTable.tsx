@@ -263,16 +263,16 @@ export default function CouncilDataTable({
       setIsSubmitting(true);
       if (projectFormData.action === 'add') {
         await addCouncilProjects(selectedCouncil.id.toString(), projectFormData.projectIds);
-        toast.success("Gán dự án thành công");
+        toast.success("Gán đề tài thành công");
       } else {
         await removeCouncilProjects(selectedCouncil.id.toString(), projectFormData.projectIds);
-        toast.success("Gỡ dự án thành công");
+        toast.success("Gỡ đề tài thành công");
       }
       setShowProjectModal(false);
       onRefresh();
     } catch (error: unknown) {
       console.error('Error in handleProjectSubmit:', error);
-      const errorMessage = projectFormData.action === 'add' ? "Không thể gán dự án" : "Không thể gỡ dự án";
+      const errorMessage = projectFormData.action === 'add' ? "Không thể gán đề tài" : "Không thể gỡ đề tài";
       toast.error(getErrorMessage(error, errorMessage));
     } finally {
       setIsSubmitting(false);
@@ -364,7 +364,7 @@ export default function CouncilDataTable({
             </button>
           </div>
           <div className="pt-3 space-y-1">
-            <div className="text-sm font-medium">Dự án ({(projectsByCouncil[council.id] || []).length})</div>
+            <div className="text-sm font-medium">Đề tài ({(projectsByCouncil[council.id] || []).length})</div>
             {(projectsByCouncil[council.id] || []).length > 0 && (
               <div className="space-y-1">
                 {(projectsByCouncil[council.id] || []).map((p) => (
@@ -386,18 +386,18 @@ export default function CouncilDataTable({
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         <div className="flex items-center gap-3">
           <button
-            title="Gán dự án"
+            title="Gán đề tài"
             onClick={() => handleManageProjects(council, 'add')}
             className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-success-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-success-600 sm:w-auto"
           >
-            Gán dự án
+            Gán đề tài
           </button>
           <button
-            title="Gỡ dự án"
+            title="Gỡ đề tài"
             onClick={() => handleManageProjects(council, 'remove')}
             className="btn btn-warning btn-update-event flex w-full justify-center rounded-lg bg-warning-500 px-6 py-2.5 text-sm font-medium text-white hover:bg-warning-600 sm:w-auto"
           >
-            Gỡ dự án
+            Gỡ đề tài
           </button>
           <button
             onClick={() => handleEdit(council)}
@@ -558,7 +558,7 @@ export default function CouncilDataTable({
         <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
           <div>
             <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-              {projectFormData.action === 'add' ? 'Gán dự án cho hội đồng' : 'Gỡ dự án khỏi hội đồng'}
+              {projectFormData.action === 'add' ? 'Gán đề tài cho hội đồng' : 'Gỡ đề tài khỏi hội đồng'}
             </h5>
             {selectedCouncil && (
               <p className="text-base text-gray-600 dark:text-gray-400">
@@ -569,7 +569,7 @@ export default function CouncilDataTable({
           <div className="mt-8">
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                {projectFormData.action === 'add' ? 'Chọn dự án để gán' : 'Chọn dự án để gỡ'}
+                {projectFormData.action === 'add' ? 'Chọn đề tài để gán' : 'Chọn đề tài để gỡ'}
               </label>
               <MultiSelect
                 value={projectFormData.projectIds.map(String)}
@@ -578,7 +578,7 @@ export default function CouncilDataTable({
                   ? projects.filter(p => !selectedCouncil?.facultyId || Number(p.facultyId) === Number(selectedCouncil?.facultyId))
                   : projects.filter(p => !selectedCouncil?.facultyId || Number(p.facultyId) === Number(selectedCouncil?.facultyId))
                 ).map(p => ({ value: p.id.toString(), label: `${p.title} (${p.code})` }))}
-                placeholder={projectFormData.action === 'add' ? 'Chọn dự án để gán' : 'Chọn dự án để gỡ'}
+                placeholder={projectFormData.action === 'add' ? 'Chọn đề tài để gán' : 'Chọn đề tài để gỡ'}
               />
             </div>
           </div>
@@ -596,7 +596,7 @@ export default function CouncilDataTable({
               disabled={isSubmitting}
               className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
             >
-              {isSubmitting ? "Đang xử lý..." : projectFormData.action === 'add' ? "Gán dự án" : "Gỡ dự án"}
+              {isSubmitting ? "Đang xử lý..." : projectFormData.action === 'add' ? "Gán đề tài" : "Gỡ đề tài"}
             </button>
           </div>
         </div>

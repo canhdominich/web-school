@@ -53,7 +53,7 @@ export class MilestoneSubmissionService {
     ) {
       const label = getProjectStatusLabel(projectStatus);
       throw new BadRequestException(
-        `Không thể submit tài liệu vì dự án đang ở trạng thái ${label}`,
+        `Không thể submit tài liệu vì đề tài đang ở trạng thái ${label}`,
       );
     }
 
@@ -70,7 +70,7 @@ export class MilestoneSubmissionService {
     });
     if (!membership) {
       throw new ForbiddenException(
-        'Bạn không phải là thành viên của dự án này',
+        'Bạn không phải là thành viên của đề tài này',
       );
     }
 
@@ -128,7 +128,7 @@ export class MilestoneSubmissionService {
       if (project.supervisorUser) {
         await this.notificationService.create({
           title: 'Tài liệu mốc mới được nộp',
-          body: `Sinh viên ${submitterName} đã nộp tài liệu cho mốc "${milestone.title}" của dự án "${project.title}" (${project.code}). Phiên bản: v${submission.version}`,
+          body: `Sinh viên ${submitterName} đã nộp tài liệu cho mốc "${milestone.title}" của đề tài "${project.title}" (${project.code}). Phiên bản: v${submission.version}`,
           userId: project.supervisorUser.id,
         });
       }
@@ -139,7 +139,7 @@ export class MilestoneSubmissionService {
           .filter((member) => member.studentId !== submittedByUserId)
           .map((member) => ({
             title: 'Tài liệu mốc mới được nộp',
-            body: `Sinh viên ${submitterName} đã nộp tài liệu cho mốc "${milestone.title}" của dự án "${project.title}" (${project.code}). Phiên bản: v${submission.version}`,
+            body: `Sinh viên ${submitterName} đã nộp tài liệu cho mốc "${milestone.title}" của đề tài "${project.title}" (${project.code}). Phiên bản: v${submission.version}`,
             userId: member.studentId,
           }));
 

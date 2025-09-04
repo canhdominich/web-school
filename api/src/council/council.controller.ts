@@ -245,7 +245,7 @@ export class CouncilController {
 
   // Grading endpoints
   @Post(':id/projects/:projectId/grade')
-  @ApiOperation({ summary: 'Giảng viên trong hội đồng chấm điểm dự án (0-10)' })
+  @ApiOperation({ summary: 'Giảng viên trong hội đồng chấm điểm đề tài (0-10)' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.Lecturer, UserRole.FacultyDean, UserRole.Admin)
   async gradeProject(
@@ -264,7 +264,7 @@ export class CouncilController {
   }
 
   @Get(':id/projects/:projectId/grades')
-  @ApiOperation({ summary: 'Danh sách điểm của các giảng viên cho dự án' })
+  @ApiOperation({ summary: 'Danh sách điểm của các giảng viên cho đề tài' })
   async listGrades(
     @Param('id', ParseIntPipe) councilId: number,
     @Param('projectId', ParseIntPipe) projectId: number,
@@ -274,7 +274,7 @@ export class CouncilController {
 
   @Get('can-grade-project/:projectId')
   @ApiOperation({
-    summary: 'Lấy danh sách hội đồng có thể chấm điểm cho dự án',
+    summary: 'Lấy danh sách hội đồng có thể chấm điểm cho đề tài',
   })
   async getCouncilsForProjectGrading(
     @Param('projectId', ParseIntPipe) projectId: number,

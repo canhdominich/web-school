@@ -40,7 +40,7 @@ const ProjectMetrics = () => {
         <div className="flex items-end justify-between mt-5">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Tổng số dự án
+              Tổng số đề tài
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
               {stats.projects?.totalProjects?.toLocaleString() || 0}
@@ -58,7 +58,7 @@ const ProjectMetrics = () => {
         <div className="flex items-end justify-between mt-5">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Dự án nháp
+              Đề tài nháp
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
               {stats.projects?.draftProjects?.toLocaleString() || 0}
@@ -77,7 +77,7 @@ const ProjectMetrics = () => {
         <div className="mt-4 flex items-end justify-between">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Dự án chờ duyệt
+              Đề tài chờ duyệt
             </span>
             <h4 className="text-title-md font-bold text-black dark:text-white">
               {stats.projects?.pendingProjects?.toLocaleString() || 0}
@@ -95,7 +95,7 @@ const ProjectMetrics = () => {
         <div className="flex items-end justify-between mt-5">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Dự án đã duyệt
+              Đề tài đã duyệt
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
               {stats.projects?.approvedProjects?.toLocaleString() || 0}
@@ -113,7 +113,7 @@ const ProjectMetrics = () => {
         <div className="flex items-end justify-between mt-5">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Dự án đang thực hiện
+              Đề tài đang thực hiện
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
               {stats.projects?.inProgressProjects?.toLocaleString() || 0}
@@ -132,7 +132,7 @@ const ProjectMetrics = () => {
         <div className="mt-4 flex items-end justify-between">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Dự án hoàn thành
+              Đề tài hoàn thành
             </span>
             <h4 className="text-title-md font-bold text-black dark:text-white">
               {stats.projects?.completedProjects?.toLocaleString() || 0}
@@ -151,7 +151,7 @@ const ProjectMetrics = () => {
         <div className="mt-4 flex items-end justify-between">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Dự án bị hủy
+              Đề tài bị hủy
             </span>
             <h4 className="text-title-md font-bold text-black dark:text-white">
               {stats.projects?.cancelledProjects?.toLocaleString() || 0}
