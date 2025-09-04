@@ -106,7 +106,8 @@ export default function FacultyDataTable({
       toast.error("Vui lòng nhập mã khoa");
       return;
     }
-    if (!formData.schoolId) {
+    // Chỉ validate schoolId khi thêm mới khoa
+    if (!selectedFaculty && !formData.schoolId) {
       toast.error("Vui lòng chọn trường");
       return;
     }
@@ -114,7 +115,12 @@ export default function FacultyDataTable({
     try {
       setIsSubmitting(true);
       if (selectedFaculty?.id) {
-        await updateFaculty(selectedFaculty.id.toString(), formData as UpdateFacultyDto);
+        // Khi chỉnh sửa, đảm bảo schoolId được giữ nguyên
+        const updateData = {
+          ...formData,
+          schoolId: selectedFaculty.schoolId,
+        } as UpdateFacultyDto;
+        await updateFaculty(selectedFaculty.id.toString(), updateData);
         toast.success("Cập nhật khoa thành công");
       } else {
         await createFaculty(formData as CreateFacultyDto);
@@ -295,14 +301,14 @@ export default function FacultyDataTable({
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Trường <span className="text-red-500">*</span>
+                Trường {!selectedFaculty && <span className="text-red-500">*</span>}
               </label>
               <select
                 id="schoolId"
                 value={formData.schoolId || ""}
                 onChange={(e) => setFormData({ ...formData, schoolId: e.target.value ? Number(e.target.value) : undefined })}
                 className="dark:bg-gray-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                disabled={isLoadingSchools}
+                disabled={isLoadingSchools || !!selectedFaculty}
               >
                 <option value="">Chọn trường</option>
                 {schools.map((school) => (
@@ -311,6 +317,11 @@ export default function FacultyDataTable({
                   </option>
                 ))}
               </select>
+              {selectedFaculty && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Không thể thay đổi trường khi chỉnh sửa khoa
+                </p>
+              )}
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">

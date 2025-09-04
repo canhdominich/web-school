@@ -106,6 +106,10 @@ export default function DepartmentDataTable({
         facultyId: selectedDepartment.facultyId,
         schoolId: selectedDepartment.schoolId,
       });
+      // Load khoa theo trường của bộ môn được chọn
+      if (selectedDepartment.schoolId) {
+        fetchFacultiesBySchool(selectedDepartment.schoolId);
+      }
     }
   }, [selectedDepartment]);
 
@@ -127,19 +131,28 @@ export default function DepartmentDataTable({
       toast.error("Vui lòng nhập mã bộ môn");
       return;
     }
-    if (!formData.schoolId) {
-      toast.error("Vui lòng chọn trường");
-      return;
-    }
-    if (!formData.facultyId) {
-      toast.error("Vui lòng chọn khoa");
-      return;
+    // Chỉ validate schoolId và facultyId khi thêm mới bộ môn
+    if (!selectedDepartment) {
+      if (!formData.schoolId) {
+        toast.error("Vui lòng chọn trường");
+        return;
+      }
+      if (!formData.facultyId) {
+        toast.error("Vui lòng chọn khoa");
+        return;
+      }
     }
 
     try {
       setIsSubmitting(true);
       if (selectedDepartment?.id) {
-        await updateDepartment(selectedDepartment.id.toString(), formData as UpdateDepartmentDto);
+        // Khi chỉnh sửa, đảm bảo schoolId và facultyId được giữ nguyên
+        const updateData = {
+          ...formData,
+          schoolId: selectedDepartment.schoolId,
+          facultyId: selectedDepartment.facultyId,
+        } as UpdateDepartmentDto;
+        await updateDepartment(selectedDepartment.id.toString(), updateData);
         toast.success("Cập nhật bộ môn thành công");
       } else {
         await createDepartment(formData as CreateDepartmentDto);
@@ -318,7 +331,7 @@ export default function DepartmentDataTable({
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Trường <span className="text-red-500">*</span>
+                Trường {!selectedDepartment && <span className="text-red-500">*</span>}
               </label>
               <select
                 id="schoolId"
@@ -333,7 +346,7 @@ export default function DepartmentDataTable({
                   }
                 }}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                disabled={isLoadingSchools}
+                disabled={isLoadingSchools || !!selectedDepartment}
               >
                 <option value="">Chọn trường</option>
                 {schools.map((school) => (
@@ -342,17 +355,22 @@ export default function DepartmentDataTable({
                   </option>
                 ))}
               </select>
+              {selectedDepartment && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Không thể thay đổi trường khi chỉnh sửa bộ môn
+                </p>
+              )}
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Khoa <span className="text-red-500">*</span>
+                Khoa {!selectedDepartment && <span className="text-red-500">*</span>}
               </label>
               <select
                 id="facultyId"
                 value={formData.facultyId || ""}
                 onChange={(e) => setFormData({ ...formData, facultyId: e.target.value ? Number(e.target.value) : undefined })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                disabled={!formData.schoolId || isLoadingFaculties}
+                disabled={!formData.schoolId || isLoadingFaculties || !!selectedDepartment}
               >
                 <option value="">Chọn khoa</option>
                 {faculties.map((faculty) => (
@@ -361,6 +379,11 @@ export default function DepartmentDataTable({
                   </option>
                 ))}
               </select>
+              {selectedDepartment && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Không thể thay đổi khoa khi chỉnh sửa bộ môn
+                </p>
+              )}
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
