@@ -7,6 +7,16 @@ export class CreateMajorDto {
   @IsNotEmpty()
   departmentId: number;
 
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  facultyId: number;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  schoolId: number;
+
   @ApiProperty({ example: 'M001' })
   @IsString()
   @IsNotEmpty()

@@ -14,8 +14,7 @@ import { MajorService } from './major.service';
 import { CreateMajorDto } from './dto/create-major.dto';
 import { UpdateMajorDto } from './dto/update-major.dto';
 import { SearchMajorDto } from './dto/search-major.dto';
-import { PaginatedMajorResponseDto } from './dto/paginated-major-response.dto';
-import { Major } from './major.entity';
+import { PaginatedMajorResponseDto, MajorResponseDto } from './dto';
 
 @ApiTags('majors')
 @Controller('majors')
@@ -27,9 +26,9 @@ export class MajorController {
   @ApiResponse({
     status: 201,
     description: 'Major successfully created.',
-    type: Major,
+    type: MajorResponseDto,
   })
-  create(@Body() dto: CreateMajorDto) {
+  create(@Body() dto: CreateMajorDto): Promise<MajorResponseDto> {
     return this.majorService.create(dto);
   }
 
@@ -38,7 +37,7 @@ export class MajorController {
   @ApiResponse({
     status: 200,
     description: 'Return all majors.',
-    type: [Major],
+    type: [MajorResponseDto],
   })
   @ApiResponse({
     status: 200,
@@ -54,10 +53,10 @@ export class MajorController {
   @ApiResponse({
     status: 200,
     description: 'Return the major.',
-    type: Major,
+    type: MajorResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Major not found.' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<MajorResponseDto> {
     return this.majorService.findOne(id);
   }
 
@@ -66,18 +65,22 @@ export class MajorController {
   @ApiResponse({
     status: 200,
     description: 'Major successfully updated.',
-    type: Major,
+    type: MajorResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Major not found.' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMajorDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMajorDto): Promise<MajorResponseDto> {
     return this.majorService.update(id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a major' })
-  @ApiResponse({ status: 200, description: 'Major successfully deleted.' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Major successfully deleted.',
+    type: MajorResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Major not found.' })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseIntPipe) id: number): Promise<MajorResponseDto> {
     return this.majorService.remove(id);
   }
 } 

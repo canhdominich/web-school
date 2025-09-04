@@ -98,6 +98,10 @@ export interface Major extends RowData {
     description?: string;
     departmentId: number;
     department?: Department;
+    facultyId: number;
+    faculty?: Faculty;
+    schoolId: number;
+    school?: School;
     createdAt: string;
     updatedAt: string;
 }

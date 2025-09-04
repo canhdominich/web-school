@@ -8,6 +8,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Department } from '../department/department.entity';
+import { Faculty } from '../faculty/faculty.entity';
+import { School } from '../school/school.entity';
 
 @Entity('majors')
 export class Major {
@@ -16,6 +18,12 @@ export class Major {
 
   @Column({ type: 'bigint' })
   departmentId: number;
+
+  @Column({ type: 'bigint' })
+  facultyId: number;
+
+  @Column({ type: 'bigint' })
+  schoolId: number;
 
   @Column({ type: 'varchar', length: 15, unique: true })
   code: string;
@@ -35,4 +43,12 @@ export class Major {
   @ManyToOne(() => Department)
   @JoinColumn({ name: 'departmentId' })
   department: Department;
+
+  @ManyToOne(() => Faculty)
+  @JoinColumn({ name: 'facultyId' })
+  faculty: Faculty;
+
+  @ManyToOne(() => School)
+  @JoinColumn({ name: 'schoolId' })
+  school: School;
 }

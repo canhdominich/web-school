@@ -1,25 +1,46 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Major } from '../major.entity';
+import { MajorResponseDto } from './major-response.dto';
 
 export class PaginatedMajorResponseDto {
-  @ApiProperty({ type: [Major] })
-  data: Major[];
+  @ApiProperty({
+    description: 'Danh sách ngành',
+    type: [MajorResponseDto],
+  })
+  data: MajorResponseDto[];
 
-  @ApiProperty({ example: 100 })
+  @ApiProperty({
+    description: 'Tổng số ngành',
+    example: 100,
+  })
   total: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({
+    description: 'Trang hiện tại',
+    example: 1,
+  })
   page: number;
 
-  @ApiProperty({ example: 10 })
+  @ApiProperty({
+    description: 'Số lượng item trên mỗi trang',
+    example: 10,
+  })
   limit: number;
 
-  @ApiProperty({ example: 10 })
+  @ApiProperty({
+    description: 'Tổng số trang',
+    example: 10,
+  })
   totalPages: number;
 
-  @ApiProperty({ example: true })
+  @ApiProperty({
+    description: 'Có trang tiếp theo không',
+    example: true,
+  })
   hasNext: boolean;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({
+    description: 'Có trang trước không',
+    example: false,
+  })
   hasPrev: boolean;
 }

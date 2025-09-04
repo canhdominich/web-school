@@ -6,6 +6,8 @@ export interface SearchMajorDto {
   code?: string;
   description?: string;
   departmentId?: number;
+  facultyId?: number;
+  schoolId?: number;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -58,6 +60,8 @@ export const createMajor = async (data: {
     code: string;
     description?: string;
     departmentId: number;
+    facultyId: number;
+    schoolId: number;
 }): Promise<Major> => {
     const res = await httpClient.post('/majors', data);
     return res.data;
@@ -68,6 +72,8 @@ export const updateMajor = async (id: string, data: {
     code?: string;
     description?: string;
     departmentId?: number;
+    facultyId?: number;
+    schoolId?: number;
 }): Promise<Major> => {
     const res = await httpClient.patch(`/majors/${id}`, data);
     return res.data;
@@ -82,6 +88,8 @@ export interface CreateMajorDto {
     code: string;
     description?: string;
     departmentId: number;
+    facultyId: number;
+    schoolId: number;
 }
 
 export interface UpdateMajorDto {
@@ -89,4 +97,6 @@ export interface UpdateMajorDto {
     code?: string;
     description?: string;
     departmentId?: number;
+    facultyId?: number;
+    schoolId?: number;
 } 

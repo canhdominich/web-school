@@ -1,11 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { TableCell, TableRow } from "../ui/table";
-import { BasicTableProps, Header, Major, Department } from "@/types/common";
+import { BasicTableProps, Header, Major, Department, Faculty, School } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { CreateMajorDto, createMajor, deleteMajor, updateMajor, UpdateMajorDto } from "@/services/majorService";
 import { getDepartments } from "@/services/departmentService";
+import { getFaculties } from "@/services/facultyService";
+import { getSchools } from "@/services/schoolService";
 import { toast } from "react-hot-toast";
 import { VERY_BIG_NUMBER } from "@/constants/common";
 import SearchableDataTable from "../common/SearchableDataTable";
@@ -36,29 +38,67 @@ export default function MajorDataTable({
 }: MajorDataTableProps) {
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoadingSchools, setIsLoadingSchools] = useState(false);
+  const [isLoadingFaculties, setIsLoadingFaculties] = useState(false);
+  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
   const [formData, setFormData] = useState<CreateMajorDto | UpdateMajorDto>({
     name: "",
     code: "",
     description: "",
-    departmentId: 0,
+    departmentId: undefined,
+    facultyId: undefined,
+    schoolId: undefined,
   });
   const { isOpen, openModal, closeModal } = useModal();
 
-  // Fetch departments for dropdown
+  // Load schools when component mounts
   useEffect(() => {
-    const fetchDepartments = async () => {
+    const loadSchools = async () => {
       try {
-        const data = await getDepartments({ limit: VERY_BIG_NUMBER });
-        // API now always returns paginated response
-        setDepartments(data.data);
+        setIsLoadingSchools(true);
+        const response = await getSchools({ limit: VERY_BIG_NUMBER });
+        setSchools(response.data);
       } catch (error) {
-        console.error('Error fetching departments:', error);
-        setDepartments([]);
+        console.error('Error loading schools:', error);
+        toast.error('Không thể tải danh sách trường');
+      } finally {
+        setIsLoadingSchools(false);
       }
     };
-    fetchDepartments();
+    
+    loadSchools();
   }, []);
+
+  // Fetch faculties when school changes
+  const fetchFacultiesBySchool = async (schoolId: number) => {
+    try {
+      setIsLoadingFaculties(true);
+      const data = await getFaculties({ schoolId, limit: VERY_BIG_NUMBER });
+      setFaculties(data.data);
+    } catch (error) {
+      console.error('Error fetching faculties:', error);
+      setFaculties([]);
+    } finally {
+      setIsLoadingFaculties(false);
+    }
+  };
+
+  // Fetch departments when faculty changes
+  const fetchDepartmentsByFaculty = async (facultyId: number) => {
+    try {
+      setIsLoadingDepartments(true);
+      const data = await getDepartments({ facultyId, limit: VERY_BIG_NUMBER });
+      setDepartments(data.data);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      setDepartments([]);
+    } finally {
+      setIsLoadingDepartments(false);
+    }
+  };
 
   // Reset form when modal closes
   useEffect(() => {
@@ -68,7 +108,9 @@ export default function MajorDataTable({
         name: "",
         code: "",
         description: "",
-        departmentId: 0,
+        departmentId: undefined,
+        facultyId: undefined,
+        schoolId: undefined,
       });
     }
   }, [isOpen]);
@@ -81,7 +123,16 @@ export default function MajorDataTable({
         code: selectedMajor.code,
         description: selectedMajor.description || "",
         departmentId: selectedMajor.departmentId,
+        facultyId: selectedMajor.facultyId,
+        schoolId: selectedMajor.schoolId,
       });
+      // Load faculties và departments theo thứ tự
+      if (selectedMajor.schoolId) {
+        fetchFacultiesBySchool(selectedMajor.schoolId);
+      }
+      if (selectedMajor.facultyId) {
+        fetchDepartmentsByFaculty(selectedMajor.facultyId);
+      }
     }
   }, [selectedMajor]);
 
@@ -94,15 +145,42 @@ export default function MajorDataTable({
     e.preventDefault();
     if (isSubmitting) return;
 
-    if (!formData.departmentId) {
-      toast.error("Vui lòng chọn bộ môn");
+    // Validation
+    if (!formData.name?.trim()) {
+      toast.error("Vui lòng nhập tên ngành học");
       return;
+    }
+    if (!formData.code?.trim()) {
+      toast.error("Vui lòng nhập mã ngành học");
+      return;
+    }
+    // Chỉ validate khi thêm mới ngành học
+    if (!selectedMajor) {
+      if (!formData.schoolId) {
+        toast.error("Vui lòng chọn trường");
+        return;
+      }
+      if (!formData.facultyId) {
+        toast.error("Vui lòng chọn khoa");
+        return;
+      }
+      if (!formData.departmentId) {
+        toast.error("Vui lòng chọn bộ môn");
+        return;
+      }
     }
 
     try {
       setIsSubmitting(true);
       if (selectedMajor?.id) {
-        await updateMajor(selectedMajor.id.toString(), formData as UpdateMajorDto);
+        // Khi chỉnh sửa, đảm bảo schoolId, facultyId, departmentId được giữ nguyên
+        const updateData = {
+          ...formData,
+          schoolId: selectedMajor.schoolId,
+          facultyId: selectedMajor.facultyId,
+          departmentId: selectedMajor.departmentId,
+        } as UpdateMajorDto;
+        await updateMajor(selectedMajor.id.toString(), updateData);
         toast.success("Cập nhật ngành học thành công");
       } else {
         await createMajor(formData as CreateMajorDto);
@@ -180,7 +258,14 @@ export default function MajorDataTable({
         {major.description || "Không có mô tả"}
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-        {major.department?.name || "Không xác định"}
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {major.department?.name || "Không xác định"}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {major.faculty?.name || "Chưa có khoa"} / {major.school?.name || "Chưa có trường"}
+          </span>
+        </div>
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         {new Date(major.createdAt).toLocaleString('vi-VN')}
@@ -248,7 +333,7 @@ export default function MajorDataTable({
           <div className="mt-8">
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Tên ngành học
+                Tên ngành học <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
@@ -261,7 +346,7 @@ export default function MajorDataTable({
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Mã ngành học
+                Mã ngành học <span className="text-red-500">*</span>
               </label>
               <input
                 id="code"
@@ -274,21 +359,92 @@ export default function MajorDataTable({
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Bộ môn
+                Trường {!selectedMajor && <span className="text-red-500">*</span>}
               </label>
               <select
-                id="departmentId"
-                value={formData.departmentId}
-                onChange={(e) => setFormData({ ...formData, departmentId: Number(e.target.value) })}
+                id="schoolId"
+                value={formData.schoolId || ""}
+                onChange={(e) => {
+                  const schoolId = e.target.value ? Number(e.target.value) : undefined;
+                  setFormData({ ...formData, schoolId, facultyId: undefined, departmentId: undefined });
+                  if (schoolId) {
+                    fetchFacultiesBySchool(schoolId);
+                  } else {
+                    setFaculties([]);
+                    setDepartments([]);
+                  }
+                }}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                disabled={isLoadingSchools || !!selectedMajor}
               >
-                <option value={0}>Chọn bộ môn</option>
-                {departments.map((department) => (
-                  <option key={department.id} value={department.id}>
-                    {department.name}
+                <option value="">Chọn trường</option>
+                {schools.map((school) => (
+                  <option key={school.id} value={school.id}>
+                    {school.name} ({school.code})
                   </option>
                 ))}
               </select>
+              {selectedMajor && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Không thể thay đổi trường khi chỉnh sửa ngành học
+                </p>
+              )}
+            </div>
+            <div className="mb-3">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Khoa {!selectedMajor && <span className="text-red-500">*</span>}
+              </label>
+              <select
+                id="facultyId"
+                value={formData.facultyId || ""}
+                onChange={(e) => {
+                  const facultyId = e.target.value ? Number(e.target.value) : undefined;
+                  setFormData({ ...formData, facultyId, departmentId: undefined });
+                  if (facultyId) {
+                    fetchDepartmentsByFaculty(facultyId);
+                  } else {
+                    setDepartments([]);
+                  }
+                }}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                disabled={!formData.schoolId || isLoadingFaculties || !!selectedMajor}
+              >
+                <option value="">Chọn khoa</option>
+                {faculties.map((faculty) => (
+                  <option key={faculty.id} value={faculty.id}>
+                    {faculty.name} ({faculty.code})
+                  </option>
+                ))}
+              </select>
+              {selectedMajor && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Không thể thay đổi khoa khi chỉnh sửa ngành học
+                </p>
+              )}
+            </div>
+            <div className="mb-3">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Bộ môn {!selectedMajor && <span className="text-red-500">*</span>}
+              </label>
+              <select
+                id="departmentId"
+                value={formData.departmentId || ""}
+                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value ? Number(e.target.value) : undefined })}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                disabled={!formData.facultyId || isLoadingDepartments || !!selectedMajor}
+              >
+                <option value="">Chọn bộ môn</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.name} ({department.code})
+                  </option>
+                ))}
+              </select>
+              {selectedMajor && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Không thể thay đổi bộ môn khi chỉnh sửa ngành học
+                </p>
+              )}
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">

@@ -14,7 +14,7 @@ export default function MajorPage() {
     { key: "name", title: "Tên ngành học" },
     { key: "code", title: "Mã ngành học" },
     { key: "description", title: "Mô tả" },
-    { key: "department", title: "Bộ môn" },
+    { key: "department", title: "Bộ môn/Khoa/Trường" },
     { key: "createdAt", title: "Ngày tạo" },
     { key: "updatedAt", title: "Ngày cập nhật" },
     { key: "action", title: "Hành động" },

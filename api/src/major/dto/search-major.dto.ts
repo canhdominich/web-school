@@ -28,6 +28,15 @@ export class SearchMajorDto {
   description?: string;
 
   @ApiPropertyOptional({
+    description: 'ID trường để lọc',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  schoolId?: number;
+
+  @ApiPropertyOptional({
     description: 'ID khoa để lọc',
     example: 1,
   })
@@ -72,7 +81,7 @@ export class SearchMajorDto {
   @ApiPropertyOptional({
     description: 'Sắp xếp theo trường',
     example: 'id',
-    enum: ['id', 'name', 'code', 'facultyId', 'departmentId', 'createdAt', 'updatedAt'],
+    enum: ['id', 'name', 'code', 'schoolId', 'facultyId', 'departmentId', 'createdAt', 'updatedAt'],
   })
   @IsOptional()
   @IsString()
