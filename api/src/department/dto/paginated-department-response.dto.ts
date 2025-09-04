@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Department } from '../department.entity';
+import { DepartmentResponseDto } from './department-response.dto';
 
 export class PaginatedDepartmentResponseDto {
-  @ApiProperty({ type: [Department] })
-  data: Department[];
+  @ApiProperty({ type: [DepartmentResponseDto] })
+  data: DepartmentResponseDto[];
 
   @ApiProperty({ example: 100 })
   total: number;

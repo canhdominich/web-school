@@ -37,6 +37,15 @@ export class SearchDepartmentDto {
   facultyId?: number;
 
   @ApiPropertyOptional({
+    description: 'ID trường để lọc',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  schoolId?: number;
+
+  @ApiPropertyOptional({
     description: 'Trang hiện tại (bắt đầu từ 1)',
     example: 1,
     minimum: 1,
@@ -63,7 +72,7 @@ export class SearchDepartmentDto {
   @ApiPropertyOptional({
     description: 'Sắp xếp theo trường',
     example: 'id',
-    enum: ['id', 'name', 'code', 'facultyId', 'createdAt', 'updatedAt'],
+    enum: ['id', 'name', 'code', 'facultyId', 'schoolId', 'createdAt', 'updatedAt'],
   })
   @IsOptional()
   @IsString()

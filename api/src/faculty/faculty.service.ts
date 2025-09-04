@@ -58,8 +58,16 @@ export class FacultyService {
       return faculties.map((faculty) => this.mapToResponseDto(faculty));
     }
 
-    const { name, code, description, page, limit, sortBy, sortOrder } =
-      searchDto;
+    const {
+      name,
+      code,
+      description,
+      schoolId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = searchDto;
 
     const queryBuilder = this.facultyRepository
       .createQueryBuilder('faculty')
@@ -77,6 +85,10 @@ export class FacultyService {
       queryBuilder.andWhere('faculty.description LIKE :description', {
         description: `%${description}%`,
       });
+    }
+
+    if (schoolId) {
+      queryBuilder.andWhere('faculty.schoolId = :schoolId', { schoolId });
     }
 
     if (sortBy) {

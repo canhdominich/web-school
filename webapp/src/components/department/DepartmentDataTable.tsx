@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { TableCell, TableRow } from "../ui/table";
-import { BasicTableProps, Header, Department, Faculty } from "@/types/common";
+import { BasicTableProps, Header, Department, Faculty, School } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { CreateDepartmentDto, createDepartment, deleteDepartment, updateDepartment, UpdateDepartmentDto } from "@/services/departmentService";
 import { getFaculties } from "@/services/facultyService";
+import { getSchools } from "@/services/schoolService";
 import { toast } from "react-hot-toast";
 import { VERY_BIG_NUMBER } from "@/constants/common";
 import SearchableDataTable from "../common/SearchableDataTable";
@@ -36,29 +37,50 @@ export default function DepartmentDataTable({
 }: DepartmentDataTableProps) {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [isLoadingSchools, setIsLoadingSchools] = useState(false);
+  const [isLoadingFaculties, setIsLoadingFaculties] = useState(false);
   const [formData, setFormData] = useState<CreateDepartmentDto | UpdateDepartmentDto>({
     name: "",
     code: "",
     description: "",
-    facultyId: 0,
+    facultyId: undefined,
+    schoolId: undefined,
   });
   const { isOpen, openModal, closeModal } = useModal();
 
-  // Fetch faculties for dropdown
+  // Load schools when component mounts
   useEffect(() => {
-    const fetchFaculties = async () => {
+    const loadSchools = async () => {
       try {
-        const data = await getFaculties({ limit: VERY_BIG_NUMBER });
-        // API now always returns paginated response
-        setFaculties(data.data);
+        setIsLoadingSchools(true);
+        const response = await getSchools({ limit: VERY_BIG_NUMBER });
+        setSchools(response.data);
       } catch (error) {
-        console.error('Error fetching faculties:', error);
-        setFaculties([]);
+        console.error('Error loading schools:', error);
+        toast.error('Không thể tải danh sách trường');
+      } finally {
+        setIsLoadingSchools(false);
       }
     };
-    fetchFaculties();
+    
+    loadSchools();
   }, []);
+
+  // Fetch faculties when school changes
+  const fetchFacultiesBySchool = async (schoolId: number) => {
+    try {
+      setIsLoadingFaculties(true);
+      const data = await getFaculties({ schoolId, limit: VERY_BIG_NUMBER });
+      setFaculties(data.data);
+    } catch (error) {
+      console.error('Error fetching faculties:', error);
+      setFaculties([]);
+    } finally {
+      setIsLoadingFaculties(false);
+    }
+  };
 
   // Reset form when modal closes
   useEffect(() => {
@@ -68,7 +90,8 @@ export default function DepartmentDataTable({
         name: "",
         code: "",
         description: "",
-        facultyId: 0,
+        facultyId: undefined,
+        schoolId: undefined,
       });
     }
   }, [isOpen]);
@@ -81,6 +104,7 @@ export default function DepartmentDataTable({
         code: selectedDepartment.code,
         description: selectedDepartment.description || "",
         facultyId: selectedDepartment.facultyId,
+        schoolId: selectedDepartment.schoolId,
       });
     }
   }, [selectedDepartment]);
@@ -94,6 +118,19 @@ export default function DepartmentDataTable({
     e.preventDefault();
     if (isSubmitting) return;
 
+    // Validation
+    if (!formData.name?.trim()) {
+      toast.error("Vui lòng nhập tên bộ môn");
+      return;
+    }
+    if (!formData.code?.trim()) {
+      toast.error("Vui lòng nhập mã bộ môn");
+      return;
+    }
+    if (!formData.schoolId) {
+      toast.error("Vui lòng chọn trường");
+      return;
+    }
     if (!formData.facultyId) {
       toast.error("Vui lòng chọn khoa");
       return;
@@ -180,7 +217,14 @@ export default function DepartmentDataTable({
         {department.description || "Không có mô tả"}
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-        {department.faculty?.name || "Không xác định"}
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {department.faculty?.name || "Không xác định"}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {department.school?.name || "Chưa có trường"}
+          </span>
+        </div>
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         {new Date(department.createdAt).toLocaleString('vi-VN')}
@@ -248,7 +292,7 @@ export default function DepartmentDataTable({
           <div className="mt-8">
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Tên bộ môn
+                Tên bộ môn <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
@@ -261,7 +305,7 @@ export default function DepartmentDataTable({
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Mã bộ môn
+                Mã bộ môn <span className="text-red-500">*</span>
               </label>
               <input
                 id="code"
@@ -274,18 +318,46 @@ export default function DepartmentDataTable({
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                Khoa
+                Trường <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="schoolId"
+                value={formData.schoolId || ""}
+                onChange={(e) => {
+                  const schoolId = e.target.value ? Number(e.target.value) : undefined;
+                  setFormData({ ...formData, schoolId, facultyId: undefined });
+                  if (schoolId) {
+                    fetchFacultiesBySchool(schoolId);
+                  } else {
+                    setFaculties([]);
+                  }
+                }}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                disabled={isLoadingSchools}
+              >
+                <option value="">Chọn trường</option>
+                {schools.map((school) => (
+                  <option key={school.id} value={school.id}>
+                    {school.name} ({school.code})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Khoa <span className="text-red-500">*</span>
               </label>
               <select
                 id="facultyId"
-                value={formData.facultyId}
-                onChange={(e) => setFormData({ ...formData, facultyId: Number(e.target.value) })}
+                value={formData.facultyId || ""}
+                onChange={(e) => setFormData({ ...formData, facultyId: e.target.value ? Number(e.target.value) : undefined })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                disabled={!formData.schoolId || isLoadingFaculties}
               >
-                <option value={0}>Chọn khoa</option>
+                <option value="">Chọn khoa</option>
                 {faculties.map((faculty) => (
                   <option key={faculty.id} value={faculty.id}>
-                    {faculty.name}
+                    {faculty.name} ({faculty.code})
                   </option>
                 ))}
               </select>

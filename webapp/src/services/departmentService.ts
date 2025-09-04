@@ -6,6 +6,7 @@ export interface SearchDepartmentDto {
   code?: string;
   description?: string;
   facultyId?: number;
+  schoolId?: number;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -58,6 +59,7 @@ export const createDepartment = async (data: {
     code: string;
     description?: string;
     facultyId: number;
+    schoolId: number;
 }): Promise<Department> => {
     const res = await httpClient.post('/departments', data);
     return res.data;
@@ -68,6 +70,7 @@ export const updateDepartment = async (id: string, data: {
     code?: string;
     description?: string;
     facultyId?: number;
+    schoolId?: number;
 }): Promise<Department> => {
     const res = await httpClient.patch(`/departments/${id}`, data);
     return res.data;
@@ -82,6 +85,7 @@ export interface CreateDepartmentDto {
     code: string;
     description?: string;
     facultyId: number;
+    schoolId: number;
 }
 
 export interface UpdateDepartmentDto {
@@ -89,4 +93,5 @@ export interface UpdateDepartmentDto {
     code?: string;
     description?: string;
     facultyId?: number;
+    schoolId?: number;
 } 

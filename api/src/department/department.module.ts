@@ -4,9 +4,10 @@ import { Department } from './department.entity';
 import { DepartmentController } from './department.controller';
 import { DepartmentService } from './department.service';
 import { Faculty } from '../faculty/faculty.entity';
+import { School } from '../school/school.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Department, Faculty])],
+  imports: [TypeOrmModule.forFeature([Department, Faculty, School])],
   controllers: [DepartmentController],
   providers: [DepartmentService],
 })

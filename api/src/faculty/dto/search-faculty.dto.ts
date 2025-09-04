@@ -20,6 +20,14 @@ export class SearchFacultyDto {
   code?: string;
 
   @ApiPropertyOptional({
+    description: 'ID trường để tìm kiếm',
+    example: '',
+  })
+  @IsOptional()
+  @IsNumber()
+  schoolId?: number;
+
+  @ApiPropertyOptional({
     description: 'Mô tả để tìm kiếm',
     example: '',
   })

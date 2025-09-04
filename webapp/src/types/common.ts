@@ -85,6 +85,8 @@ export interface Department extends RowData {
     description?: string;
     facultyId: number;
     faculty?: Faculty;
+    schoolId: number;
+    school?: School;
     createdAt: string;
     updatedAt: string;
 }

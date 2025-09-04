@@ -5,6 +5,7 @@ export interface SearchFacultyDto {
   name?: string;
   code?: string;
   description?: string;
+  schoolId?: number;
   page?: number;
   limit?: number;
   sortBy?: string;

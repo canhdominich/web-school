@@ -7,6 +7,11 @@ export class CreateDepartmentDto {
   @IsNotEmpty()
   facultyId: number;
 
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  schoolId: number;
+
   @ApiProperty({ example: 'HUST-IT-1' })
   @IsString()
   @IsNotEmpty()

@@ -23,7 +23,7 @@ export class Faculty {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'bigint', nullable: true })
+  @Column({ type: 'bigint', nullable: false })
   schoolId: number;
 
   @ManyToOne(() => School, { onDelete: 'CASCADE' })

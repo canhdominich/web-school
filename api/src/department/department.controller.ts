@@ -14,8 +14,7 @@ import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { SearchDepartmentDto } from './dto/search-department.dto';
-import { PaginatedDepartmentResponseDto } from './dto/paginated-department-response.dto';
-import { Department } from './department.entity';
+import { PaginatedDepartmentResponseDto, DepartmentResponseDto } from './dto';
 
 @ApiTags('departments')
 @Controller('departments')
@@ -27,7 +26,7 @@ export class DepartmentController {
   @ApiResponse({
     status: 201,
     description: 'Department successfully created.',
-    type: Department,
+    type: DepartmentResponseDto,
   })
   create(@Body() dto: CreateDepartmentDto) {
     return this.departmentService.create(dto);
@@ -38,7 +37,7 @@ export class DepartmentController {
   @ApiResponse({
     status: 200,
     description: 'Return all departments.',
-    type: [Department],
+    type: [DepartmentResponseDto],
   })
   @ApiResponse({
     status: 200,
@@ -54,7 +53,7 @@ export class DepartmentController {
   @ApiResponse({
     status: 200,
     description: 'Return the department.',
-    type: Department,
+    type: DepartmentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Department not found.' })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -66,7 +65,7 @@ export class DepartmentController {
   @ApiResponse({
     status: 200,
     description: 'Department successfully updated.',
-    type: Department,
+    type: DepartmentResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Department not found.' })
   update(
@@ -78,7 +77,11 @@ export class DepartmentController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a department' })
-  @ApiResponse({ status: 200, description: 'Department successfully deleted.' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Department successfully deleted.',
+    type: DepartmentResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Department not found.' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.departmentService.remove(id);

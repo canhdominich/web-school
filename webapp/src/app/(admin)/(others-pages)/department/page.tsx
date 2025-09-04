@@ -14,7 +14,7 @@ export default function DepartmentPage() {
     { key: "name", title: "Tên bộ môn" },
     { key: "code", title: "Mã bộ môn" },
     { key: "description", title: "Mô tả" },
-    { key: "faculty", title: "Khoa" },
+    { key: "faculty", title: "Khoa/Trường" },
     { key: "createdAt", title: "Ngày tạo" },
     { key: "updatedAt", title: "Ngày cập nhật" },
     { key: "action", title: "Hành động" },

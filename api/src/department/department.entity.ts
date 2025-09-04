@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Faculty } from '../faculty/faculty.entity';
+import { School } from '../school/school.entity';
 
 @Entity('departments')
 export class Department {
@@ -16,6 +17,9 @@ export class Department {
 
   @Column({ type: 'bigint' })
   facultyId: number;
+
+  @Column({ type: 'bigint' })
+  schoolId: number;
 
   @Column({ type: 'varchar', length: 15, unique: true })
   code: string;
@@ -35,4 +39,8 @@ export class Department {
   @ManyToOne(() => Faculty)
   @JoinColumn({ name: 'facultyId' })
   faculty: Faculty;
+
+  @ManyToOne(() => School)
+  @JoinColumn({ name: 'schoolId' })
+  school: School;
 }
