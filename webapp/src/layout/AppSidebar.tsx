@@ -57,6 +57,11 @@ const AppSidebar: React.FC = () => {
     name: "Quản lý cơ cấu tổ chức",
     subItems: [
       {
+        name: "Quản lý năm học",
+        path: "/academic-year",
+        role: [UserRole.Admin],
+      },
+      {
         name: "Quản lý trường",
         path: "/school",
         role: [UserRole.Admin],
