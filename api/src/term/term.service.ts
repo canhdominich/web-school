@@ -6,7 +6,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Term } from './term.entity';
-import { CreateTermDto, UpdateTermDto, TermResponseDto, SearchTermDto, PaginatedTermResponseDto } from './dto';
+import {
+  CreateTermDto,
+  UpdateTermDto,
+  TermResponseDto,
+  SearchTermDto,
+  PaginatedTermResponseDto,
+} from './dto';
 
 @Injectable()
 export class TermService {
@@ -51,10 +57,19 @@ export class TermService {
       return terms;
     }
 
-    const { name, description, academicYear, status, page, limit, sortBy, sortOrder } =
-      searchDto;
+    const {
+      name,
+      description,
+      academicYear,
+      status,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = searchDto;
 
-    const queryBuilder = this.termRepository.createQueryBuilder('term')
+    const queryBuilder = this.termRepository
+      .createQueryBuilder('term')
       .leftJoinAndSelect('term.termMilestones', 'termMilestones');
 
     if (name) {
@@ -163,7 +178,7 @@ export class TermService {
     }
 
     Object.assign(term, updateTermDto);
-    const updatedTerm = await this.termRepository.save(term);
+    await this.termRepository.save(term);
 
     // Fetch the updated term with relations
     return this.findOne(id);

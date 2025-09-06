@@ -9,10 +9,11 @@ import { ProjectMemberService } from './project-member.service';
 import { User } from '../user/user.entity';
 import { ProjectMilestoneModule } from '../project-milestone/project-milestone.module';
 import { NotificationModule } from '../notification/notification.module';
+import { Term } from '../term/term.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, ProjectMember, User]),
+    TypeOrmModule.forFeature([Project, ProjectMember, User, Term]),
     ProjectMilestoneModule,
     NotificationModule,
   ],

@@ -29,6 +29,7 @@ import {
 import { NotificationService } from '../notification/notification.service';
 import { UserRole } from 'src/constants/user.constant';
 import { RequestUser } from 'src/interfaces';
+import { Term, TermStatus } from 'src/term/term.entity';
 
 @Injectable()
 export class ProjectService {
@@ -42,14 +43,45 @@ export class ProjectService {
     private readonly projectMemberRepository?: Repository<ProjectMember>,
     @InjectRepository(User)
     private readonly userRepository?: Repository<User>,
+    @InjectRepository(Term)
+    private readonly termRepository?: Repository<Term>,
   ) {}
 
+  private validateProject(
+    createOrUpdateProjectDto: CreateProjectDto | UpdateProjectDto,
+  ): void {
+    if (!createOrUpdateProjectDto.termId) {
+      throw new BadRequestException('Vui lòng chọn tiến độ');
+    }
+
+    if (!createOrUpdateProjectDto.facultyId) {
+      throw new BadRequestException('Vui lòng chọn khoa');
+    }
+
+    if (!createOrUpdateProjectDto.departmentId) {
+      throw new BadRequestException('Vui lòng chọn bộ môn');
+    }
+
+    if (!createOrUpdateProjectDto.majorId) {
+      throw new BadRequestException('Vui lòng chọn ngành');
+    }
+
+    if (!createOrUpdateProjectDto.supervisorId) {
+      throw new BadRequestException('Vui lòng chọn giảng viên hướng dẫn');
+    }
+
+    if (!createOrUpdateProjectDto.termId) {
+      throw new BadRequestException('Vui lòng chọn tiến độ');
+    }
+  }
   /**
    * Create a new project with notifications
    * - Notifies supervisor about new project assignment
    * - Notifies all members about being added to the project
    */
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
+    this.validateProject(createProjectDto);
+
     // Check if project code already exists
     const existingProject = await this.projectRepository.findOne({
       where: { code: createProjectDto.code },
@@ -77,6 +109,30 @@ export class ProjectService {
       async (manager) => {
         const projectRepo = manager.getRepository(Project);
         const projectMemberRepo = manager.getRepository(ProjectMember);
+        const termRepo = manager.getRepository(Term);
+
+        const term = await termRepo.findOne({
+          where: { id: createProjectDto.termId },
+        });
+        if (!term) {
+          throw new BadRequestException('Tiến độ không được tìm thấy');
+        }
+
+        const now = new Date();
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        const startDate = new Date(`${term.startDate}T00:00:00`);
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        const endDate = new Date(`${term.endDate}T23:59:59`);
+
+        if (startDate > now || endDate < now) {
+          throw new BadRequestException(
+            'Không thể đăng ký đề tài ngoài thời gian tiến độ',
+          );
+        } else if (term.status === TermStatus.CLOSED) {
+          throw new BadRequestException(
+            'Không thể đăng ký đề tài trong tiến độ đã đóng',
+          );
+        }
 
         const project = projectRepo.create({
           ...createProjectDto,
@@ -1070,6 +1126,8 @@ export class ProjectService {
     id: number,
     updateProjectDto: UpdateProjectDto,
   ): Promise<Project> {
+    this.validateProject(updateProjectDto);
+
     const project = await this.projectRepository.findOne({ where: { id } });
 
     if (!project) {
@@ -1090,6 +1148,32 @@ export class ProjectService {
       async (manager) => {
         const projectRepo = manager.getRepository(Project);
         const projectMemberRepo = manager.getRepository(ProjectMember);
+        const termRepo = manager.getRepository(Term);
+
+        if (updateProjectDto.termId) {
+          const term = await termRepo.findOne({
+            where: { id: updateProjectDto.termId },
+          });
+          if (!term) {
+            throw new BadRequestException('Tiến độ không được tìm thấy');
+          }
+
+          const now = new Date();
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          const startDate = new Date(`${term.startDate}T00:00:00`);
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          const endDate = new Date(`${term.endDate}T23:59:59`);
+
+          if (startDate > now || endDate < now) {
+            throw new BadRequestException(
+              'Không thể cập nhật đề tài ngoài thời gian tiến độ',
+            );
+          } else if (term.status === TermStatus.CLOSED) {
+            throw new BadRequestException(
+              'Không thể cập nhật đề tài trong tiến độ đã đóng',
+            );
+          }
+        }
 
         const oldStatus = project.status;
         const oldLevel = project.level;

@@ -369,7 +369,7 @@ export default function ProjectDataTable({
       } else {
         const payload: CreateProjectDto = transformCreatePayload(formData as CreateProjectDto);
         await createProject(payload);
-        toast.success("Thêm đề tài thành công");
+        toast.success("Đăng ký đề tài thành công");
       }
       closeModal();
       onRefresh();
@@ -731,7 +731,7 @@ export default function ProjectDataTable({
       type="button"
       className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
     >
-      Thêm đề tài
+      Đăng ký đề tài
     </button>
   );
 
@@ -763,7 +763,7 @@ export default function ProjectDataTable({
                     ? rolesObject[UserRole.Admin]
                       ? "Chỉnh sửa đề tài"
                       : "Thông tin đề tài"
-                    : "Thêm đề tài"}
+                    : "Đăng ký đề tài"}
                 </h5>
               </div>
 
