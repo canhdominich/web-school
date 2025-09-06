@@ -205,7 +205,9 @@ export class FacultyService {
     return {
       id: faculty.id,
       code: faculty.code,
-      name: faculty.name,
+      name:
+        faculty.name +
+        `${faculty.school && faculty.school.name ? ` (${faculty.school.name})` : ''}`,
       description: faculty.description,
       schoolId: faculty.schoolId,
       school: faculty.school
