@@ -16,7 +16,6 @@ import {
   ApiResponse,
   ApiTags,
   ApiBearerAuth,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';

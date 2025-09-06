@@ -8,7 +8,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Council } from './council.entity';
 import { CouncilMember } from './council-member.entity';
-import { CreateCouncilDto, UpdateCouncilDto, CouncilStatus, SearchCouncilDto, PaginatedCouncilResponseDto } from './dto';
+import {
+  CreateCouncilDto,
+  UpdateCouncilDto,
+  CouncilStatus,
+  SearchCouncilDto,
+  PaginatedCouncilResponseDto,
+} from './dto';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
 import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
@@ -134,10 +140,19 @@ export class CouncilService {
       });
     }
 
-    const { name, description, facultyId, status, page, limit, sortBy, sortOrder } =
-      searchDto;
+    const {
+      name,
+      description,
+      facultyId,
+      status,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    } = searchDto;
 
-    const queryBuilder = this.councilRepository.createQueryBuilder('council')
+    const queryBuilder = this.councilRepository
+      .createQueryBuilder('council')
       .leftJoinAndSelect('council.councilMembers', 'councilMembers')
       .leftJoinAndSelect('councilMembers.user', 'user')
       .leftJoinAndSelect('council.faculty', 'faculty');
@@ -515,13 +530,16 @@ export class CouncilService {
         '../project/project.utils'
       );
       if (
-        ![ProjectStatus.APPROVED, ProjectStatus.IN_PROGRESS].includes(
-          project.status,
-        )
+        ![
+          ProjectStatus.APPROVED_BY_LECTURER,
+          ProjectStatus.APPROVED_BY_FACULTY_DEAN,
+          ProjectStatus.APPROVED_BY_RECTOR,
+          ProjectStatus.IN_PROGRESS,
+        ].includes(project.status)
       ) {
         const label = getProjectStatusLabel(project.status);
         throw new BadRequestException(
-          `Không thể thực hiện chấm điểm khi đề tài đang ở trạng thái ${label}`,
+          `Không thể thực hiện chấm điểm khi đề tài đang ở trạng thái ${label}.`,
         );
       }
     }

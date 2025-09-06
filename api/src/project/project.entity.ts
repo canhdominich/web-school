@@ -19,7 +19,9 @@ import { ProjectMilestone } from '../project-milestone/project-milestone.entity'
 export enum ProjectStatus {
   DRAFT = 'draft',
   PENDING = 'pending',
-  APPROVED = 'approved',
+  APPROVED_BY_LECTURER = 'approved_by_lecturer',
+  APPROVED_BY_FACULTY_DEAN = 'approved_by_faculty_dean',
+  APPROVED_BY_RECTOR = 'approved_by_rector',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',

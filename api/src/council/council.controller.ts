@@ -73,7 +73,7 @@ export class CouncilController {
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
   @ApiResponse({ status: 409, description: 'Tên hội đồng đã tồn tại.' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   async create(@Body() createCouncilDto: CreateCouncilDto) {
     const council = await this.councilService.create(createCouncilDto);
     return this.mapCouncilToResponse(council);
@@ -93,7 +93,7 @@ export class CouncilController {
   })
   async findAll(@Query() searchDto: SearchCouncilDto) {
     const councils = await this.councilService.findAll(searchDto);
-    
+
     // Handle pagination response
     if ('data' in councils) {
       return {
@@ -101,7 +101,7 @@ export class CouncilController {
         data: councils.data.map((c) => this.mapCouncilToResponse(c)),
       };
     }
-    
+
     return councils.map((c) => this.mapCouncilToResponse(c));
   }
 
@@ -153,7 +153,7 @@ export class CouncilController {
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
   @ApiResponse({ status: 409, description: 'Tên hội đồng đã tồn tại.' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCouncilDto: UpdateCouncilDto,
@@ -172,7 +172,7 @@ export class CouncilController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   async addMembers(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { memberIds: number[] },
@@ -191,7 +191,7 @@ export class CouncilController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   async removeMembers(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { memberIds: number[] },
@@ -205,7 +205,7 @@ export class CouncilController {
   @ApiResponse({ status: 200, description: 'Hội đồng được xóa thành công.' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy hội đồng.' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.councilService.remove(id);
   }
@@ -214,7 +214,7 @@ export class CouncilController {
   @Post(':id/projects')
   @ApiOperation({ summary: 'Gán nhiều project cho hội đồng' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   async addProjects(
     @Param('id', ParseIntPipe) id: number,
     @Body('projectIds', new ParseArrayPipe({ items: Number, separator: ',' }))
@@ -227,7 +227,7 @@ export class CouncilController {
   @Delete(':id/projects')
   @ApiOperation({ summary: 'Gỡ gán project khỏi hội đồng' })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Admin, UserRole.FacultyDean)
+  @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   async removeProjects(
     @Param('id', ParseIntPipe) id: number,
     @Body('projectIds', new ParseArrayPipe({ items: Number, separator: ',' }))
@@ -245,9 +245,16 @@ export class CouncilController {
 
   // Grading endpoints
   @Post(':id/projects/:projectId/grade')
-  @ApiOperation({ summary: 'Giảng viên trong hội đồng chấm điểm đề tài (0-10)' })
+  @ApiOperation({
+    summary: 'Giảng viên trong hội đồng chấm điểm đề tài (0-10)',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.Lecturer, UserRole.FacultyDean, UserRole.Admin)
+  @Roles(
+    UserRole.Lecturer,
+    UserRole.FacultyDean,
+    UserRole.Admin,
+    UserRole.Rector,
+  )
   async gradeProject(
     @Param('id', ParseIntPipe) councilId: number,
     @Param('projectId', ParseIntPipe) projectId: number,

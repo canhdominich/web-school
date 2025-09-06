@@ -4,7 +4,9 @@ export function getProjectStatusLabel(status: ProjectStatus): string {
   const map: Record<ProjectStatus, string> = {
     [ProjectStatus.DRAFT]: 'Nháp',
     [ProjectStatus.PENDING]: 'Chờ duyệt',
-    [ProjectStatus.APPROVED]: 'Đã duyệt',
+    [ProjectStatus.APPROVED_BY_LECTURER]: 'Giảng viên đã duyệt',
+    [ProjectStatus.APPROVED_BY_FACULTY_DEAN]: 'Trưởng khoa đã duyệt',
+    [ProjectStatus.APPROVED_BY_RECTOR]: 'Trường đã duyệt',
     [ProjectStatus.IN_PROGRESS]: 'Đang thực hiện',
     [ProjectStatus.COMPLETED]: 'Hoàn thành',
     [ProjectStatus.CANCELLED]: 'Đã hủy',

@@ -211,7 +211,9 @@ export class StatisticService {
         case ProjectStatus.PENDING:
           counts.pendingProjects = count;
           break;
-        case ProjectStatus.APPROVED:
+        case ProjectStatus.APPROVED_BY_LECTURER:
+        case ProjectStatus.APPROVED_BY_FACULTY_DEAN:
+        case ProjectStatus.APPROVED_BY_RECTOR:
           counts.approvedProjects = count;
           break;
         case ProjectStatus.IN_PROGRESS:

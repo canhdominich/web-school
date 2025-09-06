@@ -26,6 +26,7 @@ import {
   ProjectStatus,
   ProjectLevel,
   ProjectMemberDto,
+  ProjectStatusEnum,
 } from "@/services/projectService";
 import { getRolesObject } from "@/utils/user.utils";
 import { PencilIcon } from "@/icons";
@@ -46,6 +47,8 @@ interface ProjectDataTableProps {
   onPageChange?: (page: number) => void;
   onItemsPerPageChange?: (limit: number) => void;
 }
+
+type Option = { value: ProjectStatus; label: string };
 
 export default function ProjectDataTable({ 
   headers, 
@@ -125,11 +128,42 @@ export default function ProjectDataTable({
   const canEditProject = (project: ProjectEntity | null): boolean => {
     if (!project) return true; // Cho phép tạo mới
     if (rolesObject[UserRole.Admin]) return true; // Admin luôn được chỉnh sửa
+    if (
+      rolesObject[UserRole.Rector] &&
+      ![
+        ProjectStatusEnum.DRAFT,
+        ProjectStatusEnum.PENDING,
+        ProjectStatusEnum.APPROVED_BY_LECTURER,
+        ProjectStatusEnum.APPROVED_BY_FACULTY_DEAN,
+        ProjectStatusEnum.APPROVED_BY_RECTOR,
+      ].includes(project.status as ProjectStatusEnum)
+    ) {
+      return true;
+    }
+    if (
+      rolesObject[UserRole.FacultyDean] &&
+      ![
+        ProjectStatusEnum.DRAFT,
+        ProjectStatusEnum.PENDING,
+        ProjectStatusEnum.APPROVED_BY_LECTURER,
+      ].includes(project.status as ProjectStatusEnum)
+    ) {
+      return true;
+    }
+    if (
+      rolesObject[UserRole.Lecturer] &&
+      ![
+        ProjectStatusEnum.DRAFT,
+        ProjectStatusEnum.PENDING,
+      ].includes(project.status as ProjectStatusEnum)
+    ) {
+      return true;
+    }
     if (rolesObject[UserRole.Student]) {
       // Sinh viên chỉ được chỉnh sửa khi trạng thái là draft hoặc pending
-      return project.status === 'draft' || project.status === 'pending';
+      return project.status === ProjectStatusEnum.DRAFT || project.status === ProjectStatusEnum.PENDING;
     }
-    return true; // Các role khác được chỉnh sửa
+    return false; // Các role khác không được chỉnh sửa
   };
 
   // Helper function để kiểm tra quyền xóa project (chỉ Admin)
@@ -167,6 +201,97 @@ export default function ProjectDataTable({
       !selectedProject || 
       selectedProject.status === 'draft' 
       || selectedProject.status === 'pending';
+  };
+
+  // Hàm tạo danh sách trạng thái động dựa trên vai trò người dùng
+  const getStatusOptions = () => {
+    const selectedOption = selectedProject
+      ? {
+          value: selectedProject.status,
+          label: getStatusLabel(selectedProject.status as ProjectStatus),
+        }
+      : undefined;
+
+      
+    let baseOptions: Option[] = [
+      {
+        value: "draft",
+        label: getStatusLabel("draft"),
+      },
+      {
+        value: "pending",
+        label: getStatusLabel("pending"),
+      },
+    ];
+    
+    if (selectedOption) {
+      baseOptions = [
+        ...baseOptions.filter((opt) => opt.value !== selectedOption.value),
+        selectedOption,
+      ];
+    }
+
+    // Nếu là admin, hiển thị tất cả options
+    if (rolesObject[UserRole.Admin]) {
+      return [
+        { value: "draft", label: "Nháp" },
+        { value: "pending", label: "Chờ duyệt" },
+        { value: "approved_by_lecturer", label: "Giảng viên đã duyệt" },
+        { value: "approved_by_faculty_dean", label: "Trưởng khoa đã duyệt" },
+        { value: "approved_by_rector", label: "Trường đã duyệt" },
+        { value: "in_progress", label: "Đang thực hiện" },
+        { value: "completed", label: "Hoàn thành" },
+        { value: "cancelled", label: "Hủy" },
+      ];
+    }
+
+    // Nếu là rector, thêm option approved_by_rector
+    if (rolesObject[UserRole.Rector]) {
+      if(selectedProject && ![ProjectStatusEnum.DRAFT, ProjectStatusEnum.PENDING, ProjectStatusEnum.APPROVED_BY_LECTURER, ProjectStatusEnum.APPROVED_BY_FACULTY_DEAN, ProjectStatusEnum.APPROVED_BY_RECTOR].includes(selectedProject.status as ProjectStatusEnum)) {
+        return [selectedOption];
+      }
+      return [
+        { value: "approved_by_lecturer", label: "Giảng viên đã duyệt" },
+        { value: "approved_by_faculty_dean", label: "Trưởng khoa đã duyệt" },
+        { value: "approved_by_rector", label: "Trường đã duyệt" },
+        ...(selectedProject && selectedProject.status === ProjectStatusEnum.APPROVED_BY_RECTOR ? [{ value: "cancelled", label: "Hủy" }] : []),
+      ];
+    }
+
+    // Nếu là trưởng khoa, thêm option approved_by_faculty_dean
+    if (rolesObject[UserRole.FacultyDean]) {
+      if(selectedProject && ![ProjectStatusEnum.DRAFT, ProjectStatusEnum.PENDING, ProjectStatusEnum.APPROVED_BY_LECTURER, ProjectStatusEnum.APPROVED_BY_FACULTY_DEAN].includes(selectedProject.status as ProjectStatusEnum)) {
+        return [selectedOption];
+      }
+      return [
+        { value: "approved_by_lecturer", label: "Giảng viên đã duyệt" },
+        { value: "approved_by_faculty_dean", label: "Trưởng khoa đã duyệt" },
+        ...(selectedProject && selectedProject.status === ProjectStatusEnum.APPROVED_BY_FACULTY_DEAN ? [{ value: "cancelled", label: "Hủy" }] : []),
+      ];
+    }
+
+    // Nếu là giảng viên, thêm option cancelled
+    if (rolesObject[UserRole.Lecturer]) {
+      if(selectedProject && ![ProjectStatusEnum.DRAFT, ProjectStatusEnum.PENDING, ProjectStatusEnum.APPROVED_BY_LECTURER].includes(selectedProject.status as ProjectStatusEnum)) {
+        return [selectedOption];
+      }
+      return [
+        { value: "pending", label: "Chờ duyệt" },
+        { value: "approved_by_lecturer", label: "Giảng viên đã duyệt" },
+        ...((selectedProject && [ProjectStatusEnum.DRAFT, ProjectStatusEnum.PENDING].includes(selectedProject.status as ProjectStatusEnum) || (selectedProject && selectedProject.status === ProjectStatusEnum.APPROVED_BY_LECTURER)) ? [{ value: "cancelled", label: "Hủy" }] : []),
+      ];
+    }
+
+    // Nếu là sinh viên, chỉ hiển thị các option cơ bản
+    if (rolesObject[UserRole.Student]) {
+      if(selectedProject && ![ProjectStatusEnum.DRAFT, ProjectStatusEnum.PENDING].includes(selectedProject.status as ProjectStatusEnum)) {
+        return [selectedOption];
+      }
+      return baseOptions;
+    }
+
+    // Mặc định trả về options cơ bản
+    return baseOptions;
   };
 
   useEffect(() => {
@@ -226,7 +351,7 @@ export default function ProjectDataTable({
         expectedOutputs: "",
         startDate: "",
         endDate: "",
-        status: "pending",
+        status: ProjectStatusEnum.PENDING,
         level: "undergraduate",
         budget: 0,
         facultyId: 0,
@@ -528,7 +653,9 @@ export default function ProjectDataTable({
       in_progress: "Đang thực hiện",
       completed: "Hoàn thành",
       cancelled: "Đã hủy",
-      approved: "Đã duyệt",
+      approved_by_lecturer: "Giảng viên đã duyệt",
+      approved_by_faculty_dean: "Trưởng khoa đã duyệt",
+      approved_by_rector: "Trường đã duyệt",
       pending: "Chờ duyệt",
       draft: "Nháp"
     };
@@ -566,7 +693,9 @@ export default function ProjectDataTable({
     in_progress: "success",
     completed: "primary",
     cancelled: "error",
-    approved: "info",
+    approved_by_lecturer: "info",
+    approved_by_faculty_dean: "info",
+    approved_by_rector: "info",
     pending: "warning",
   };
 
@@ -923,14 +1052,7 @@ export default function ProjectDataTable({
                     <Select
                       value={formData?.status as string}
                       onChange={(v) => setFormData({ ...formData, status: v as ProjectStatus })}
-                      options={[
-                        { value: "draft", label: "Nháp" },
-                        { value: "pending", label: "Chờ duyệt" },
-                        { value: "approved", label: "Đã duyệt" },
-                        { value: "in_progress", label: "Đang thực hiện" },
-                        { value: "completed", label: "Hoàn thành" },
-                        { value: "cancelled", label: "Hủy" },
-                      ]}
+                      options={getStatusOptions() as Option[]}
                       disabled={!canChangeProjectStatus() || !selectedProject || (selectedProject && rolesObject[UserRole.Student])}
                     />
                   </div>

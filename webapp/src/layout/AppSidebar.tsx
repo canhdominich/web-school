@@ -69,12 +69,12 @@ const AppSidebar: React.FC = () => {
       {
         name: "Quản lý bộ môn",
         path: "/department",
-        role: [UserRole.Admin, UserRole.FacultyDean],
+        role: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean],
       },
       {
         name: "Quản lý ngành học",
         path: "/major",
-        role: [UserRole.Admin, UserRole.FacultyDean, UserRole.DepartmentHead],
+        role: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean, UserRole.DepartmentHead],
       },
       {
         name: "Quản lý năm học",
@@ -110,25 +110,25 @@ const AppSidebar: React.FC = () => {
     icon: <TableIcon />,
     name: "Quản lý hội đồng",
     path: "/council",
-    requiredRole: [UserRole.Admin, UserRole.FacultyDean],
+    requiredRole: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean],
   },
   {
     icon: <PaperPlaneIcon />,
     name: "Quản lý tiến độ",
     path: "/term",
-    requiredRole: [UserRole.Admin],
+    requiredRole: [UserRole.Admin, UserRole.Rector],
   },
   {
     icon: <CalenderIcon />,
     name: "Đăng ký đề tài",
     path: "/project",
-    requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council],
+    requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council, UserRole.Rector],
   },
   {
     icon: <UserCircleIcon />,
     name: "Trang cá nhân",
     path: "/profile",
-    requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council],
+    requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council, UserRole.Rector],
   },
   {
     icon: (<svg

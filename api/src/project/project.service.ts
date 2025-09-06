@@ -554,7 +554,9 @@ export class ProjectService {
       const statusLabels = {
         draft: 'Nháp',
         pending: 'Chờ duyệt',
-        approved: 'Đã duyệt',
+        approved_by_lecturer: 'Giảng viên đã duyệt',
+        approved_by_faculty_dean: 'Trưởng khoa đã duyệt',
+        approved_by_rector: 'Trường đã duyệt',
         in_progress: 'Đang thực hiện',
         completed: 'Hoàn thành',
         cancelled: 'Hủy',
@@ -756,7 +758,7 @@ export class ProjectService {
       const roles = user.roles || [];
 
       // Admin: No additional filtering needed
-      if (!roles.includes(UserRole.Admin)) {
+      if (!roles.includes(UserRole.Admin) && !roles.includes(UserRole.Rector)) {
         // Student: Return projects created by user or where user is a member
         if (roles.includes(UserRole.Student)) {
           queryBuilder.andWhere(

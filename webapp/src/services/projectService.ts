@@ -4,10 +4,23 @@ import type { User, RowData } from "@/types/common";
 export type ProjectStatus =
 	| "draft"
 	| "pending"
-	| "approved"
+	| "approved_by_lecturer"
+	| "approved_by_faculty_dean"
+	| "approved_by_rector"
 	| "in_progress"
 	| "completed"
 	| "cancelled";
+
+export enum ProjectStatusEnum {
+  DRAFT = 'draft',
+  PENDING = 'pending',
+  APPROVED_BY_LECTURER = 'approved_by_lecturer',
+  APPROVED_BY_FACULTY_DEAN = 'approved_by_faculty_dean',
+  APPROVED_BY_RECTOR = 'approved_by_rector',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+}
 
 export type ProjectLevel = "undergraduate" | "graduate" | "research";
 

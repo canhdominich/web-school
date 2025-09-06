@@ -48,7 +48,9 @@ export class MilestoneSubmissionService {
     // Project status check: only allow when APPROVED or IN_PROGRESS
     const projectStatus = milestone.project?.status;
     if (
-      projectStatus !== ProjectStatus.APPROVED &&
+      projectStatus !== ProjectStatus.APPROVED_BY_LECTURER &&
+      projectStatus !== ProjectStatus.APPROVED_BY_FACULTY_DEAN &&
+      projectStatus !== ProjectStatus.APPROVED_BY_RECTOR &&
       projectStatus !== ProjectStatus.IN_PROGRESS
     ) {
       const label = getProjectStatusLabel(projectStatus);
