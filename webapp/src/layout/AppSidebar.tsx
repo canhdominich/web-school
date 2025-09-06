@@ -114,7 +114,7 @@ const AppSidebar: React.FC = () => {
   },
   {
     icon: <PaperPlaneIcon />,
-    name: "Quản lý tiến độ",
+    name: "Quản lý sự kiện",
     path: "/term",
     requiredRole: [UserRole.Admin, UserRole.Rector],
   },
