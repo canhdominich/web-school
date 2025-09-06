@@ -120,7 +120,7 @@ const AppSidebar: React.FC = () => {
   },
   {
     icon: <CalenderIcon />,
-    name: "Đăng ký đề tài",
+    name: "Quản lý đề tài",
     path: "/project",
     requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council, UserRole.Rector],
   },
