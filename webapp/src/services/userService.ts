@@ -17,6 +17,7 @@ export interface SearchUserDto {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
+  roles?: string[];
 }
 
 export interface PaginatedUserResponse {

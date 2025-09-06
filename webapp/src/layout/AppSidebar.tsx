@@ -85,17 +85,22 @@ const AppSidebar: React.FC = () => {
     requiredRole: [UserRole.Admin, UserRole.FacultyDean, UserRole.DepartmentHead],
   },
   {
-    icon: <TableIcon />,
+    icon: <GroupIcon />,
     name: "Quản lý người dùng",
     subItems: [
       {
-        name: "Quản lý sinh viên",
+        name: "Quản lý tài khoản",
         path: "/user",
         role: [UserRole.Admin],
       },
       {
+        name: "Quản lý sinh viên",
+        path: "/student",
+        role: [UserRole.Admin],
+      },
+      {
         name: "Quản lý giảng viên",
-        path: "/user",
+        path: "/lecturer",
         role: [UserRole.Admin],
       },
     ],
@@ -118,12 +123,6 @@ const AppSidebar: React.FC = () => {
     name: "Đăng ký đề tài",
     path: "/project",
     requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council],
-  },
-  {
-    icon: <GroupIcon />,
-    name: "Quản lý tài khoản",
-    path: "/user",
-    requiredRole: [UserRole.Admin],
   },
   {
     icon: <UserCircleIcon />,

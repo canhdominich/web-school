@@ -1,5 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, Min, Max, IsEnum, IsArray } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  Min,
+  Max,
+  IsEnum,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserRole } from 'src/constants/user.constant';
 
@@ -100,7 +108,18 @@ export class SearchUserDto {
   @ApiPropertyOptional({
     description: 'Sắp xếp theo trường',
     example: 'id',
-    enum: ['id', 'name', 'code', 'email', 'phone', 'facultyId', 'departmentId', 'majorId', 'createdAt', 'updatedAt'],
+    enum: [
+      'id',
+      'name',
+      'code',
+      'email',
+      'phone',
+      'facultyId',
+      'departmentId',
+      'majorId',
+      'createdAt',
+      'updatedAt',
+    ],
   })
   @IsOptional()
   @IsString()

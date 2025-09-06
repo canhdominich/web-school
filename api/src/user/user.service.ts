@@ -363,9 +363,17 @@ export class UserService {
     }
 
     if (roles && roles.length > 0) {
+      const roleList = Array.isArray(roles) ? roles : [roles];
+
       queryBuilder.andWhere(
-        'EXISTS (SELECT 1 FROM user_roles ur INNER JOIN roles r ON ur.roleId = r.id WHERE ur.userId = user.id AND r.name IN (:...roles))',
-        { roles },
+        `EXISTS (
+          SELECT 1 
+          FROM user_roles ur 
+          INNER JOIN roles r ON ur.roleId = r.id 
+          WHERE ur.userId = user.id 
+            AND r.name IN (:...roles)
+        )`,
+        { roles: roleList },
       );
     }
 

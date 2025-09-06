@@ -15,7 +15,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { SearchUserDto } from './dto/search-user.dto';
 import { PaginatedUserResponseDto } from './dto/paginated-user-response.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { User } from './user.entity';
 import { UserResponseDto } from './dto/user-response.dto';
 import { Faculty } from '../faculty/faculty.entity';
 import { Department } from '../department/department.entity';
@@ -40,15 +39,27 @@ export class UserController {
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Return all users.', type: [UserResponseDto] })
-  @ApiResponse({ status: 200, description: 'Return paginated users.', type: PaginatedUserResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all users.',
+    type: [UserResponseDto],
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return paginated users.',
+    type: PaginatedUserResponseDto,
+  })
   findAll(@Query() searchDto: SearchUserDto) {
     return this.userService.findAll(searchDto);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a user by id' })
-  @ApiResponse({ status: 200, description: 'Return the user.', type: UserResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Return the user.',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'User not found.' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
@@ -80,15 +91,27 @@ export class UserController {
 
   @Get('academic/faculties')
   @ApiOperation({ summary: 'Get all faculties' })
-  @ApiResponse({ status: 200, description: 'Return all faculties.', type: [Faculty] })
+  @ApiResponse({
+    status: 200,
+    description: 'Return all faculties.',
+    type: [Faculty],
+  })
   getFaculties() {
     return this.userService.getFaculties();
   }
 
   @Get('academic/departments')
   @ApiOperation({ summary: 'Get departments by faculty' })
-  @ApiQuery({ name: 'facultyId', required: false, description: 'Faculty ID to filter departments' })
-  @ApiResponse({ status: 200, description: 'Return departments.', type: [Department] })
+  @ApiQuery({
+    name: 'facultyId',
+    required: false,
+    description: 'Faculty ID to filter departments',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return departments.',
+    type: [Department],
+  })
   getDepartments(@Query('facultyId') facultyId?: string) {
     const facultyIdNum = facultyId ? parseInt(facultyId, 10) : undefined;
     return this.userService.getDepartments(facultyIdNum);
@@ -96,10 +119,16 @@ export class UserController {
 
   @Get('academic/majors')
   @ApiOperation({ summary: 'Get majors by department' })
-  @ApiQuery({ name: 'departmentId', required: false, description: 'Department ID to filter majors' })
+  @ApiQuery({
+    name: 'departmentId',
+    required: false,
+    description: 'Department ID to filter majors',
+  })
   @ApiResponse({ status: 200, description: 'Return majors.', type: [Major] })
   getMajors(@Query('departmentId') departmentId?: string) {
-    const departmentIdNum = departmentId ? parseInt(departmentId, 10) : undefined;
+    const departmentIdNum = departmentId
+      ? parseInt(departmentId, 10)
+      : undefined;
     return this.userService.getMajors(departmentIdNum);
   }
 }
