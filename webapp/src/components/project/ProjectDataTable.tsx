@@ -1029,11 +1029,11 @@ export default function ProjectDataTable({
                 </div>
                 <div className="grid grid-cols-3 gap-4 col-span-2">
                   <div className="mb-3">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Tiến độ</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Sự kiện</label>
                     <Select
                       value={formData?.termId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, termId: parseInt(v, 10) })}
-                      options={[{ value: "0", label: "Chọn tiến độ" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
+                      options={[{ value: "0", label: "Chọn sự kiện" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
                       disabled={!canChangeProjectStatus()}
                     />
                   </div>

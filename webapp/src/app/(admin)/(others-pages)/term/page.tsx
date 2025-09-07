@@ -11,8 +11,8 @@ import { usePagination } from "@/hooks/usePagination";
 
 export default function TermPage() {
   const headers = [
-    { key: "name", title: "Tên tiến độ" },
-    { key: "code", title: "Mã tiến độ" },
+    { key: "name", title: "Tên sự kiện" },
+    { key: "code", title: "Mã sự kiện" },
     { key: "description", title: "Mô tả" },
     { key: "dateRange", title: "Thời gian" },
     { key: "status", title: "Trạng thái" },
@@ -59,7 +59,7 @@ export default function TermPage() {
       setTotalItems(data.total);
       setTotalPages(data.totalPages);
     } catch (e) {
-      toast.error(getErrorMessage(e, "Không thể tải danh sách tiến độ"));
+      toast.error(getErrorMessage(e, "Không thể tải danh sách sự kiện"));
     } finally {
       if (isSearch) {
         setIsSearching(false);
@@ -98,7 +98,7 @@ export default function TermPage() {
 
   return (
     <div>
-      <PageBreadcrumb pageTitle="Quản lý tiến độ" />
+      <PageBreadcrumb pageTitle="Quản lý sự kiện" />
       <div className="space-y-6">
         <ComponentCard title="">
           {isLoading ? (

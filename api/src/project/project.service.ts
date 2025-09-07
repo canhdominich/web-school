@@ -51,7 +51,7 @@ export class ProjectService {
     createOrUpdateProjectDto: CreateProjectDto | UpdateProjectDto,
   ): void {
     if (!createOrUpdateProjectDto.termId) {
-      throw new BadRequestException('Vui lòng chọn tiến độ');
+      throw new BadRequestException('Vui lòng chọn sự kiện');
     }
 
     if (!createOrUpdateProjectDto.facultyId) {
@@ -71,7 +71,7 @@ export class ProjectService {
     }
 
     if (!createOrUpdateProjectDto.termId) {
-      throw new BadRequestException('Vui lòng chọn tiến độ');
+      throw new BadRequestException('Vui lòng chọn sự kiện');
     }
   }
   /**
@@ -115,7 +115,7 @@ export class ProjectService {
           where: { id: createProjectDto.termId },
         });
         if (!term) {
-          throw new BadRequestException('Tiến độ không được tìm thấy');
+          throw new BadRequestException('Sự kiện không được tìm thấy');
         }
 
         const now = new Date();
@@ -126,11 +126,11 @@ export class ProjectService {
 
         if (startDate > now || endDate < now) {
           throw new BadRequestException(
-            'Không thể đăng ký đề tài ngoài thời gian tiến độ',
+            'Không thể đăng ký đề tài ngoài thời gian sự kiện',
           );
         } else if (term.status === TermStatus.CLOSED) {
           throw new BadRequestException(
-            'Không thể đăng ký đề tài trong tiến độ đã đóng',
+            'Không thể đăng ký đề tài trong sự kiện đã đóng',
           );
         }
 
@@ -1157,7 +1157,7 @@ export class ProjectService {
             where: { id: updateProjectDto.termId },
           });
           if (!term) {
-            throw new BadRequestException('Tiến độ không được tìm thấy');
+            throw new BadRequestException('Sự kiện không được tìm thấy');
           }
 
           const now = new Date();
@@ -1168,11 +1168,11 @@ export class ProjectService {
 
           if (startDate > now || endDate < now) {
             throw new BadRequestException(
-              'Không thể cập nhật đề tài ngoài thời gian tiến độ',
+              'Không thể cập nhật đề tài ngoài thời gian sự kiện',
             );
           } else if (term.status === TermStatus.CLOSED) {
             throw new BadRequestException(
-              'Không thể cập nhật đề tài trong tiến độ đã đóng',
+              'Không thể cập nhật đề tài trong sự kiện đã đóng',
             );
           }
         }
