@@ -7,6 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  BeforeUpdate,
 } from 'typeorm';
 import { User } from '../user/user.entity';
 import { Faculty } from '../faculty/faculty.entity';
@@ -15,6 +16,8 @@ import { Major } from '../major/major.entity';
 import { ProjectMember } from './project-member.entity';
 import { Term } from '../term/term.entity';
 import { ProjectMilestone } from '../project-milestone/project-milestone.entity';
+import { MilestoneSubmission } from 'src/milestone-submission/milestone-submission.entity';
+import { AppDataSource } from 'src/data-source';
 
 export enum ProjectStatus {
   DRAFT = 'draft',
@@ -138,4 +141,39 @@ export class Project {
 
   @Column({ type: 'decimal', precision: 4, scale: 2, nullable: true })
   averageScore: number | null;
+
+  @Column({ type: 'bigint', nullable: true })
+  lastMilestoneSubmissionId: number;
+
+  @ManyToOne(() => MilestoneSubmission, { nullable: true })
+  @JoinColumn({ name: 'lastMilestoneSubmissionId' })
+  lastMilestoneSubmission: MilestoneSubmission;
+
+  @BeforeUpdate()
+  async setLastMilestoneSubmissionId() {
+    console.log('setLastMilestoneSubmissionId', this.averageScore);
+    if (this.averageScore !== null) {
+      const projectId = this.id;
+      const averageScore = this.averageScore;
+      const projectRepo = AppDataSource.getRepository(Project);
+
+      const lastSubmission = await AppDataSource.manager.query(
+        `
+        SELECT ms.id
+        FROM milestone_submissions ms
+        WHERE ms.milestoneId IN (
+          SELECT pm.id FROM project_milestones pm WHERE pm.projectId = ?
+        )
+        ORDER BY ms.id DESC
+        LIMIT 1
+        `,
+        [projectId],
+      );
+
+      await projectRepo.update(projectId, {
+        averageScore,
+        lastMilestoneSubmissionId: lastSubmission.length > 0 ? lastSubmission[0].id : null,
+      });
+    }
+  }
 }

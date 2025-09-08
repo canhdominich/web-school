@@ -114,9 +114,14 @@ const AppSidebar: React.FC = () => {
         name: "Thiết lập hội đồng",
         path: "/council",
         role: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean],
+      },
+      {
+        name: "Lưu trữ",
+        path: "/archive",
+        role: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean, UserRole.DepartmentHead, UserRole.Lecturer, UserRole.Student, UserRole.Council],
       }
     ],
-    requiredRole: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean],
+    requiredRole: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean, UserRole.DepartmentHead, UserRole.Lecturer, UserRole.Student, UserRole.Council],
   },
   {
     icon: <PaperPlaneIcon />,

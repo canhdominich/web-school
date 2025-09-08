@@ -692,6 +692,7 @@ export class ProjectService {
       limit,
       sortBy,
       sortOrder,
+      isArchived,
     } = searchDto;
 
     const queryBuilder = this.projectRepository
@@ -704,6 +705,7 @@ export class ProjectService {
       .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
       .leftJoinAndSelect('project.members', 'members')
       .leftJoinAndSelect('members.student', 'student')
+      .leftJoinAndSelect('project.lastMilestoneSubmission', 'lastMilestoneSubmission')
       .leftJoinAndSelect('project.projectMilestones', 'projectMilestones');
 
     // Apply search filters
@@ -751,6 +753,11 @@ export class ProjectService {
       queryBuilder.andWhere('project.supervisorId = :supervisorId', {
         supervisorId,
       });
+    }
+
+    console.log('isArchived = ', isArchived, isArchived === true);
+    if (isArchived) {
+      queryBuilder.andWhere('project.averageScore IS NOT NULL');
     }
 
     // Apply user role-based filtering

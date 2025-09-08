@@ -609,10 +609,14 @@ export class CouncilService {
             ).toFixed(2),
           )
         : null;
-    await this.projectRepository.update(
-      { id: projectId as any },
-      { averageScore: avg as any },
-    );
+
+    const findProject = await this.projectRepository.findOne({ where: { id: projectId } });
+    if(!findProject) {
+      throw new BadRequestException('Không tìm thấy đề tài');
+    }
+    
+    findProject.averageScore = avg;
+    await this.projectRepository.save(findProject);
 
     // Notify project members about the new average score
     try {

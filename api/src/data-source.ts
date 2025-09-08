@@ -1,5 +1,8 @@
-import { DataSourceOptions } from 'typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export const createDataSource = async (configService: ConfigService) => {
   const dbConfig: DataSourceOptions = {
@@ -19,3 +22,17 @@ export const createDataSource = async (configService: ConfigService) => {
   console.log('Database config:', dbConfig);
   return dbConfig;
 };
+
+export const AppDataSource = new DataSource({
+  type: process.env.DB_TYPE as any || 'mysql',
+  host: process.env.DB_HOST,
+  port: +process.env.DB_PORT!,
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  synchronize: process.env.APP_ENV === 'development',
+  logging: process.env.DB_LOGGING === 'false',
+  entities: [__dirname + '/**/**/*.entity{.ts,.js}'],
+  migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+});
+

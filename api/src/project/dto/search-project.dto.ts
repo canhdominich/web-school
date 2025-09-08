@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, Min, Max, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsNumber, Min, Max, IsEnum, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ProjectStatus, ProjectLevel } from '../project.entity';
 
@@ -131,4 +131,12 @@ export class SearchProjectDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'ASC' | 'DESC';
+
+  @ApiPropertyOptional({
+    description: 'Trạng thái đề tài đã lưu trữ',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isArchived?: boolean;
 }

@@ -1,8 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { AppDataSource } from './data-source';
 
 async function bootstrap() {
+  await AppDataSource.initialize()
+    .then(() => console.log('✅ Database connected'))
+    .catch((err) => console.error('❌ DB connection error:', err));
+    
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('api');

@@ -39,6 +39,26 @@ export interface ProjectMemberEntity {
 	student?: User;
 }
 
+export interface MilestoneSubmissionEntity {
+    id: number;
+    milestoneId: number;
+    submittedBy: number;
+    submittedAt: string;
+    note?: string | null;
+    fileUrl?: string | null;
+    version: number;
+    createdAt: string;
+    updatedAt: string;
+    projectMilestone?: {
+        id: number;
+        title: string;
+    };
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
+}
 export interface ProjectEntity extends RowData {
 	id: number;
 	code: string;
@@ -70,6 +90,7 @@ export interface ProjectEntity extends RowData {
 	members?: ProjectMemberEntity[];
 	projectMilestones?: ProjectMilestoneEntity[];
 	averageScore?: number | null;
+	lastMilestoneSubmission?: MilestoneSubmissionEntity | null;
 }
 
 export interface ProjectMilestoneEntity {
@@ -124,6 +145,7 @@ export interface SearchProjectDto {
 	limit?: number;
 	sortBy?: string;
 	sortOrder?: 'ASC' | 'DESC';
+	isArchived?: boolean;
 }
 
 export interface PaginatedProjectResponse {
