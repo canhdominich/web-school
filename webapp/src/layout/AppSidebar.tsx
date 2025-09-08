@@ -108,8 +108,14 @@ const AppSidebar: React.FC = () => {
   },
   {
     icon: <TableIcon />,
-    name: "Quản lý hội đồng",
-    path: "/council",
+    name: "Quản lý bảo vệ đề tài",
+    subItems: [
+      {
+        name: "Thiết lập hội đồng",
+        path: "/council",
+        role: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean],
+      }
+    ],
     requiredRole: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean],
   },
   {
