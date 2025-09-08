@@ -106,7 +106,7 @@ export class UserService {
       }
 
       // If facultyId is provided, check if department belongs to that faculty
-      if (facultyId && Number(department.facultyId) !== facultyId) {
+      if (facultyId && Number(department.facultyId) !== Number(facultyId)) {
         throw new BadRequestException(
           `Bộ môn có ID ${departmentId} không thuộc khoa có ID ${facultyId}`,
         );
@@ -122,7 +122,7 @@ export class UserService {
       }
 
       // If departmentId is provided, check if major belongs to that department
-      if (departmentId && Number(major.departmentId) !== departmentId) {
+      if (departmentId && Number(major.departmentId) !== Number(departmentId)) {
         throw new BadRequestException(
           `Ngành có ID ${majorId} không thuộc bộ môn có ID ${departmentId}`,
         );
@@ -133,7 +133,7 @@ export class UserService {
         const department = await this.departmentRepository.findOne({
           where: { id: major.departmentId },
         });
-        if (department && Number(department.facultyId) !== facultyId) {
+        if (department && Number(department.facultyId) !== Number(facultyId)) {
           throw new BadRequestException(
             `Ngành có ID ${majorId} không thuộc khoa có ID ${facultyId}`,
           );
@@ -151,6 +151,15 @@ export class UserService {
       throw new ConflictException('Email đã tồn tại');
     }
 
+    if (createUserDto.code) {
+      const existingUser = await this.userRepository.findOne({
+        where: { code: createUserDto.code },
+      });
+      if (existingUser) {
+        throw new ConflictException('Mã tài khoản đã tồn tại');
+      }
+    }
+
     // Validate academic information
     await this.validateAcademicInfo(
       createUserDto.facultyId,
@@ -166,8 +175,8 @@ export class UserService {
         const roleRepo = manager.getRepository(Role);
         const userRoleRepo = manager.getRepository(UserRoleEntity);
 
-        // Generate unique code for new user
-        const code = await this.generateUniqueCode();
+        // If the code is empty then generate unique code for new user
+        const code = createUserDto.code || await this.generateUniqueCode();
 
         const user = userRepo.create({
           ...createUserDto,

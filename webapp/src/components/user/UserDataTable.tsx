@@ -61,6 +61,7 @@ export default function UserDataTable({
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateUserDto | UpdateUserDto>({
+    code: "",
     name: "",
     phone: "",
     email: "",
@@ -105,6 +106,7 @@ export default function UserDataTable({
     if (!isOpen) {
       setSelectedUser(null);
       setFormData({
+        code: "",
         name: "",
         phone: "",
         email: "",
@@ -121,6 +123,7 @@ export default function UserDataTable({
   useEffect(() => {
     if (selectedUser) {
       setFormData({
+        code: selectedUser.code,
         name: selectedUser.name,
         phone: selectedUser.phone,
         email: selectedUser.email,
@@ -272,6 +275,16 @@ export default function UserDataTable({
         {user.email}
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {user.major?.name || "Không xác định"}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {user.faculty?.name || "Chưa có khoa"} / {user.department?.name || "Chưa có bộ môn"}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         <div className="flex flex-wrap gap-1">
           {getAllRoleLabels(user).map((roleLabel, index) => (
             <Badge
@@ -371,6 +384,18 @@ export default function UserDataTable({
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              />
+            </div>
+            <div className="mb-3">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Mã tài khoản
+              </label>
+              <input
+                id="code"
+                type="text"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
               />
             </div>

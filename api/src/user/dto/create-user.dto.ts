@@ -11,6 +11,11 @@ import {
 import { UserRole } from 'src/constants/user.constant';
 
 export class CreateUserDto {
+  @ApiPropertyOptional({ example: '00000001' })
+  @IsString()
+  @IsOptional()
+  code: string;
+
   @ApiProperty({ example: 'John Doe' })
   @IsString()
   @IsNotEmpty()

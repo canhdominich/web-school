@@ -71,6 +71,7 @@ export const getUserById = async (id: string): Promise<User> => {
 };
 
 export const createUser = async (data: {
+    code?: string
     name: string
     email: string
     phone: string
@@ -85,6 +86,7 @@ export const createUser = async (data: {
 }
 
 export const updateUser = async (id: string, data: {
+    code?: string
     name?: string
     email?: string
     phone?: string
@@ -122,6 +124,7 @@ export const getMajors = async (departmentId?: number): Promise<PaginatedMajorRe
 };
 
 export interface CreateUserDto {
+    code: string;
     name: string;
     email: string;
     phone: string;
@@ -133,6 +136,7 @@ export interface CreateUserDto {
 }
 
 export interface UpdateUserDto {
+    code?: string;
     name?: string;
     email?: string;
     phone?: string;
