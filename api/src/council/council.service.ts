@@ -111,6 +111,7 @@ export class CouncilService {
     const council = this.councilRepository.create({
       name: createCouncilDto.name,
       description: createCouncilDto.description,
+      defenseAddress: (createCouncilDto as any).defenseAddress ?? null,
       status: createCouncilDto.status || CouncilStatus.Active,
       facultyId: createCouncilDto.facultyId,
     });
@@ -122,6 +123,7 @@ export class CouncilService {
       this.councilMemberRepository.create({
         councilId: savedCouncil.id,
         userId: member.id,
+        roleInCouncil: 'Thành viên',
       }),
     );
 
@@ -262,6 +264,9 @@ export class CouncilService {
     if (updateCouncilDto.description !== undefined) {
       council.description = updateCouncilDto.description;
     }
+    if ((updateCouncilDto as any).defenseAddress !== undefined) {
+      (council as any).defenseAddress = (updateCouncilDto as any).defenseAddress ?? null;
+    }
     if (updateCouncilDto.status) {
       council.status = updateCouncilDto.status;
     }
@@ -283,6 +288,7 @@ export class CouncilService {
         this.councilMemberRepository.create({
           councilId: id,
           userId: member.id,
+          roleInCouncil: 'Thành viên',
         }),
       );
 
@@ -332,7 +338,11 @@ export class CouncilService {
   /**
    * Add members to council
    */
-  async addMembers(councilId: number, memberIds: number[]): Promise<Council> {
+  async addMembers(
+    councilId: number,
+    memberIds: number[],
+    rolesMap?: Map<number, string>,
+  ): Promise<Council> {
     const council = await this.councilRepository.findOne({
       where: { id: councilId },
     });
@@ -362,6 +372,7 @@ export class CouncilService {
       this.councilMemberRepository.create({
         councilId,
         userId: member.id,
+        roleInCouncil: rolesMap?.get(Number(member.id)) || 'Thành viên',
       }),
     );
 

@@ -69,8 +69,11 @@ export const deleteCouncil = async (id: string): Promise<void> => {
     await httpClient.delete(`/councils/${id}`);
 };
 
-export const addCouncilMembers = async (id: string, memberIds: number[]): Promise<Council> => {
-    const res = await httpClient.post(`/councils/${id}/members`, { memberIds });
+export const addCouncilMembers = async (
+    id: string,
+    members: Array<{ userId: number; roleInCouncil?: string }>,
+): Promise<Council> => {
+    const res = await httpClient.post(`/councils/${id}/members`, { members });
     return res.data;
 };
 

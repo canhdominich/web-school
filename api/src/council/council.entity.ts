@@ -22,6 +22,9 @@ export class Council {
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  defenseAddress: string;
+
   @Column({ type: 'varchar', length: 50, default: 'active' })
   status: string; // active, inactive, archived
 

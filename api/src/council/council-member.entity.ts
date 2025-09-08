@@ -17,6 +17,9 @@ export class CouncilMember {
   @PrimaryColumn({ type: 'bigint' })
   userId: number;
 
+  @Column({ type: 'varchar', length: 100 })
+  roleInCouncil: string;
+
   @ManyToOne(() => Council, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'councilId' })
   council: Council;

@@ -44,6 +44,7 @@ export class CouncilController {
         email: u?.email || '',
         phone: u?.phone || '',
         avatar: u?.avatar || '',
+        roleInCouncil: (cm as any)?.roleInCouncil || 'Thành viên',
       };
     });
 
@@ -51,6 +52,7 @@ export class CouncilController {
       id: council.id,
       name: council.name,
       description: council.description,
+      defenseAddress: (council as any).defenseAddress,
       status: council.status as any,
       facultyId: council.facultyId,
       faculty:
@@ -175,9 +177,17 @@ export class CouncilController {
   @Roles(UserRole.Admin, UserRole.Rector, UserRole.FacultyDean)
   async addMembers(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { memberIds: number[] },
+    @Body() body: { members: Array<{ userId: number; roleInCouncil?: string }>; memberIds?: number[] },
   ) {
-    const council = await this.councilService.addMembers(id, body.memberIds);
+    // Backward-compat: accept memberIds array
+    const memberIds = body?.members?.length
+      ? body.members.map((m) => m.userId)
+      : (body.memberIds || []);
+    const rolesMap = new Map<number, string>();
+    (body.members || []).forEach((m) => {
+      if (m.roleInCouncil) rolesMap.set(Number(m.userId), m.roleInCouncil);
+    });
+    const council = await this.councilService.addMembers(id, memberIds, rolesMap);
     return this.mapCouncilToResponse(council);
   }
 

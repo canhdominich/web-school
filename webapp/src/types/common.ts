@@ -179,6 +179,7 @@ export interface CouncilMember {
     email: string;
     phone: string;
     avatar?: string;
+    roleInCouncil?: string;
 }
 
 export type CouncilStatus = 'active' | 'inactive' | 'archived';
@@ -187,6 +188,7 @@ export interface Council extends RowData {
     id: number;
     name: string;
     description?: string;
+    defenseAddress?: string;
     status: CouncilStatus;
     facultyId?: number;
     faculty?: Faculty | null;
@@ -198,6 +200,7 @@ export interface Council extends RowData {
 export interface CreateCouncilDto {
     name: string;
     description?: string;
+    defenseAddress?: string;
     status?: CouncilStatus;
     facultyId?: number;
     memberIds: number[];
@@ -206,6 +209,7 @@ export interface CreateCouncilDto {
 export interface UpdateCouncilDto {
     name?: string;
     description?: string;
+    defenseAddress?: string;
     status?: CouncilStatus;
     facultyId?: number;
     memberIds?: number[];

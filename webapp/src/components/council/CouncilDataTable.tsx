@@ -57,6 +57,7 @@ export default function CouncilDataTable({
   const [formData, setFormData] = useState<CreateCouncilDto | UpdateCouncilDto>({
     name: "",
     description: "",
+    defenseAddress: "",
     status: 'active',
     facultyId: undefined,
     memberIds: [],
@@ -64,9 +65,11 @@ export default function CouncilDataTable({
   const [memberFormData, setMemberFormData] = useState<{
     action: 'add' | 'remove';
     memberIds: number[];
+    roles: Record<number, string>;
   }>({
     action: 'add',
     memberIds: [],
+    roles: {},
   });
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [projects, setProjects] = useState<ProjectEntity[]>([]);
@@ -143,6 +146,7 @@ export default function CouncilDataTable({
       setFormData({
         name: "",
         description: "",
+        defenseAddress: "",
         status: 'active',
         facultyId: undefined,
         memberIds: [],
@@ -156,6 +160,7 @@ export default function CouncilDataTable({
       setFormData({
         name: selectedCouncil.name,
         description: selectedCouncil.description || "",
+        defenseAddress: selectedCouncil.defenseAddress || "",
         status: selectedCouncil.status,
         facultyId: selectedCouncil.facultyId,
         memberIds: (selectedCouncil.members || []).map(m => m.id),
@@ -173,6 +178,7 @@ export default function CouncilDataTable({
     setMemberFormData({
       action,
       memberIds: [],
+      roles: {},
     });
     setShowMemberModal(true);
   };
@@ -214,7 +220,8 @@ export default function CouncilDataTable({
     try {
       setIsSubmitting(true);
       if (memberFormData.action === 'add') {
-        await addCouncilMembers(selectedCouncil.id.toString(), memberFormData.memberIds);
+        const membersPayload = memberFormData.memberIds.map(id => ({ userId: id, roleInCouncil: memberFormData.roles[id] || 'Thành viên' }));
+        await addCouncilMembers(selectedCouncil.id.toString(), membersPayload);
         toast.success("Thêm giảng viên thành công");
       } else {
         await removeCouncilMembers(selectedCouncil.id.toString(), memberFormData.memberIds);
@@ -342,6 +349,11 @@ export default function CouncilDataTable({
                     <span>{member.name}</span>
                     <span className="text-gray-500">({member.code})</span>
                     <span className="text-gray-500">({member.email})</span>
+                    {member.roleInCouncil && (
+                      <span className="ml-2 inline-flex items-center rounded bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+                        {member.roleInCouncil}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -377,6 +389,16 @@ export default function CouncilDataTable({
                 ))}
               </div>
             )}
+          </div>
+          <div className="pt-3 space-y-1">
+            <div className="text-sm font-medium">Địa điểm bảo vệ</div>
+            <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-500">{council.defenseAddress}</span>
+                    </div>
+                  </div>
+              </div>
           </div>
         </div>
       </TableCell>
@@ -488,6 +510,19 @@ export default function CouncilDataTable({
                   ))}
                 </select>
               </div>
+            </div>
+            <div className="mb-3">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Địa điểm bảo vệ
+              </label>
+              <input
+                id="defenseAddress"
+                type="text"
+                value={formData.defenseAddress || ''}
+                onChange={(e) => setFormData({ ...formData, defenseAddress: e.target.value })}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                placeholder="Nhập địa điểm bảo vệ"
+              />
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
@@ -635,6 +670,26 @@ export default function CouncilDataTable({
                 placeholder={memberFormData.action === 'add' ? 'Chọn giảng viên để thêm' : 'Chọn giảng viên để xóa'}
               />
             </div>
+            {memberFormData.action === 'add' && memberFormData.memberIds.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {memberFormData.memberIds.map((id) => (
+                  <div key={id} className="grid grid-cols-3 gap-3 items-center">
+                    <div className="text-sm text-gray-700 dark:text-gray-400">
+                      {lecturers.find(l => Number(l.id) === Number(id))?.name || id}
+                    </div>
+                    <div className="col-span-2">
+                      <input
+                        type="text"
+                        value={memberFormData.roles[id] || ''}
+                        onChange={(e) => setMemberFormData({ ...memberFormData, roles: { ...memberFormData.roles, [id]: e.target.value } })}
+                        className="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                        placeholder="Vai trò trong hội đồng (VD: Chủ tịch, Phản biện, Thư ký...)"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 mt-6 modal-footer sm:justify-end">
             <button

@@ -33,6 +33,14 @@ export class CreateCouncilDto {
   description?: string;
 
   @ApiPropertyOptional({
+    example: 'Phòng 201, Nhà A1',
+    description: 'Địa chỉ/buổi bảo vệ diễn ra',
+  })
+  @IsString()
+  @IsOptional()
+  defenseAddress?: string;
+
+  @ApiPropertyOptional({
     enum: CouncilStatus,
     default: CouncilStatus.Active,
     description: 'Trạng thái của hội đồng',

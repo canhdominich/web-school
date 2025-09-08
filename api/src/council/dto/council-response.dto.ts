@@ -19,6 +19,9 @@ export class CouncilMemberDto {
 
   @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg' })
   avatar?: string;
+
+  @ApiPropertyOptional({ example: 'Chủ tịch hội đồng' })
+  roleInCouncil?: string;
 }
 
 export class CouncilFacultyDto {
@@ -41,6 +44,9 @@ export class CouncilResponseDto {
       'Hội đồng chịu trách nhiệm về các vấn đề khoa học và đào tạo của khoa',
   })
   description?: string;
+
+  @ApiPropertyOptional({ example: 'Phòng 201, Nhà A1' })
+  defenseAddress?: string;
 
   @ApiProperty({
     enum: CouncilStatus,
