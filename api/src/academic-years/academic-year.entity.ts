@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Term } from '../term/term.entity';
 
 @Entity('academic_years')
 export class AcademicYear {
@@ -31,4 +33,7 @@ export class AcademicYear {
 
   @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
+
+  @OneToMany(() => Term, (term) => term.academicYear)
+  terms: Term[];
 }

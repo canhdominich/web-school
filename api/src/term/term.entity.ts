@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { TermMilestone } from '../term-milestone/term-milestone.entity';
+import { AcademicYear } from '../academic-years/academic-year.entity';
 
 export enum TermStatus {
   OPEN = 'open',
@@ -18,6 +21,13 @@ export enum TermStatus {
 export class Term {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: number;
+
+  @Column({ type: 'bigint', nullable: true })
+  academicYearId: number;
+
+  @ManyToOne(() => AcademicYear, (academicYear) => academicYear.id)
+  @JoinColumn({ name: 'academicYearId' })
+  academicYear: AcademicYear;
 
   @Column({ type: 'varchar', length: 20, unique: true })
   code: string;

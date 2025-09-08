@@ -21,7 +21,7 @@ export class SearchTermDto {
 
   @ApiPropertyOptional({
     description: 'Năm học',
-    example: '2024-2025',
+    example: '',
   })
   @IsOptional()
   @IsString()
@@ -29,7 +29,7 @@ export class SearchTermDto {
 
   @ApiPropertyOptional({
     description: 'Trạng thái học kỳ',
-    example: 'active',
+    example: 'open',
   })
   @IsOptional()
   @IsString()

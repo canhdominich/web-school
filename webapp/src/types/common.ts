@@ -133,6 +133,8 @@ export interface Term extends RowData {
     startDate: string;
     endDate: string;
     status: TermStatus;
+    academicYearId?: number;
+    academicYear?: AcademicYear;
     termMilestones: TermMilestone[];
     createdAt: string;
     updatedAt: string;

@@ -6,10 +6,16 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  IsNumber,
 } from 'class-validator';
 import { TermStatus } from '../term.entity';
 
 export class CreateTermDto {
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  academicYearId: number;
+
   @ApiProperty({ example: '2025A', description: 'Term code' })
   @IsString()
   @IsNotEmpty()

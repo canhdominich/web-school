@@ -3,7 +3,8 @@ import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import TermDataTable from "@/components/term/TermDataTable";
 import { getTerms, SearchTermDto } from "@/services/termService";
-import { Term } from "@/types/common";
+import { getAcademicYears } from "@/services/academicYearService";
+import { Term, AcademicYear } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { getErrorMessage } from "@/lib/utils";
@@ -14,6 +15,7 @@ export default function TermPage() {
     { key: "name", title: "Tên sự kiện" },
     { key: "code", title: "Mã sự kiện" },
     { key: "description", title: "Mô tả" },
+    { key: "academicYear", title: "Năm học" },
     { key: "dateRange", title: "Thời gian" },
     { key: "status", title: "Trạng thái" },
     { key: "milestones", title: "Cột mốc" },
@@ -21,6 +23,7 @@ export default function TermPage() {
   ];
 
   const [terms, setTerms] = useState<Term[]>([]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -69,6 +72,15 @@ export default function TermPage() {
     }
   }, [currentPage, itemsPerPage]);
 
+  const fetchAcademicYears = useCallback(async () => {
+    try {
+      const data = await getAcademicYears({ limit: 100 }); // Get all academic years
+      setAcademicYears(data.data);
+    } catch (e) {
+      toast.error(getErrorMessage(e, "Không thể tải danh sách năm học"));
+    }
+  }, []);
+
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
     setSearchTerm(trimmedQuery);
@@ -94,7 +106,8 @@ export default function TermPage() {
   // Initial load and fetch data when pagination changes
   useEffect(() => {
     fetchTerms({});
-  }, [fetchTerms]);
+    fetchAcademicYears();
+  }, [fetchTerms, fetchAcademicYears]);
 
   return (
     <div>
@@ -111,6 +124,7 @@ export default function TermPage() {
             <TermDataTable 
               headers={headers} 
               items={terms} 
+              academicYears={academicYears}
               onRefresh={handleRefresh}
               searchTerm={searchTerm}
               onSearch={handleSearch}

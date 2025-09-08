@@ -8,6 +8,7 @@ export interface SearchTermDto {
   status?: TermStatus;
   startDate?: string;
   endDate?: string;
+  academicYearId?: number;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -62,6 +63,7 @@ export const createTerm = async (data: {
     startDate: string;
     endDate: string;
     status: TermStatus;
+    academicYearId?: number;
 }): Promise<Term> => {
     const res = await httpClient.post('/terms', data);
     return res.data;
@@ -74,6 +76,7 @@ export const updateTerm = async (id: string, data: {
     startDate?: string;
     endDate?: string;
     status?: TermStatus;
+    academicYearId?: number;
 }): Promise<Term> => {
     const res = await httpClient.patch(`/terms/${id}`, data);
     return res.data;
@@ -90,6 +93,7 @@ export interface CreateTermDto {
     startDate: string;
     endDate: string;
     status: TermStatus;
+    academicYearId?: number;
 }
 
 export interface UpdateTermDto {
@@ -99,4 +103,5 @@ export interface UpdateTermDto {
     startDate?: string;
     endDate?: string;
     status?: TermStatus;
+    academicYearId?: number;
 } 

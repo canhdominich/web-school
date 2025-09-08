@@ -45,7 +45,7 @@ export class TermService {
   ): Promise<TermResponseDto[] | PaginatedTermResponseDto> {
     if (!searchDto || Object.keys(searchDto).length === 0) {
       const terms = await this.termRepository.find({
-        relations: ['termMilestones'],
+        relations: ['termMilestones', 'academicYear'],
         order: {
           createdAt: 'DESC',
           termMilestones: {
@@ -70,7 +70,8 @@ export class TermService {
 
     const queryBuilder = this.termRepository
       .createQueryBuilder('term')
-      .leftJoinAndSelect('term.termMilestones', 'termMilestones');
+      .leftJoinAndSelect('term.termMilestones', 'termMilestones')
+      .leftJoinAndSelect('term.academicYear', 'academicYear');
 
     if (name) {
       queryBuilder.andWhere('term.name LIKE :name', { name: `%${name}%` });
@@ -83,7 +84,7 @@ export class TermService {
     }
 
     if (academicYear) {
-      queryBuilder.andWhere('term.academicYear LIKE :academicYear', {
+      queryBuilder.andWhere('academicYear.name LIKE :academicYear', {
         academicYear: `%${academicYear}%`,
       });
     }
@@ -139,7 +140,7 @@ export class TermService {
   async findOne(id: number): Promise<TermResponseDto> {
     const term = await this.termRepository.findOne({
       where: { id },
-      relations: ['termMilestones'],
+      relations: ['termMilestones', 'academicYear'],
       order: {
         termMilestones: {
           orderIndex: 'ASC',
@@ -160,7 +161,7 @@ export class TermService {
   ): Promise<TermResponseDto> {
     const term = await this.termRepository.findOne({
       where: { id },
-      relations: ['termMilestones'],
+      relations: ['termMilestones', 'academicYear'],
     });
 
     if (!term) {
@@ -187,7 +188,7 @@ export class TermService {
   async remove(id: number): Promise<TermResponseDto> {
     const term = await this.termRepository.findOne({
       where: { id },
-      relations: ['termMilestones'],
+      relations: ['termMilestones', 'academicYear'],
     });
 
     if (!term) {

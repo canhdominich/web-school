@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { TableCell, TableRow } from "../ui/table";
-import { BasicTableProps, Header, Term, TermMilestone, TermStatus, TermMilestoneStatus } from "@/types/common";
+import { BasicTableProps, Header, Term, TermMilestone, TermStatus, TermMilestoneStatus, AcademicYear } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { CreateTermDto, createTerm, deleteTerm, updateTerm, UpdateTermDto } from "@/services/termService";
@@ -15,6 +15,7 @@ interface TermDataTableProps extends BasicTableProps {
   onRefresh: () => void;
   items: Term[];
   headers: Header[];
+  academicYears: AcademicYear[];
   searchTerm?: string;
   onSearch?: (query: string) => void;
   isSearching?: boolean;
@@ -27,6 +28,7 @@ export default function TermDataTable({
   headers, 
   items, 
   onRefresh, 
+  academicYears,
   searchTerm = "", 
   onSearch,
   isSearching = false,
@@ -45,6 +47,7 @@ export default function TermDataTable({
     startDate: "",
     endDate: "",
     status: 'open',
+    academicYearId: undefined,
   });
   const [milestoneFormData, setMilestoneFormData] = useState<CreateTermMilestoneDto | UpdateTermMilestoneDto>({
     title: "",
@@ -68,6 +71,7 @@ export default function TermDataTable({
         startDate: "",
         endDate: "",
         status: 'open',
+        academicYearId: undefined,
       });
     }
   }, [isOpen]);
@@ -82,6 +86,7 @@ export default function TermDataTable({
         startDate: selectedTerm.startDate,
         endDate: selectedTerm.endDate,
         status: selectedTerm.status as TermStatus,
+        academicYearId: selectedTerm.academicYearId,
       });
     }
   }, [selectedTerm]);
@@ -252,6 +257,16 @@ export default function TermDataTable({
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         {term.description || "Không có mô tả"}
+      </TableCell>
+      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+        {term.academicYear ? (
+          <div className="text-sm">
+            <div className="font-medium">{term.academicYear.name}</div>
+            <div className="text-xs text-gray-400">{term.academicYear.code}</div>
+          </div>
+        ) : (
+          <span className="text-gray-400">Chưa chọn năm học</span>
+        )}
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         <div className="text-sm">
@@ -440,6 +455,24 @@ export default function TermDataTable({
                 className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                 placeholder="Nhập mô tả sự kiện (không bắt buộc)"
               />
+            </div>
+            <div className="mb-3">
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Năm học
+              </label>
+              <select
+                id="academicYearId"
+                value={formData.academicYearId || ""}
+                onChange={(e) => setFormData({ ...formData, academicYearId: e.target.value ? Number(e.target.value) : undefined })}
+                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              >
+                <option value="">Chọn năm học</option>
+                {academicYears.map((academicYear) => (
+                  <option key={academicYear.id} value={academicYear.id}>
+                    {academicYear.name} ({academicYear.code})
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">

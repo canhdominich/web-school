@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TermStatus } from '../term.entity';
 import { TermMilestoneStatus } from '../../term-milestone/term-milestone.entity';
+import { AcademicYearResponseDto } from '../../academic-years/dto';
 
 export class TermMilestoneResponseDto {
   @ApiProperty({ example: 1, description: 'Term milestone ID' })
@@ -52,6 +53,12 @@ export class TermResponseDto {
 
   @ApiProperty({ enum: TermStatus, example: TermStatus.OPEN })
   status: TermStatus;
+
+  @ApiProperty({ example: 1 })
+  academicYearId: number;
+
+  @ApiProperty({ type: AcademicYearResponseDto, required: false })
+  academicYear?: AcademicYearResponseDto;
 
   @ApiProperty({
     type: [TermMilestoneResponseDto],
