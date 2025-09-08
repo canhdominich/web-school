@@ -1,7 +1,7 @@
 "use client";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import StudentDataTable from "@/components/student/StudentDataTable";
+import LectureDataTable from "@/components/lecturer/LecturerDataTable";
 import { getUsers, SearchUserDto } from "@/services/userService";
 import { User } from "@/types/common";
 import React, { useEffect, useState, useCallback } from "react";
@@ -16,6 +16,7 @@ export default function UserPage() {
     { key: "code", title: "Mã tài khoản" },
     { key: "phone", title: "Số điện thoại" },
     { key: "email", title: "Email" },
+    { key: "department", title: "Khoa" },
     { key: "role", title: "Vai trò" },
     { key: "createdAt", title: "Ngày tạo" },
     { key: "updatedAt", title: "Ngày cập nhật" },
@@ -111,7 +112,7 @@ export default function UserPage() {
 
   return (
     <div>
-      <PageBreadcrumb pageTitle="Quản lý sinh viên" />
+      <PageBreadcrumb pageTitle="Quản lý giảng viên" />
       <div className="space-y-6">
         <ComponentCard title="">
           {isLoading ? (
@@ -121,7 +122,7 @@ export default function UserPage() {
               </div>
             </div>
           ) : (
-            <StudentDataTable 
+            <LectureDataTable 
               headers={headers} 
               items={users} 
               onRefresh={handleRefresh}

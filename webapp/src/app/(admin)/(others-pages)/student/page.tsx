@@ -16,6 +16,7 @@ export default function UserPage() {
     { key: "code", title: "Mã tài khoản" },
     { key: "phone", title: "Số điện thoại" },
     { key: "email", title: "Email" },
+    { key: "department", title: "Ngành/Khoa" },
     { key: "role", title: "Vai trò" },
     { key: "createdAt", title: "Ngày tạo" },
     { key: "updatedAt", title: "Ngày cập nhật" },

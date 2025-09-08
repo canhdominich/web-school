@@ -272,6 +272,13 @@ export default function LecturerDataTable({
         {user.email}
       </TableCell>
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+        <div className="flex flex-col">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            {user.faculty?.name || "Chưa có khoa"}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         <div className="flex flex-wrap gap-1">
           {getAllRoleLabels(user).map((roleLabel, index) => (
             <Badge

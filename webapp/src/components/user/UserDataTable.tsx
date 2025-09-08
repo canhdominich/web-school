@@ -277,7 +277,7 @@ export default function UserDataTable({
       <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
         <div className="flex flex-col">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {user.major?.name || "Không xác định"}
+            {user.major?.name || "Chưa có ngành"}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {user.faculty?.name || "Chưa có khoa"} / {user.department?.name || "Chưa có bộ môn"}
