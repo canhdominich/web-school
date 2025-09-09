@@ -46,7 +46,8 @@ const AppSidebar: React.FC = () => {
     setIsLoading(false);
   };
 
-  const navItems = useMemo(() => [{
+  const navItems = useMemo(() => [
+  {
     icon: <GridIcon />,
     name: "Trang chủ",
     path: "/",
@@ -114,6 +115,12 @@ const AppSidebar: React.FC = () => {
         name: "Thiết lập hội đồng",
         path: "/council",
         role: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean],
+      },
+      {
+        icon: <CalenderIcon />,
+        name: "Đăng ký lịch bảo vệ",
+        path: "/booking",
+        requiredRole: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean, UserRole.DepartmentHead, UserRole.Lecturer, UserRole.Student, UserRole.Council],
       },
       {
         name: "Lưu trữ",

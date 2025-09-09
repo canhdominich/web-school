@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class FacultyResponseDto {
+export class PartOfFacultyResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -14,7 +14,7 @@ export class FacultyResponseDto {
   description?: string;
 }
 
-export class DepartmentResponseDto {
+export class PartOfDepartmentResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -30,11 +30,11 @@ export class DepartmentResponseDto {
   @ApiProperty({ example: 1 })
   facultyId: number;
 
-  @ApiPropertyOptional({ type: FacultyResponseDto })
-  faculty?: FacultyResponseDto;
+  @ApiPropertyOptional({ type: PartOfFacultyResponseDto })
+  faculty?: PartOfFacultyResponseDto;
 }
 
-export class MajorResponseDto {
+export class PartOfMajorResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
@@ -50,8 +50,8 @@ export class MajorResponseDto {
   @ApiProperty({ example: 1 })
   departmentId: number;
 
-  @ApiPropertyOptional({ type: DepartmentResponseDto })
-  department?: DepartmentResponseDto;
+  @ApiPropertyOptional({ type: PartOfDepartmentResponseDto })
+  department?: PartOfDepartmentResponseDto;
 }
 
 export class UserRoleDetailResponseDto {
@@ -110,20 +110,20 @@ export class UserResponseDto {
   @ApiPropertyOptional({ example: 1 })
   facultyId?: number;
 
-  @ApiPropertyOptional({ type: FacultyResponseDto })
-  faculty?: FacultyResponseDto;
+  @ApiPropertyOptional({ type: PartOfFacultyResponseDto })
+  faculty?: PartOfFacultyResponseDto;
 
   @ApiPropertyOptional({ example: 1 })
   departmentId?: number;
 
-  @ApiPropertyOptional({ type: DepartmentResponseDto })
-  department?: DepartmentResponseDto;
+  @ApiPropertyOptional({ type: PartOfDepartmentResponseDto })
+  department?: PartOfDepartmentResponseDto;
 
   @ApiPropertyOptional({ example: 1 })
   majorId?: number;
 
-  @ApiPropertyOptional({ type: MajorResponseDto })
-  major?: MajorResponseDto;
+  @ApiPropertyOptional({ type: PartOfMajorResponseDto })
+  major?: PartOfMajorResponseDto;
 
   @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
   createdAt: Date;

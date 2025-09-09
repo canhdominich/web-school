@@ -65,4 +65,16 @@ export class User {
 
   @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[];
+
+  @OneToMany('Booking', 'student')
+  bookings: any[];
+
+  @OneToMany('Booking', 'approvedByLecturer')
+  approvedBookingsAsLecturer: any[];
+
+  @OneToMany('Booking', 'approvedByFacultyDean')
+  approvedBookingsAsFacultyDean: any[];
+
+  @OneToMany('Booking', 'approvedByRector')
+  approvedBookingsAsRector: any[];
 }

@@ -19,6 +19,7 @@ import { StatisticModule } from './statistic/statistic.module';
 import { CouncilModule } from './council/council.module';
 import { SchoolModule } from './school/school.module';
 import { AcademicYearModule } from './academic-years/academic-year.module';
+import { BookingModule } from './booking/booking.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TaskModule } from './task/task.module';
 
@@ -52,6 +53,7 @@ import { TaskModule } from './task/task.module';
     StatisticModule,
     CouncilModule,
     AcademicYearModule,
+    BookingModule,
     ScheduleModule.forRoot(),
     TaskModule,
   ],
