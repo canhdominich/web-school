@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { TableCell, TableRow } from "../ui/table";
 import { Header } from "@/types/common";
 import Badge from "../ui/badge/Badge";
@@ -11,6 +11,10 @@ import { Council } from "@/types/common";
 import SearchableDataTable from "../common/SearchableDataTable";
 import { PaginationInfo } from "../common/Pagination";
 import { PASS_SCORE } from "@/constants/common";
+import { getFaculties } from "@/services/facultyService";
+import { getAcademicYears } from "@/services/academicYearService";
+import type { Faculty, AcademicYear } from "@/types/common";
+import { VERY_BIG_NUMBER } from "@/constants/common";
 
 interface ArchiveDataTableProps {
   onRefresh: () => void;
@@ -22,6 +26,9 @@ interface ArchiveDataTableProps {
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
   onItemsPerPageChange?: (limit: number) => void;
+  onFilterChange?: (filters: { facultyId?: number; academicYearId?: number }) => void;
+  facultyId?: number;
+  academicYearId?: number;
 }
 
 export default function ArchiveDataTable({ 
@@ -32,10 +39,31 @@ export default function ArchiveDataTable({
   isSearching = false,
   pagination,
   onPageChange,
-  onItemsPerPageChange
+  onItemsPerPageChange,
+  onFilterChange,
+  facultyId,
+  academicYearId,
 }: ArchiveDataTableProps) {
   // Add state to store council information for each project
   const [projectCouncils, setProjectCouncils] = useState<Record<number, Council | null>>({});
+  // Filter sources
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  // Selected filters
+  const [selectedFacultyId, setSelectedFacultyId] = useState<string>("");
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<string>("");
+
+  // Sync internal state from controlled props
+  useEffect(() => {
+    if (facultyId !== undefined && facultyId !== null) {
+      setSelectedFacultyId(String(facultyId));
+    }
+  }, [facultyId]);
+  useEffect(() => {
+    if (academicYearId !== undefined && academicYearId !== null) {
+      setSelectedAcademicYearId(String(academicYearId));
+    }
+  }, [academicYearId]);
   // Load council information for all projects
   const loadProjectCouncils = useCallback(async () => {
     if (items.length === 0) return;
@@ -64,6 +92,48 @@ export default function ArchiveDataTable({
   useEffect(() => {
     loadProjectCouncils();
   }, [loadProjectCouncils]);
+
+  // Load filter options (faculties, academic years)
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const [facRes, yearRes] = await Promise.all([
+          getFaculties({ limit: VERY_BIG_NUMBER }),
+          getAcademicYears({ limit: VERY_BIG_NUMBER }),
+        ]);
+        setFaculties(facRes?.data || []);
+        setAcademicYears(yearRes?.data || []);
+      } catch {
+        // Fallback to empty lists on error
+        setFaculties([]);
+        setAcademicYears([]);
+      }
+    };
+    fetchFilters();
+  }, []);
+
+  // Keep latest onFilterChange in a ref and emit only on real changes
+  const onFilterChangeRef = useRef(onFilterChange);
+  useEffect(() => {
+    onFilterChangeRef.current = onFilterChange;
+  }, [onFilterChange]);
+
+  const lastEmittedFiltersRef = useRef<{ facultyId?: number; academicYearId?: number }>({});
+  useEffect(() => {
+    const payload: { facultyId?: number; academicYearId?: number } = {};
+    if (selectedFacultyId) payload.facultyId = Number(selectedFacultyId);
+    if (selectedAcademicYearId) payload.academicYearId = Number(selectedAcademicYearId);
+
+    // Do not emit if nothing selected (avoid refresh loop on initial render)
+    if (Object.keys(payload).length === 0) return;
+
+    const last = lastEmittedFiltersRef.current || {};
+    const isSame = last.facultyId === payload.facultyId && last.academicYearId === payload.academicYearId;
+    if (isSame) return;
+
+    lastEmittedFiltersRef.current = payload;
+    onFilterChangeRef.current?.(payload);
+  }, [selectedFacultyId, selectedAcademicYearId]);
 
   const getStatusLabel = (status: string): string => {
     const statusMap: Record<string, string> = {
@@ -215,6 +285,52 @@ export default function ArchiveDataTable({
       pagination={pagination}
       onPageChange={onPageChange}
       onItemsPerPageChange={onItemsPerPageChange}
+      actionButton={(
+        <div className="flex items-center gap-3">
+          <div>
+            <label className="sr-only">Khoa</label>
+            <select
+              value={selectedFacultyId}
+              onChange={(e) => setSelectedFacultyId(e.target.value)}
+              className="dark:bg-dark-900 h-10 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            >
+              <option value="">Tất cả khoa</option>
+              {faculties.map(f => (
+                <option key={f.id} value={f.id}>{f.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="sr-only">Năm học</label>
+            <select
+              value={selectedAcademicYearId}
+              onChange={(e) => setSelectedAcademicYearId(e.target.value)}
+              className="dark:bg-dark-900 h-10 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+            >
+              <option value="">Tất cả năm học</option>
+              {academicYears.map(y => (
+                <option key={y.id} value={y.id}>{y.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => { 
+                setSelectedFacultyId(""); 
+                setSelectedAcademicYearId(""); 
+                // Gọi ngay để refresh dữ liệu toàn trang khi xóa bộ lọc
+                onFilterChangeRef.current?.({});
+              }}
+              disabled={!selectedFacultyId && !selectedAcademicYearId}
+              className="inline-flex items-center h-10 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+              title="Xóa bộ lọc"
+            >
+              Xóa bộ lọc
+            </button>
+          </div>
+        </div>
+      )}
     />
   );
 }

@@ -57,6 +57,15 @@ export class SearchProjectDto {
   termId?: number;
 
   @ApiPropertyOptional({
+    description: 'ID năm học để lọc (join qua term)',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  academicYearId?: number;
+
+  @ApiPropertyOptional({
     description: 'Trạng thái đề tài',
     enum: ProjectStatus,
   })

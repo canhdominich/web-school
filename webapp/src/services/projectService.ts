@@ -139,6 +139,7 @@ export interface SearchProjectDto {
 	departmentId?: number;
 	majorId?: number;
 	termId?: number;
+	academicYearId?: number;
 	supervisorId?: number;
 	createdBy?: number;
 	page?: number;

@@ -684,6 +684,7 @@ export class ProjectService {
       departmentId,
       majorId,
       termId,
+      academicYearId,
       status,
       level,
       createdBy,
@@ -705,7 +706,10 @@ export class ProjectService {
       .leftJoinAndSelect('project.supervisorUser', 'supervisorUser')
       .leftJoinAndSelect('project.members', 'members')
       .leftJoinAndSelect('members.student', 'student')
-      .leftJoinAndSelect('project.lastMilestoneSubmission', 'lastMilestoneSubmission')
+      .leftJoinAndSelect(
+        'project.lastMilestoneSubmission',
+        'lastMilestoneSubmission',
+      )
       .leftJoinAndSelect('project.projectMilestones', 'projectMilestones');
 
     // Apply search filters
@@ -735,6 +739,19 @@ export class ProjectService {
 
     if (termId) {
       queryBuilder.andWhere('project.termId = :termId', { termId });
+    }
+
+    // Filter by academicYearId through terms list (IN clause)
+    if (academicYearId) {
+      const termRepo = this.termRepository!;
+      const terms = await termRepo.find({ where: { academicYearId } });
+      const termIds = (terms || []).map((t) => +t.id);
+      // If no terms found for the academic year, force empty result set
+      if (termIds.length === 0) {
+        queryBuilder.andWhere('1 = 0');
+      } else {
+        queryBuilder.andWhere('project.termId IN (:...termIds)', { termIds });
+      }
     }
 
     if (status) {
