@@ -70,7 +70,7 @@ export default function TermPage() {
         setIsLoading(false);
       }
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
 
   const fetchAcademicYears = useCallback(async () => {
     try {

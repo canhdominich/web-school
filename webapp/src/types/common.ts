@@ -5,7 +5,7 @@ export interface Header {
 
 export interface RowData {
     id: number;
-    [key: string]: string | number | boolean | null | undefined | Array<unknown> | Record<string, unknown> | Object;
+    [key: string]: string | number | boolean | null | undefined | Array<unknown> | Record<string, unknown> | object;
 }
 
 export interface BasicTableProps {

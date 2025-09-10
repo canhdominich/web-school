@@ -5,7 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Booking, BookingStatus } from './booking.entity';
 import {
   CreateBookingDto,
@@ -14,11 +14,12 @@ import {
   PaginatedBookingResponseDto,
   ApproveBookingDto,
 } from './dto';
-import { Project } from '../project/project.entity';
+import { Project, ProjectStatus } from '../project/project.entity';
 import { User } from '../user/user.entity';
 import { Term } from '../term/term.entity';
 import { RequestUser } from '../interfaces';
 import { UserRole } from '../constants/user.constant';
+import { getProjectStatusLabel } from 'src/project/project.utils';
 
 @Injectable()
 export class BookingService {
@@ -36,15 +37,35 @@ export class BookingService {
   /**
    * Tạo booking mới với validation thời gian trong khoảng term
    */
-  async create(createBookingDto: CreateBookingDto, user: RequestUser): Promise<Booking> {
+  async create(
+    createBookingDto: CreateBookingDto,
+    user: RequestUser,
+  ): Promise<Booking> {
     // Kiểm tra project có tồn tại không
     const project = await this.projectRepository.findOne({
-      where: { id: createBookingDto.projectId },
+      where: {
+        id: createBookingDto.projectId,
+      },
       relations: ['term'],
     });
 
     if (!project) {
-      throw new NotFoundException('Không tìm thấy dự án');
+      throw new NotFoundException('Không tìm thấy đề tài');
+    }
+
+    if (
+      ![
+        ProjectStatus.APPROVED_BY_LECTURER,
+        ProjectStatus.APPROVED_BY_FACULTY_DEAN,
+        ProjectStatus.APPROVED_BY_RECTOR,
+        ProjectStatus.IN_PROGRESS,
+        ProjectStatus.COMPLETED,
+      ].includes(project.status)
+    ) {
+      const label = getProjectStatusLabel(project.status);
+      throw new BadRequestException(
+        `Không thể gửi yêu cầu đặt lịch bảo vệ cho đề tài, vì đề tài đang ở trạng thái ${label}`,
+      );
     }
 
     // Kiểm tra student có tồn tại không
@@ -54,6 +75,18 @@ export class BookingService {
 
     if (!student) {
       throw new NotFoundException('Không tìm thấy sinh viên');
+    }
+
+    // Kiểm tra student có phải là member trong đề tài không
+    const isProjectMember = await this.projectRepository
+      .createQueryBuilder('project')
+      .leftJoin('project.members', 'member')
+      .where('project.id = :projectId', { projectId: createBookingDto.projectId })
+      .andWhere('member.studentId = :studentId', { studentId: createBookingDto.studentId })
+      .getOne();
+
+    if (!isProjectMember) {
+      throw new BadRequestException('Sinh viên không phải là thành viên tham gia vào đề tài này');
     }
 
     // Kiểm tra thời gian booking có nằm trong khoảng thời gian của term không
@@ -77,7 +110,9 @@ export class BookingService {
     });
 
     if (existingBooking) {
-      throw new ConflictException('Đã có lịch đặt cho dự án này vào thời gian này');
+      throw new ConflictException(
+        'Đã có yêu cầu lịch bảo vệ đề tài này vào thời gian này',
+      );
     }
 
     // Tạo booking mới
@@ -111,11 +146,14 @@ export class BookingService {
     const queryBuilder = this.bookingRepository
       .createQueryBuilder('booking')
       .leftJoinAndSelect('booking.project', 'project')
+      .leftJoinAndSelect('project.term', 'term')
       .leftJoinAndSelect('booking.student', 'student')
       .leftJoinAndSelect('booking.approvedByLecturer', 'approvedByLecturer')
-      .leftJoinAndSelect('booking.approvedByFacultyDean', 'approvedByFacultyDean')
-      .leftJoinAndSelect('booking.approvedByRector', 'approvedByRector')
-      .leftJoinAndSelect('project.term', 'term');
+      .leftJoinAndSelect(
+        'booking.approvedByFacultyDean',
+        'approvedByFacultyDean',
+      )
+      .leftJoinAndSelect('booking.approvedByRector', 'approvedByRector');
 
     // Apply search filters
     if (projectId) {
@@ -145,12 +183,16 @@ export class BookingService {
       if (!roles.includes(UserRole.Admin) && !roles.includes(UserRole.Rector)) {
         // Student: Return bookings created by user
         if (roles.includes(UserRole.Student)) {
-          queryBuilder.andWhere('booking.studentId = :userId', { userId: user.id });
+          queryBuilder.andWhere('booking.studentId = :userId', {
+            userId: user.id,
+          });
         }
 
         // Lecturer: Return bookings for projects where user is supervisor
         if (roles.includes(UserRole.Lecturer)) {
-          queryBuilder.andWhere('project.supervisorId = :userId', { userId: user.id });
+          queryBuilder.andWhere('project.supervisorId = :userId', {
+            userId: user.id,
+          });
         }
 
         // DepartmentHead: Return bookings for projects in user's department
@@ -184,7 +226,9 @@ export class BookingService {
         'createdAt',
         'updatedAt',
       ];
-      const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+      const sortField = allowedSortFields.includes(sortBy)
+        ? sortBy
+        : 'createdAt';
       const order = sortOrder || 'DESC';
       queryBuilder.orderBy(`booking.${sortField}`, order);
     } else {
@@ -226,6 +270,7 @@ export class BookingService {
       return this.bookingRepository.find({
         relations: [
           'project',
+          'project.term',
           'student',
           'approvedByLecturer',
           'approvedByFacultyDean',
@@ -241,6 +286,7 @@ export class BookingService {
       return this.bookingRepository.find({
         relations: [
           'project',
+          'project.term',
           'student',
           'approvedByLecturer',
           'approvedByFacultyDean',
@@ -255,6 +301,7 @@ export class BookingService {
         where: { studentId: user.id },
         relations: [
           'project',
+          'project.term',
           'student',
           'approvedByLecturer',
           'approvedByFacultyDean',
@@ -268,9 +315,13 @@ export class BookingService {
       return this.bookingRepository
         .createQueryBuilder('booking')
         .leftJoinAndSelect('booking.project', 'project')
+        .leftJoinAndSelect('project.term', 'term')
         .leftJoinAndSelect('booking.student', 'student')
         .leftJoinAndSelect('booking.approvedByLecturer', 'approvedByLecturer')
-        .leftJoinAndSelect('booking.approvedByFacultyDean', 'approvedByFacultyDean')
+        .leftJoinAndSelect(
+          'booking.approvedByFacultyDean',
+          'approvedByFacultyDean',
+        )
         .leftJoinAndSelect('booking.approvedByRector', 'approvedByRector')
         .where('project.supervisorId = :userId', { userId: user.id })
         .getMany();
@@ -282,9 +333,13 @@ export class BookingService {
         return this.bookingRepository
           .createQueryBuilder('booking')
           .leftJoinAndSelect('booking.project', 'project')
+          .leftJoinAndSelect('project.term', 'term')
           .leftJoinAndSelect('booking.student', 'student')
           .leftJoinAndSelect('booking.approvedByLecturer', 'approvedByLecturer')
-          .leftJoinAndSelect('booking.approvedByFacultyDean', 'approvedByFacultyDean')
+          .leftJoinAndSelect(
+            'booking.approvedByFacultyDean',
+            'approvedByFacultyDean',
+          )
           .leftJoinAndSelect('booking.approvedByRector', 'approvedByRector')
           .where('project.departmentId = :departmentId', {
             departmentId: user.departmentId,
@@ -299,9 +354,13 @@ export class BookingService {
         return this.bookingRepository
           .createQueryBuilder('booking')
           .leftJoinAndSelect('booking.project', 'project')
+          .leftJoinAndSelect('project.term', 'term')
           .leftJoinAndSelect('booking.student', 'student')
           .leftJoinAndSelect('booking.approvedByLecturer', 'approvedByLecturer')
-          .leftJoinAndSelect('booking.approvedByFacultyDean', 'approvedByFacultyDean')
+          .leftJoinAndSelect(
+            'booking.approvedByFacultyDean',
+            'approvedByFacultyDean',
+          )
           .leftJoinAndSelect('booking.approvedByRector', 'approvedByRector')
           .where('project.facultyId = :facultyId', {
             facultyId: user.facultyId,
@@ -321,6 +380,7 @@ export class BookingService {
       where: { id },
       relations: [
         'project',
+        'project.term',
         'student',
         'approvedByLecturer',
         'approvedByFacultyDean',
@@ -329,7 +389,7 @@ export class BookingService {
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy booking có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
     }
 
     return booking;
@@ -338,11 +398,14 @@ export class BookingService {
   /**
    * Cập nhật booking
    */
-  async update(id: number, updateBookingDto: UpdateBookingDto): Promise<Booking> {
+  async update(
+    id: number,
+    updateBookingDto: UpdateBookingDto,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({ where: { id } });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy booking có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
     }
 
     // Nếu cập nhật thời gian, kiểm tra lại validation
@@ -376,7 +439,7 @@ export class BookingService {
     const booking = await this.bookingRepository.findOne({ where: { id } });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy booking có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
     }
 
     await this.bookingRepository.softDelete(id);
@@ -393,21 +456,21 @@ export class BookingService {
   ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id },
-      relations: ['project'],
+      relations: ['project', 'project.term'],
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy booking có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
     }
 
     // Kiểm tra user có phải là giảng viên hướng dẫn của project không
     if (booking.project.supervisorId !== user.id) {
-      throw new BadRequestException('Bạn không có quyền duyệt booking này');
+      throw new BadRequestException('Bạn không có quyền duyệt lịch bảo vệ đề tài này');
     }
 
     // Kiểm tra trạng thái hiện tại
     if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException('Booking này đã được xử lý');
+      throw new BadRequestException('Lịch bảo vệ đề tài này đã được xử lý');
     }
 
     booking.status = approveDto.status;
@@ -426,21 +489,21 @@ export class BookingService {
   ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id },
-      relations: ['project'],
+      relations: ['project', 'project.term'],
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy booking có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
     }
 
     // Kiểm tra user có phải là trưởng khoa của project không
     if (booking.project.facultyId !== user.facultyId) {
-      throw new BadRequestException('Bạn không có quyền duyệt booking này');
+      throw new BadRequestException('Bạn không có quyền duyệt lịch bảo vệ đề tài này');
     }
 
     // Kiểm tra trạng thái hiện tại
     if (booking.status !== BookingStatus.APPROVED_BY_LECTURER) {
-      throw new BadRequestException('Booking phải được giảng viên duyệt trước');
+      throw new BadRequestException('Lịch bảo vệ đề tài phải được giảng viên duyệt trước');
     }
 
     booking.status = approveDto.status;
@@ -459,16 +522,18 @@ export class BookingService {
   ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id },
-      relations: ['project'],
+      relations: ['project', 'project.term'],
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy booking có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
     }
 
     // Kiểm tra trạng thái hiện tại
     if (booking.status !== BookingStatus.APPROVED_BY_FACULTY_DEAN) {
-      throw new BadRequestException('Booking phải được trưởng khoa duyệt trước');
+      throw new BadRequestException(
+        'Lịch bảo vệ đề tài phải được trưởng khoa duyệt trước',
+      );
     }
 
     booking.status = approveDto.status;

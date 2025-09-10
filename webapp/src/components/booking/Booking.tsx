@@ -112,6 +112,11 @@ const renderEventContent = (eventInfo: EventContentArg) => {
         <div className="text-sm font-semibold text-gray-800 dark:text-white truncate leading-tight">
           📋 {booking.project?.title || "Không có tên đề tài"}
         </div>
+
+        {/* Tên sự kiện */}
+        <div className="text-sm font-semibold text-gray-800 dark:text-white truncate leading-tight">
+          📋 {booking.project?.term?.name || "Không có tên sự kiện"}
+        </div>
         
         {/* Tên sinh viên */}
         <div className="text-xs text-gray-700 dark:text-gray-300 truncate">

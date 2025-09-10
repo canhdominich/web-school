@@ -67,7 +67,7 @@ export default function CouncilPage() {
         setIsLoading(false);
       }
     }
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, setTotalItems, setTotalPages]);
 
   const handleSearch = useCallback((query: string) => {
     const trimmedQuery = query.trim();
