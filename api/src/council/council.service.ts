@@ -17,7 +17,7 @@ import {
 } from './dto';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
-import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
+import { UserRole as UserRoleEntity } from '../user-role/userRole.entity';
 import { UserRole as UserRoleEnum } from '../constants/user.constant';
 import { Project } from '../project/project.entity';
 import { CouncilProject } from './council-project.entity';

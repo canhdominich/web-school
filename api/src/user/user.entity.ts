@@ -8,7 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { UserRole } from '../userRole/userRole.entity';
+import { UserRole } from '../user-role/userRole.entity';
 import { Faculty } from 'src/faculty/faculty.entity';
 import { Department } from 'src/department/department.entity';
 import { Major } from 'src/major/major.entity';

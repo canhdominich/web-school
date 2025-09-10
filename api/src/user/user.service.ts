@@ -16,7 +16,7 @@ import {
 } from './dto';
 import { hash } from 'bcrypt';
 import { Role } from '../role/role.entity';
-import { UserRole as UserRoleEntity } from '../userRole/userRole.entity';
+import { UserRole as UserRoleEntity } from '../user-role/userRole.entity';
 import { UserRole as UserRoleEnum } from '../constants/user.constant';
 import { Faculty } from '../faculty/faculty.entity';
 import { Department } from '../department/department.entity';

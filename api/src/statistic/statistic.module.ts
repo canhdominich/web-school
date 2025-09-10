@@ -4,7 +4,7 @@ import { StatisticController } from './statistic.controller';
 import { StatisticService } from './statistic.service';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
-import { UserRole } from '../userRole/userRole.entity';
+import { UserRole } from '../user-role/userRole.entity';
 import { Project } from '../project/project.entity';
 import { Faculty } from '../faculty/faculty.entity';
 import { Department } from '../department/department.entity';

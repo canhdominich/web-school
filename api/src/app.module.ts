@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { createDataSource } from './data-source';
 import { AuthModule } from './auth/auth.module';
 import { RoleModule } from './role/role.module';
-import { UserRoleModule } from './userRole/userRole.module';
+import { UserRoleModule } from './user-role/userRole.module';
 import { FacultyModule } from './faculty/faculty.module';
 import { DepartmentModule } from './department/department.module';
 import { MajorModule } from './major/major.module';

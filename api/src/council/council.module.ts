@@ -6,7 +6,7 @@ import { Council } from './council.entity';
 import { CouncilMember } from './council-member.entity';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
-import { UserRole } from '../userRole/userRole.entity';
+import { UserRole } from '../user-role/userRole.entity';
 import { Faculty } from '../faculty/faculty.entity';
 import { CouncilProject } from './council-project.entity';
 import { Project } from '../project/project.entity';

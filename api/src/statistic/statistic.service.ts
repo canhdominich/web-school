@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../user/user.entity';
 import { Role } from '../role/role.entity';
-import { UserRole } from '../userRole/userRole.entity';
+import { UserRole } from '../user-role/userRole.entity';
 import { Project, ProjectStatus } from '../project/project.entity';
 import { Faculty } from '../faculty/faculty.entity';
 import { Department } from '../department/department.entity';
