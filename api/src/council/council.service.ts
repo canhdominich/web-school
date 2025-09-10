@@ -50,9 +50,9 @@ export class CouncilService {
    * Validate that all member IDs are valid lecturers
    */
   private async validateMembers(memberIds: number[]): Promise<User[]> {
-    if (!memberIds || memberIds.length === 0) {
-      throw new BadRequestException('Danh sách thành viên không được để trống');
-    }
+    // if (!memberIds || memberIds.length === 0) {
+    //   throw new BadRequestException('Danh sách thành viên không được để trống');
+    // }
 
     // Get lecturer role
     const lecturerRole = await this.roleRepository.findOne({
@@ -106,7 +106,7 @@ export class CouncilService {
     }
 
     // Validate members
-    const members = await this.validateMembers(createCouncilDto.memberIds);
+    // const members = await this.validateMembers(createCouncilDto.memberIds);
 
     const council = this.councilRepository.create({
       name: createCouncilDto.name,
@@ -119,15 +119,15 @@ export class CouncilService {
     const savedCouncil = await this.councilRepository.save(council);
 
     // Create council members
-    const councilMembers = members.map((member) =>
-      this.councilMemberRepository.create({
-        councilId: savedCouncil.id,
-        userId: member.id,
-        roleInCouncil: 'Thành viên',
-      }),
-    );
+    // const councilMembers = members.map((member) =>
+    //   this.councilMemberRepository.create({
+    //     councilId: savedCouncil.id,
+    //     userId: member.id,
+    //     roleInCouncil: 'Thành viên',
+    //   }),
+    // );
 
-    await this.councilMemberRepository.save(councilMembers);
+    // await this.councilMemberRepository.save(councilMembers);
 
     return this.findOne(savedCouncil.id);
   }
@@ -278,21 +278,21 @@ export class CouncilService {
 
     // Update members if provided
     if (updateCouncilDto.memberIds) {
-      const members = await this.validateMembers(updateCouncilDto.memberIds);
+      // const members = await this.validateMembers(updateCouncilDto.memberIds);
 
       // Remove existing members
       await this.councilMemberRepository.delete({ councilId: id });
 
-      // Add new members
-      const councilMembers = members.map((member) =>
-        this.councilMemberRepository.create({
-          councilId: id,
-          userId: member.id,
-          roleInCouncil: 'Thành viên',
-        }),
-      );
+      // // Add new members
+      // const councilMembers = members.map((member) =>
+      //   this.councilMemberRepository.create({
+      //     councilId: id,
+      //     userId: member.id,
+      //     roleInCouncil: 'Thành viên',
+      //   }),
+      // );
 
-      await this.councilMemberRepository.save(councilMembers);
+      // await this.councilMemberRepository.save(councilMembers);
     }
 
     return this.findOne(id);

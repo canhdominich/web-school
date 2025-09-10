@@ -23,7 +23,7 @@ export const UserRoleOptions = [
   { value: UserRole.Lecturer, label: "Giảng viên" },
   { value: UserRole.DepartmentHead, label: "Chủ nhiệm bộ môn" },
   { value: UserRole.FacultyDean, label: "Trưởng khoa" },
-  { value: UserRole.Rector, label: "Phòng đào tạo" },
+  { value: UserRole.Rector, label: "Phòng nghiên cứu khoa học" },
   { value: UserRole.Council, label: "Hội đồng" },
   { value: UserRole.Admin, label: "Quản trị viên" },
 ];

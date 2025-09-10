@@ -574,7 +574,7 @@ export class BookingService {
   }
 
   /**
-   * Duyệt booking bởi phòng đào tạo
+   * Duyệt booking bởi phòng nghiên cứu khoa học
    */
   async approveByRector(
     id: number,
@@ -757,7 +757,7 @@ export class BookingService {
       const statusLabels = {
         [BookingStatus.APPROVED_BY_LECTURER]: 'đã được giảng viên duyệt',
         [BookingStatus.APPROVED_BY_FACULTY_DEAN]: 'đã được trưởng khoa duyệt',
-        [BookingStatus.APPROVED_BY_RECTOR]: 'đã được phòng đào tạo duyệt',
+        [BookingStatus.APPROVED_BY_RECTOR]: 'đã được phòng nghiên cứu khoa học duyệt',
         [BookingStatus.REJECTED]: 'đã bị từ chối',
       };
 

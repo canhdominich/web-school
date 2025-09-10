@@ -148,7 +148,7 @@ export class BookingController {
   @Post(':id/approve/rector')
   @UseGuards(RolesGuard)
   @Roles(UserRole.Rector)
-  @ApiOperation({ summary: 'Duyệt booking bởi phòng đào tạo' })
+  @ApiOperation({ summary: 'Duyệt booking bởi phòng nghiên cứu khoa học' })
   @ApiResponse({
     status: 200,
     description: 'Booking được duyệt thành công.',

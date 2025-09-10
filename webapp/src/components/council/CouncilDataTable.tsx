@@ -537,7 +537,7 @@ export default function CouncilDataTable({
                 placeholder="Nhập mô tả hội đồng (không bắt buộc)"
               />
             </div>
-            <div className="mb-3">
+            {/* <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                 Giảng viên (chỉ giảng viên)
               </label>
@@ -547,7 +547,7 @@ export default function CouncilDataTable({
                 options={lecturers.map(l => ({ value: l.id.toString(), label: `${l.name} (${l.code}) - ${l.email}` }))}
                 placeholder="Chọn giảng viên"
               />
-            </div>
+            </div> */}
             <div className="mb-3">
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                 Trạng thái

@@ -123,12 +123,12 @@
 - **Khi nào**:
   - Giảng viên duyệt/từ chối: `APPROVED_BY_LECTURER` hoặc `REJECTED`
   - Trưởng khoa duyệt: `APPROVED_BY_FACULTY_DEAN`
-  - Phòng đào tạo duyệt: `APPROVED_BY_RECTOR`
+  - Phòng nghiên cứu khoa học duyệt: `APPROVED_BY_RECTOR`
 - **Thông báo cho ai**: Người tạo booking (SV) và các thành viên khác trong đề tài.
 - **Nội dung**:  
   `Lịch bảo vệ đề tài "<title>" (<code>) <statusLabel> bởi <approverName>`  
   Trong đó:
-  - statusLabel: `"đã được giảng viên duyệt" | "đã được trưởng khoa duyệt" | "đã được phòng đào tạo duyệt" | "đã bị từ chối"`
+  - statusLabel: `"đã được giảng viên duyệt" | "đã được trưởng khoa duyệt" | "đã được phòng nghiên cứu khoa học duyệt" | "đã bị từ chối"`
 - **Ví dụ**:  
   > Lịch bảo vệ đề tài "Hệ thống quản lý" (PRJ-001) đã được trưởng khoa duyệt bởi TS. B
 
