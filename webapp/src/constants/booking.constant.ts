@@ -6,7 +6,7 @@ export const BookingStatusOptions = [
   { value: BookingStatus.PENDING, label: "Chờ duyệt" },
   { value: BookingStatus.APPROVED_BY_LECTURER, label: "Đã duyệt bởi giảng viên" },
   { value: BookingStatus.APPROVED_BY_FACULTY_DEAN, label: "Đã duyệt bởi trưởng khoa" },
-  { value: BookingStatus.APPROVED_BY_RECTOR, label: "Đã duyệt bởi hiệu trưởng" },
+  { value: BookingStatus.APPROVED_BY_RECTOR, label: "Đã duyệt bởi phòng đào tạo" },
   { value: BookingStatus.REJECTED, label: "Từ chối" },
 ];
 
@@ -27,7 +27,7 @@ export const getBookingStatusText = (status: BookingStatus): string => {
     [BookingStatus.PENDING]: "Chờ duyệt",
     [BookingStatus.APPROVED_BY_LECTURER]: "Đã duyệt bởi giảng viên",
     [BookingStatus.APPROVED_BY_FACULTY_DEAN]: "Đã duyệt bởi trưởng khoa",
-    [BookingStatus.APPROVED_BY_RECTOR]: "Đã duyệt bởi hiệu trưởng",
+    [BookingStatus.APPROVED_BY_RECTOR]: "Đã duyệt bởi phòng đào tạo",
     [BookingStatus.REJECTED]: "Từ chối",
   };
 
@@ -56,7 +56,7 @@ export const getNextApprovalStep = (currentStatus: BookingStatus): string | null
     case BookingStatus.APPROVED_BY_LECTURER:
       return 'Trưởng khoa';
     case BookingStatus.APPROVED_BY_FACULTY_DEAN:
-      return 'Hiệu trưởng';
+      return 'Phòng đào tạo';
     case BookingStatus.APPROVED_BY_RECTOR:
       return 'Hoàn thành';
     case BookingStatus.REJECTED:

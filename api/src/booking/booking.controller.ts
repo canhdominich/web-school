@@ -24,7 +24,6 @@ import {
   SearchBookingDto,
   PaginatedBookingResponseDto,
   ApproveBookingDto,
-  BookingResponseDto,
 } from './dto';
 import { Booking } from './booking.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -149,7 +148,7 @@ export class BookingController {
   @Post(':id/approve/rector')
   @UseGuards(RolesGuard)
   @Roles(UserRole.Rector)
-  @ApiOperation({ summary: 'Duyệt booking bởi hiệu trưởng' })
+  @ApiOperation({ summary: 'Duyệt booking bởi phòng đào tạo' })
   @ApiResponse({
     status: 200,
     description: 'Booking được duyệt thành công.',

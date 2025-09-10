@@ -20,6 +20,7 @@ import { Term } from '../term/term.entity';
 import { RequestUser } from '../interfaces';
 import { UserRole } from '../constants/user.constant';
 import { getProjectStatusLabel } from 'src/project/project.utils';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class BookingService {
@@ -32,11 +33,9 @@ export class BookingService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Term)
     private readonly termRepository: Repository<Term>,
+    private readonly notificationService: NotificationService,
   ) {}
 
-  /**
-   * Tạo booking mới với validation thời gian trong khoảng term
-   */
   async create(
     createBookingDto: CreateBookingDto,
     user: RequestUser,
@@ -81,12 +80,18 @@ export class BookingService {
     const isProjectMember = await this.projectRepository
       .createQueryBuilder('project')
       .leftJoin('project.members', 'member')
-      .where('project.id = :projectId', { projectId: createBookingDto.projectId })
-      .andWhere('member.studentId = :studentId', { studentId: createBookingDto.studentId })
+      .where('project.id = :projectId', {
+        projectId: createBookingDto.projectId,
+      })
+      .andWhere('member.studentId = :studentId', {
+        studentId: createBookingDto.studentId,
+      })
       .getOne();
 
     if (!isProjectMember) {
-      throw new BadRequestException('Sinh viên không phải là thành viên tham gia vào đề tài này');
+      throw new BadRequestException(
+        'Sinh viên không phải là thành viên tham gia vào đề tài này',
+      );
     }
 
     // Kiểm tra thời gian booking có nằm trong khoảng thời gian của term không
@@ -121,7 +126,12 @@ export class BookingService {
       time: bookingTime,
     });
 
-    return this.bookingRepository.save(booking);
+    const savedBooking = await this.bookingRepository.save(booking);
+
+    // Tạo thông báo cho các member trong dự án
+    await this.createBookingNotifications(savedBooking, project);
+
+    return savedBooking;
   }
 
   /**
@@ -372,9 +382,6 @@ export class BookingService {
     return [];
   }
 
-  /**
-   * Lấy booking theo ID
-   */
   async findOne(id: number): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id },
@@ -389,15 +396,14 @@ export class BookingService {
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
+      throw new NotFoundException(
+        `Không tìm thấy lịch bảo vệ đề tài có ID ${id}`,
+      );
     }
 
     return booking;
   }
 
-  /**
-   * Cập nhật booking
-   */
   async update(
     id: number,
     updateBookingDto: UpdateBookingDto,
@@ -405,7 +411,9 @@ export class BookingService {
     const booking = await this.bookingRepository.findOne({ where: { id } });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
+      throw new NotFoundException(
+        `Không tìm thấy lịch bảo vệ đề tài có ID ${id}`,
+      );
     }
 
     // Nếu cập nhật thời gian, kiểm tra lại validation
@@ -429,17 +437,40 @@ export class BookingService {
     }
 
     Object.assign(booking, updateBookingDto);
-    return this.bookingRepository.save(booking);
+    const savedBooking = await this.bookingRepository.save(booking);
+
+    // Lấy thông tin project để gửi thông báo
+    const project = await this.projectRepository.findOne({
+      where: { id: booking.projectId },
+      relations: ['supervisorUser'],
+    });
+
+    if (project) {
+      // Tạo thông báo cho các member trong dự án
+      await this.createBookingUpdateNotifications(savedBooking, project);
+    }
+
+    return savedBooking;
   }
 
   /**
    * Xóa booking (soft delete)
    */
   async remove(id: number): Promise<Booking> {
-    const booking = await this.bookingRepository.findOne({ where: { id } });
+    const booking = await this.bookingRepository.findOne({
+      where: { id },
+      relations: ['project', 'project.supervisorUser'],
+    });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
+      throw new NotFoundException(
+        `Không tìm thấy lịch bảo vệ đề tài có ID ${id}`,
+      );
+    }
+
+    // Tạo thông báo cho các member trong dự án trước khi xóa
+    if (booking.project) {
+      await this.createBookingDeletionNotifications(booking, booking.project);
     }
 
     await this.bookingRepository.softDelete(id);
@@ -460,12 +491,16 @@ export class BookingService {
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
+      throw new NotFoundException(
+        `Không tìm thấy lịch bảo vệ đề tài có ID ${id}`,
+      );
     }
 
     // Kiểm tra user có phải là giảng viên hướng dẫn của project không
     if (booking.project.supervisorId !== user.id) {
-      throw new BadRequestException('Bạn không có quyền duyệt lịch bảo vệ đề tài này');
+      throw new BadRequestException(
+        'Bạn không có quyền duyệt lịch bảo vệ đề tài này',
+      );
     }
 
     // Kiểm tra trạng thái hiện tại
@@ -476,7 +511,17 @@ export class BookingService {
     booking.status = approveDto.status;
     booking.approvedByLecturerId = user.id;
 
-    return this.bookingRepository.save(booking);
+    const savedBooking = await this.bookingRepository.save(booking);
+
+    // Tạo thông báo cho các member trong dự án
+    await this.createBookingApprovalNotifications(
+      savedBooking,
+      booking.project,
+      user.name || user.email,
+      approveDto.status,
+    );
+
+    return savedBooking;
   }
 
   /**
@@ -493,27 +538,43 @@ export class BookingService {
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
+      throw new NotFoundException(
+        `Không tìm thấy lịch bảo vệ đề tài có ID ${id}`,
+      );
     }
 
     // Kiểm tra user có phải là trưởng khoa của project không
     if (booking.project.facultyId !== user.facultyId) {
-      throw new BadRequestException('Bạn không có quyền duyệt lịch bảo vệ đề tài này');
+      throw new BadRequestException(
+        'Bạn không có quyền duyệt lịch bảo vệ đề tài này',
+      );
     }
 
     // Kiểm tra trạng thái hiện tại
     if (booking.status !== BookingStatus.APPROVED_BY_LECTURER) {
-      throw new BadRequestException('Lịch bảo vệ đề tài phải được giảng viên duyệt trước');
+      throw new BadRequestException(
+        'Lịch bảo vệ đề tài phải được giảng viên duyệt trước',
+      );
     }
 
     booking.status = approveDto.status;
     booking.approvedByFacultyDeanId = user.id;
 
-    return this.bookingRepository.save(booking);
+    const savedBooking = await this.bookingRepository.save(booking);
+
+    // Tạo thông báo cho các member trong dự án
+    await this.createBookingApprovalNotifications(
+      savedBooking,
+      booking.project,
+      user.name || user.email,
+      approveDto.status,
+    );
+
+    return savedBooking;
   }
 
   /**
-   * Duyệt booking bởi hiệu trưởng
+   * Duyệt booking bởi phòng đào tạo
    */
   async approveByRector(
     id: number,
@@ -526,7 +587,9 @@ export class BookingService {
     });
 
     if (!booking) {
-      throw new NotFoundException(`Không tìm thấy lịch bảo vệ đề tài có ID ${id}`);
+      throw new NotFoundException(
+        `Không tìm thấy lịch bảo vệ đề tài có ID ${id}`,
+      );
     }
 
     // Kiểm tra trạng thái hiện tại
@@ -539,6 +602,196 @@ export class BookingService {
     booking.status = approveDto.status;
     booking.approvedByRectorId = user.id;
 
-    return this.bookingRepository.save(booking);
+    const savedBooking = await this.bookingRepository.save(booking);
+
+    // Tạo thông báo cho các member trong dự án
+    await this.createBookingApprovalNotifications(
+      savedBooking,
+      booking.project,
+      user.name || user.email,
+      approveDto.status,
+    );
+
+    return savedBooking;
+  }
+
+  /**
+   * Tạo thông báo cho các member trong dự án khi có booking mới
+   */
+  private async createBookingNotifications(
+    booking: Booking,
+    project: Project,
+  ): Promise<void> {
+    try {
+      // Thông báo cho giảng viên hướng dẫn
+      if (project.supervisorUser) {
+        await this.notificationService.create({
+          title: 'Yêu cầu đặt lịch bảo vệ mới',
+          body: `Có yêu cầu đặt lịch bảo vệ mới cho đề tài "${project.title}" (${project.code}) vào lúc ${new Date(booking.time).toLocaleString('vi-VN')}`,
+          userId: project.supervisorUser.id,
+        });
+      }
+
+      // Thông báo cho các member trong dự án
+      const projectMembers = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .where('project.id = :projectId', { projectId: project.id })
+        .getOne();
+
+      if (projectMembers?.members && projectMembers.members.length > 0) {
+        for (const member of projectMembers.members) {
+          // Không thông báo cho chính người tạo booking
+          if (Number(member.studentId) !== Number(booking.studentId)) {
+            await this.notificationService.create({
+              title: 'Yêu cầu đặt lịch bảo vệ mới',
+              body: `Có yêu cầu đặt lịch bảo vệ mới cho đề tài "${project.title}" (${project.code}) vào lúc ${new Date(booking.time).toLocaleString('vi-VN')}`,
+              userId: member.studentId,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      // Log error nhưng không làm fail việc tạo booking
+      console.error('Error creating booking notifications:', error);
+    }
+  }
+
+  /**
+   * Tạo thông báo cho các member trong dự án khi cập nhật booking
+   */
+  private async createBookingUpdateNotifications(
+    booking: Booking,
+    project: Project,
+  ): Promise<void> {
+    try {
+      // Thông báo cho giảng viên hướng dẫn
+      if (project.supervisorUser) {
+        await this.notificationService.create({
+          title: 'Lịch bảo vệ đã được cập nhật',
+          body: `Lịch bảo vệ đề tài "${project.title}" (${project.code}) đã được cập nhật vào lúc ${new Date(booking.time).toLocaleString('vi-VN')}`,
+          userId: project.supervisorUser.id,
+        });
+      }
+
+      // Thông báo cho các member trong dự án
+      const projectMembers = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .where('project.id = :projectId', { projectId: project.id })
+        .getOne();
+
+      if (projectMembers?.members && projectMembers.members.length > 0) {
+        for (const member of projectMembers.members) {
+          // Không thông báo cho chính người cập nhật booking
+          if (member.studentId !== booking.studentId) {
+            await this.notificationService.create({
+              title: 'Lịch bảo vệ đã được cập nhật',
+              body: `Lịch bảo vệ đề tài "${project.title}" (${project.code}) đã được cập nhật vào lúc ${new Date(booking.time).toLocaleString('vi-VN')}`,
+              userId: member.studentId,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      // Log error nhưng không làm fail việc cập nhật booking
+      console.error('Error creating booking update notifications:', error);
+    }
+  }
+
+  /**
+   * Tạo thông báo cho các member trong dự án khi xóa booking
+   */
+  private async createBookingDeletionNotifications(
+    booking: Booking,
+    project: Project,
+  ): Promise<void> {
+    try {
+      // Thông báo cho giảng viên hướng dẫn
+      if (project.supervisorUser) {
+        await this.notificationService.create({
+          title: 'Lịch bảo vệ đã bị hủy',
+          body: `Lịch bảo vệ đề tài "${project.title}" (${project.code}) đã bị hủy`,
+          userId: project.supervisorUser.id,
+        });
+      }
+
+      // Thông báo cho các member trong dự án
+      const projectMembers = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .where('project.id = :projectId', { projectId: project.id })
+        .getOne();
+
+      if (projectMembers?.members && projectMembers.members.length > 0) {
+        for (const member of projectMembers.members) {
+          // Không thông báo cho chính người xóa booking
+          if (member.studentId !== booking.studentId) {
+            await this.notificationService.create({
+              title: 'Lịch bảo vệ đã bị hủy',
+              body: `Lịch bảo vệ đề tài "${project.title}" (${project.code}) đã bị hủy`,
+              userId: member.studentId,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      // Log error nhưng không làm fail việc xóa booking
+      console.error('Error creating booking deletion notifications:', error);
+    }
+  }
+
+  /**
+   * Tạo thông báo cho các member trong dự án khi duyệt booking
+   */
+  private async createBookingApprovalNotifications(
+    booking: Booking,
+    project: Project,
+    approverName: string,
+    status: BookingStatus,
+  ): Promise<void> {
+    try {
+      const statusLabels = {
+        [BookingStatus.APPROVED_BY_LECTURER]: 'đã được giảng viên duyệt',
+        [BookingStatus.APPROVED_BY_FACULTY_DEAN]: 'đã được trưởng khoa duyệt',
+        [BookingStatus.APPROVED_BY_RECTOR]: 'đã được phòng đào tạo duyệt',
+        [BookingStatus.REJECTED]: 'đã bị từ chối',
+      };
+
+      const statusLabel = statusLabels[status] || 'đã được cập nhật trạng thái';
+
+      // Thông báo cho sinh viên tạo booking
+      await this.notificationService.create({
+        title: 'Lịch bảo vệ đã được cập nhật',
+        body: `Lịch bảo vệ đề tài "${project.title}" (${project.code}) ${statusLabel} bởi ${approverName}`,
+        userId: booking.studentId,
+      });
+
+      // Thông báo cho các member khác trong dự án
+      const projectMembers = await this.projectRepository
+        .createQueryBuilder('project')
+        .leftJoinAndSelect('project.members', 'members')
+        .leftJoinAndSelect('members.student', 'student')
+        .where('project.id = :projectId', { projectId: project.id })
+        .getOne();
+
+      if (projectMembers?.members && projectMembers.members.length > 0) {
+        for (const member of projectMembers.members) {
+          // Không thông báo cho chính người tạo booking (đã thông báo ở trên)
+          if (member.studentId !== booking.studentId) {
+            await this.notificationService.create({
+              title: 'Lịch bảo vệ đã được cập nhật',
+              body: `Lịch bảo vệ đề tài "${project.title}" (${project.code}) ${statusLabel} bởi ${approverName}`,
+              userId: member.studentId,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error creating booking approval notifications:', error);
+    }
   }
 }

@@ -30,7 +30,7 @@ export class BookingResponseDto {
   @ApiProperty({ example: 1, description: 'ID trưởng khoa đã duyệt', nullable: true })
   approvedByFacultyDeanId: number | null;
 
-  @ApiProperty({ example: 1, description: 'ID hiệu trưởng đã duyệt', nullable: true })
+  @ApiProperty({ example: 1, description: 'ID phòng đào tạo đã duyệt', nullable: true })
   approvedByRectorId: number | null;
 
   @ApiProperty({
@@ -65,6 +65,6 @@ export class BookingResponseDto {
   @ApiProperty({ description: 'Thông tin trưởng khoa đã duyệt', nullable: true })
   approvedByFacultyDean?: any;
 
-  @ApiProperty({ description: 'Thông tin hiệu trưởng đã duyệt', nullable: true })
+  @ApiProperty({ description: 'Thông tin phòng đào tạo đã duyệt', nullable: true })
   approvedByRector?: any;
 }
