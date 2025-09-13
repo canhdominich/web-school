@@ -387,6 +387,13 @@ export default function TermDataTable({
   // Action button
   const actionButton = (
     <div className="flex items-center gap-3">
+      <button
+        onClick={openModal}
+        type="button"
+        className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+      >
+        Thêm kế hoạch NCKH
+      </button>
       <div>
         <label className="sr-only">Năm học</label>
         <select
@@ -415,13 +422,6 @@ export default function TermDataTable({
           Xóa bộ lọc
         </button>
       </div>
-      <button
-        onClick={openModal}
-        type="button"
-        className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
-      >
-        Thêm kế hoạch NCKH
-      </button>
     </div>
   );
 

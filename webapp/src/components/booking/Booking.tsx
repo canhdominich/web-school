@@ -98,10 +98,10 @@ const renderEventContent = (eventInfo: EventContentArg) => {
       <div className="flex flex-col space-y-4 mt-2">
         {/* Header với thời gian và trạng thái */}
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-gray-800 dark:text-white bg-gray-200 dark:bg-white/20 py-1 px-2 rounded">
+          {/* <div className="text-xs font-bold text-gray-800 dark:text-white bg-gray-200 dark:bg-white/20 py-1 px-2 rounded">
             🕐 {moment(booking.time).format("HH:mm")}
-          </div>
-          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-${statusColor}-100 dark:bg-${statusColor}-900 ${getStatusTextColor(statusColor)}`}>
+          </div> */}
+          <div className={`inline-flex items-center py-1 rounded-full text-xs font-medium bg-${statusColor}-100 dark:bg-${statusColor}-900 ${getStatusTextColor(statusColor)}`}>
             <span className="mr-1">{getStatusIcon(statusColor)}</span>
             <span className="hidden sm:inline">{statusText}</span>
             <span className="sm:hidden">{statusText.split(' ')[0]}</span>
