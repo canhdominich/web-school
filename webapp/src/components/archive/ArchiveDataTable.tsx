@@ -59,11 +59,13 @@ export default function ArchiveDataTable({
       setSelectedFacultyId(String(facultyId));
     }
   }, [facultyId]);
+
   useEffect(() => {
     if (academicYearId !== undefined && academicYearId !== null) {
       setSelectedAcademicYearId(String(academicYearId));
     }
   }, [academicYearId]);
+  
   // Load council information for all projects
   const loadProjectCouncils = useCallback(async () => {
     if (items.length === 0) return;

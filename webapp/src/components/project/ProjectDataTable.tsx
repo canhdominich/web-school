@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { TableCell, TableRow } from "../ui/table";
-import { Header, Term, Major, Faculty, Department, User, IUserRole, IMilestoneSubmissions } from "@/types/common";
+import { Header, Term, Major, Faculty, Department, User, IUserRole, IMilestoneSubmissions, AcademicYear } from "@/types/common";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Select from "@/components/form/Select";
@@ -15,6 +15,7 @@ import { getTerms } from "@/services/termService";
 import { getMajors } from "@/services/majorService";
 import { getFaculties } from "@/services/facultyService";
 import { getDepartments } from "@/services/departmentService";
+import { getAcademicYears } from "@/services/academicYearService";
 import { VERY_BIG_NUMBER } from "@/constants/common";
 import {
   createProject,
@@ -46,6 +47,8 @@ interface ProjectDataTableProps {
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
   onItemsPerPageChange?: (limit: number) => void;
+  onFilterChange?: (filters: { academicYearId?: number }) => void;
+  academicYearId?: number;
 }
 
 type Option = { value: ProjectStatus; label: string };
@@ -59,7 +62,9 @@ export default function ProjectDataTable({
   isSearching = false,
   pagination,
   onPageChange,
-  onItemsPerPageChange
+  onItemsPerPageChange,
+  onFilterChange,
+  academicYearId,
 }: ProjectDataTableProps) {
   const [selectedProject, setSelectedProject] = useState<ProjectEntity | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,6 +95,8 @@ export default function ProjectDataTable({
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<string>("");
   const { isOpen, openModal, closeModal } = useModal();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [rolesObject, setRolesObject] = useState<Record<string, boolean>>({});
@@ -311,12 +318,13 @@ export default function ProjectDataTable({
     // fetch options
     (async () => {
       try {
-        const [termList, majorList, facultyList, departmentList, userList] = await Promise.all([
+        const [termList, majorList, facultyList, departmentList, userList, academicYearList] = await Promise.all([
           getTerms({ limit: VERY_BIG_NUMBER }),
           getMajors({ limit: VERY_BIG_NUMBER }),
           getFaculties({ limit: VERY_BIG_NUMBER }),
           getDepartments({ limit: VERY_BIG_NUMBER }),
           getUsers({ limit: VERY_BIG_NUMBER }),
+          getAcademicYears({ limit: VERY_BIG_NUMBER }),
         ]);
         
         // Handle both array and paginated response
@@ -325,12 +333,42 @@ export default function ProjectDataTable({
         setFaculties(Array.isArray(facultyList) ? facultyList : facultyList.data);
         setDepartments(Array.isArray(departmentList) ? departmentList : departmentList.data);
         setUsers(Array.isArray(userList) ? userList : userList.data);
+        setAcademicYears(Array.isArray(academicYearList) ? academicYearList : academicYearList.data);
       } catch (e) {
         console.error(e);
         toast.error(getErrorMessage(e, "Không thể tải dữ liệu chọn"));
       }
     })();
   }, []);
+
+  // Sync internal state from controlled props
+  useEffect(() => {
+    if (academicYearId !== undefined && academicYearId !== null) {
+      setSelectedAcademicYearId(String(academicYearId));
+    }
+  }, [academicYearId]);
+
+  // Keep latest onFilterChange in a ref and emit only on real changes
+  const onFilterChangeRef = useRef(onFilterChange);
+  useEffect(() => {
+    onFilterChangeRef.current = onFilterChange;
+  }, [onFilterChange]);
+
+  const lastEmittedFiltersRef = useRef<{ academicYearId?: number }>({});
+  useEffect(() => {
+    const payload: { academicYearId?: number } = {};
+    if (selectedAcademicYearId) payload.academicYearId = Number(selectedAcademicYearId);
+
+    // Do not emit if nothing selected (avoid refresh loop on initial render)
+    if (Object.keys(payload).length === 0) return;
+
+    const last = lastEmittedFiltersRef.current || {};
+    const isSame = last.academicYearId === payload.academicYearId;
+    if (isSame) return;
+
+    lastEmittedFiltersRef.current = payload;
+    onFilterChangeRef.current?.(payload);
+  }, [selectedAcademicYearId]);
 
   // Load project councils when items change
   useEffect(() => {
@@ -855,13 +893,43 @@ export default function ProjectDataTable({
 
   // Action button
   const actionButton = (
-    <button
-      onClick={openModal}
-      type="button"
-      className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
-    >
-      Đăng ký đề tài
-    </button>
+    <div className="flex items-center gap-3">
+      <button
+        onClick={openModal}
+        type="button"
+        className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+      >
+        Đăng ký đề tài
+      </button>
+      <div>
+        <label className="sr-only">Năm học</label>
+        <select
+          value={selectedAcademicYearId}
+          onChange={(e) => setSelectedAcademicYearId(e.target.value)}
+          className="dark:bg-dark-900 h-10 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+        >
+          <option value="">Tất cả năm học</option>
+          {academicYears.map(y => (
+            <option key={y.id} value={y.id}>{y.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => { 
+            setSelectedAcademicYearId(""); 
+            // Gọi ngay để refresh dữ liệu toàn trang khi xóa bộ lọc
+            onFilterChangeRef.current?.({});
+          }}
+          disabled={!selectedAcademicYearId}
+          className="inline-flex items-center h-10 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+          title="Xóa bộ lọc"
+        >
+          Xóa bộ lọc
+        </button>
+      </div>
+    </div>
   );
 
   return (

@@ -53,7 +53,11 @@ export class SearchBookingDto {
   @Min(1)
   page?: number;
 
-  @ApiProperty({ example: 10, description: 'Số lượng mỗi trang', required: false })
+  @ApiProperty({
+    example: 10,
+    description: 'Số lượng mỗi trang',
+    required: false,
+  })
   @IsNumber()
   @IsOptional()
   @Min(1)

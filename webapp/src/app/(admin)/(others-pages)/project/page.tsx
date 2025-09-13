@@ -25,6 +25,7 @@ export default function ProjectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<{ academicYearId?: number }>({});
   
   // Use pagination hook
   const {
@@ -76,26 +77,33 @@ export default function ProjectPage() {
     resetToFirstPage(); // Reset to first page when searching
     
     if (trimmedQuery) {
-      fetchProjects({ title: trimmedQuery }, true);
+      fetchProjects({ title: trimmedQuery, ...filters }, true);
     } else {
       // If no search term, fetch all projects
-      fetchProjects({}, true);
+      fetchProjects({ ...filters }, true);
     }
-  }, [fetchProjects, resetToFirstPage]);
+  }, [fetchProjects, resetToFirstPage, filters]);
 
   const handleRefresh = useCallback(() => {
     // Refresh with current search term and pagination
     if (searchTerm.trim()) {
-      fetchProjects({ title: searchTerm.trim() }, true);
+      fetchProjects({ title: searchTerm.trim(), ...filters }, true);
     } else {
-      fetchProjects({}, true);
+      fetchProjects({ ...filters }, true);
     }
-  }, [searchTerm, fetchProjects]);
+  }, [searchTerm, fetchProjects, filters]);
 
-  // Initial load and fetch data when pagination changes
+  const handleFilterChange = useCallback((payload: { academicYearId?: number }) => {
+    setFilters(payload);
+    // Reset to first page when filtering
+    resetToFirstPage();
+    fetchProjects({ ...payload, title: searchTerm.trim() || undefined }, true);
+  }, [fetchProjects, resetToFirstPage, searchTerm]);
+
+  // Initial load and refetch only when pagination changes (not when filters change)
   useEffect(() => {
-    fetchProjects({});
-  }, [fetchProjects]);
+    fetchProjects({ ...filters });
+  }, [currentPage, itemsPerPage]);
 
   return (
     <div>
@@ -119,6 +127,8 @@ export default function ProjectPage() {
               pagination={paginationInfo}
               onPageChange={handlePageChange}
               onItemsPerPageChange={handleItemsPerPageChange}
+              onFilterChange={handleFilterChange}
+              academicYearId={filters.academicYearId}
             />
           )}
         </ComponentCard>

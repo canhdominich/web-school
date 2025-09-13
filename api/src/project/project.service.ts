@@ -815,7 +815,6 @@ export class ProjectService {
       });
     }
 
-    console.log('isArchived = ', isArchived, isArchived === true);
     if (isArchived) {
       queryBuilder.andWhere('project.averageScore IS NOT NULL');
     }
@@ -825,7 +824,11 @@ export class ProjectService {
       const roles = user.roles || [];
 
       // Admin: No additional filtering needed
-      if (!roles.includes(UserRole.Admin) && !roles.includes(UserRole.Rector)) {
+      if (
+        !roles.includes(UserRole.Admin) &&
+        !roles.includes(UserRole.Rector) &&
+        !isArchived
+      ) {
         // Student: Return projects created by user or where user is a member
         if (roles.includes(UserRole.Student)) {
           queryBuilder.andWhere(
