@@ -717,7 +717,12 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
                 </button>
 
                 {/* Nút duyệt cho các role khác nhau */}
-                {selectedBooking && selectedBooking.id && rolesObject[UserRole.Lecturer] && canApproveBooking(UserRole.Lecturer, selectedBooking.status) && (
+                {selectedBooking && selectedBooking.id 
+                && ((rolesObject[UserRole.Lecturer] && canApproveBooking(UserRole.Lecturer, selectedBooking.status)) 
+                  || (rolesObject[UserRole.FacultyDean] && canApproveBooking(UserRole.FacultyDean, selectedBooking.status)) 
+                  || (rolesObject[UserRole.Rector] && canApproveBooking(UserRole.Rector, selectedBooking.status))
+                  || rolesObject[UserRole.Admin])
+                && (
                   <>
                     <button
                       onClick={() => handleApprove(selectedBooking.id, BookingStatus.REJECTED)}

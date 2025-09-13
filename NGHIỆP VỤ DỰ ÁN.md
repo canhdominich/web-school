@@ -38,7 +38,6 @@
 - **Quyền hạn**: Quản lý đề tài trong bộ môn, duyệt lịch bảo vệ
 - **Nghiệp vụ chính**:
   - Giám sát đề tài trong bộ môn
-  - Duyệt lịch bảo vệ đề tài (cấp thứ hai)
   - Chấm điểm đề tài trong hội đồng
   - Báo cáo tiến độ bộ môn
 

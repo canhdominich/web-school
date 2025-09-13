@@ -861,8 +861,10 @@ export class ProjectService {
         }
 
         // FacultyDean: Return projects in user's faculty + projects in councils where user is member
-        console.log("user ", user)
-        if (roles.includes(UserRole.FacultyDean)) {
+        if (
+          roles.includes(UserRole.FacultyDean) ||
+          roles.includes(UserRole.Rector)
+        ) {
           console.log('user?.facultyId', user?.facultyId);
           if (user?.facultyId) {
             queryBuilder.andWhere(

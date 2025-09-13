@@ -46,8 +46,14 @@ export class BookingController {
     type: Booking,
   })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy dự án hoặc sinh viên.' })
-  @ApiResponse({ status: 409, description: 'Đã có lịch đặt cho dự án này vào thời gian này.' })
+  @ApiResponse({
+    status: 404,
+    description: 'Không tìm thấy dự án hoặc sinh viên.',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Đã có lịch đặt cho dự án này vào thời gian này.',
+  })
   create(@Body() createBookingDto: CreateBookingDto, @Req() req: any) {
     return this.bookingService.create(createBookingDto, req.user);
   }
@@ -65,10 +71,7 @@ export class BookingController {
     type: PaginatedBookingResponseDto,
   })
   findAll(@Query() searchDto: SearchBookingDto, @Req() req: any) {
-    if (searchDto && Object.keys(searchDto).length > 0) {
-      return this.bookingService.findAllWithSearch(searchDto, req.user);
-    }
-    return this.bookingService.findAll(req.user);
+    return this.bookingService.findAllWithSearch(searchDto, req.user);
   }
 
   @Get(':id')
@@ -117,7 +120,10 @@ export class BookingController {
     type: Booking,
   })
   @ApiResponse({ status: 404, description: 'Không tìm thấy booking.' })
-  @ApiResponse({ status: 400, description: 'Không có quyền duyệt hoặc trạng thái không hợp lệ.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Không có quyền duyệt hoặc trạng thái không hợp lệ.',
+  })
   approveByLecturer(
     @Param('id', ParseIntPipe) id: number,
     @Body() approveDto: ApproveBookingDto,
@@ -136,7 +142,10 @@ export class BookingController {
     type: Booking,
   })
   @ApiResponse({ status: 404, description: 'Không tìm thấy booking.' })
-  @ApiResponse({ status: 400, description: 'Không có quyền duyệt hoặc trạng thái không hợp lệ.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Không có quyền duyệt hoặc trạng thái không hợp lệ.',
+  })
   approveByFacultyDean(
     @Param('id', ParseIntPipe) id: number,
     @Body() approveDto: ApproveBookingDto,
@@ -155,7 +164,10 @@ export class BookingController {
     type: Booking,
   })
   @ApiResponse({ status: 404, description: 'Không tìm thấy booking.' })
-  @ApiResponse({ status: 400, description: 'Không có quyền duyệt hoặc trạng thái không hợp lệ.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Không có quyền duyệt hoặc trạng thái không hợp lệ.',
+  })
   approveByRector(
     @Param('id', ParseIntPipe) id: number,
     @Body() approveDto: ApproveBookingDto,
