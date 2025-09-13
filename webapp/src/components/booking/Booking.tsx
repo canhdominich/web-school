@@ -113,9 +113,9 @@ const renderEventContent = (eventInfo: EventContentArg) => {
           📋 {booking.project?.title || "Không có tên đề tài"}
         </div>
 
-        {/* Tên sự kiện */}
+        {/* Tên kế hoạch NCKH */}
         <div className="text-sm font-semibold text-gray-800 dark:text-white truncate leading-tight">
-          📋 {booking.project?.term?.name || "Không có tên sự kiện"}
+          📋 {booking.project?.term?.name || "Không có tên kế hoạch NCKH"}
         </div>
         
         {/* Tên sinh viên */}
@@ -480,7 +480,7 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
           slotMaxTime="22:00:00"
           customButtons={rolesObject[UserRole.Student] ? {
             addEventButton: {
-              text: "Đăng ký lịch bảo vệ +",
+              text: "Đăng ký bảo vệ đề tài +",
               click: openModal,
             },
           } : {}}

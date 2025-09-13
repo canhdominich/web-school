@@ -101,7 +101,7 @@ export class BookingService {
 
     if (bookingTime < termStartDate || bookingTime > termEndDate) {
       throw new BadRequestException(
-        'Thời gian đặt lịch phải nằm trong khoảng thời gian của sự kiện',
+        'Thời gian đặt lịch phải nằm trong khoảng thời gian của kế hoạch NCKH',
       );
     }
 
@@ -430,7 +430,7 @@ export class BookingService {
 
         if (bookingTime < termStartDate || bookingTime > termEndDate) {
           throw new BadRequestException(
-            'Thời gian đặt lịch phải nằm trong khoảng thời gian của sự kiện',
+            'Thời gian đặt lịch phải nằm trong khoảng thời gian của kế hoạch NCKH',
           );
         }
       }

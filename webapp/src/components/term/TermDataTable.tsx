@@ -134,16 +134,16 @@ export default function TermDataTable({
       setIsSubmitting(true);
       if (selectedTerm?.id) {
         await updateTerm(selectedTerm.id.toString(), formData as UpdateTermDto);
-        toast.success("Cập nhật sự kiện thành công");
+        toast.success("Cập nhật kế hoạch NCKH thành công");
       } else {
         await createTerm(formData as CreateTermDto);
-        toast.success("Thêm sự kiện thành công");
+        toast.success("Thêm kế hoạch NCKH thành công");
       }
       closeModal();
       onRefresh();
     } catch (error: unknown) {
       console.error('Error in handleSubmit:', error);
-      const errorMessage = selectedTerm?.id ? "Không thể cập nhật sự kiện" : "Không thể thêm sự kiện";
+      const errorMessage = selectedTerm?.id ? "Không thể cập nhật kế hoạch NCKH" : "Không thể thêm kế hoạch NCKH";
       
       if (error instanceof Error && error.message) {
         toast.error(`${errorMessage}: ${error.message}`);
@@ -187,21 +187,21 @@ export default function TermDataTable({
   const handleDelete = async (id: number) => {
     if (isSubmitting) return;
 
-    const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa sự kiện này?");
+    const isConfirmed = window.confirm("Bạn có chắc chắn muốn xóa kế hoạch NCKH này?");
     if (!isConfirmed) return;
 
     try {
       setIsSubmitting(true);
       await deleteTerm(id.toString());
-      toast.success("Xóa sự kiện thành công");
+      toast.success("Xóa kế hoạch NCKH thành công");
       onRefresh();
     } catch (error: unknown) {
       console.error('Error in handleDelete:', error);
       
-      let errorMessage = "Không thể xóa sự kiện";
+      let errorMessage = "Không thể xóa kế hoạch NCKH";
       
       if (error instanceof Error && error.message) {
-        if (error.message.includes("Không thể xóa sự kiện này vì đang được sử dụng trong:")) {
+        if (error.message.includes("Không thể xóa kế hoạch NCKH này vì đang được sử dụng trong:")) {
           errorMessage = error.message;
           toast.error(errorMessage, { duration: 6000 });
         } else {
@@ -356,7 +356,7 @@ export default function TermDataTable({
       type="button"
       className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
     >
-      Thêm sự kiện
+      Thêm kế hoạch NCKH
     </button>
   );
 
@@ -368,7 +368,7 @@ export default function TermDataTable({
         renderRow={renderRow}
         searchTerm={searchTerm}
         onSearch={onSearch}
-        searchPlaceholder="Tìm kiếm theo tên sự kiện..."
+        searchPlaceholder="Tìm kiếm theo tên kế hoạch NCKH..."
         isSearching={isSearching}
         pagination={pagination}
         onPageChange={onPageChange}
@@ -385,14 +385,14 @@ export default function TermDataTable({
         <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
           <div>
             <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
-              {selectedTerm ? "Chỉnh sửa sự kiện" : "Thêm sự kiện"}
+              {selectedTerm ? "Chỉnh sửa kế hoạch NCKH" : "Thêm kế hoạch NCKH"}
             </h5>
           </div>
           <div className="mt-8">
             <div className="grid grid-cols-2 gap-4">
               <div className="mb-3">
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Tên sự kiện
+                  Tên kế hoạch NCKH
                 </label>
                 <input
                   id="name"
@@ -400,12 +400,12 @@ export default function TermDataTable({
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                  placeholder="Nhập tên sự kiện"
+                  placeholder="Nhập tên kế hoạch NCKH"
                 />
               </div>
               <div className="mb-3">
                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Mã sự kiện
+                  Mã kế hoạch NCKH
                 </label>
                 <input
                   id="code"
@@ -413,7 +413,7 @@ export default function TermDataTable({
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                   className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                  placeholder="Nhập mã sự kiện"
+                  placeholder="Nhập mã kế hoạch NCKH"
                 />
               </div>
             </div>
@@ -453,7 +453,7 @@ export default function TermDataTable({
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                placeholder="Nhập mô tả sự kiện (không bắt buộc)"
+                placeholder="Nhập mô tả kế hoạch NCKH (không bắt buộc)"
               />
             </div>
             <div className="mb-3">
@@ -523,7 +523,7 @@ export default function TermDataTable({
             </h5>
             {selectedTerm && (
               <p className="text-base text-gray-600 dark:text-gray-400">
-                Sự kiện: {selectedTerm.name}
+                Kế hoạch NCKH: {selectedTerm.name}
               </p>
             )}
           </div>

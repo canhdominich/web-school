@@ -27,7 +27,7 @@ export class TermService {
       where: { code: createTermDto.code },
     });
     if (existingTerm) {
-      throw new ConflictException('Mã sự kiện đã tồn tại');
+      throw new ConflictException('Mã kế hoạch NCKH đã tồn tại');
     }
 
     const term = this.termRepository.create(createTermDto);
@@ -149,7 +149,7 @@ export class TermService {
     });
 
     if (!term) {
-      throw new NotFoundException(`Không tìm thấy sự kiện có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy kế hoạch NCKH có ID ${id}`);
     }
 
     return term;
@@ -165,7 +165,7 @@ export class TermService {
     });
 
     if (!term) {
-      throw new NotFoundException(`Không tìm thấy sự kiện có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy kế hoạch NCKH có ID ${id}`);
     }
 
     // Check if term code already exists (if code is being updated)
@@ -174,7 +174,7 @@ export class TermService {
         where: { code: updateTermDto.code },
       });
       if (existingTerm) {
-        throw new ConflictException('Mã sự kiện đã tồn tại');
+        throw new ConflictException('Mã kế hoạch NCKH đã tồn tại');
       }
     }
 
@@ -192,7 +192,7 @@ export class TermService {
     });
 
     if (!term) {
-      throw new NotFoundException(`Không tìm thấy sự kiện có ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy kế hoạch NCKH có ID ${id}`);
     }
 
     // Store term data before deletion for response

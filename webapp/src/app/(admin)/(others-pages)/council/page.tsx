@@ -98,7 +98,7 @@ export default function CouncilPage() {
 
   return (
     <div>
-      <PageBreadcrumb pageTitle="Quản lý hội đồng" />
+      <PageBreadcrumb pageTitle="Thiết lập hội đồng" />
       <div className="space-y-6">
         <ComponentCard title="">
           {isLoading ? (

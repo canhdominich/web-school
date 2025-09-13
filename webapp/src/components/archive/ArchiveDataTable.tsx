@@ -142,7 +142,7 @@ export default function ArchiveDataTable({
       cancelled: "Đã hủy",
       approved_by_lecturer: "Giảng viên đã duyệt",
       approved_by_faculty_dean: "Trưởng khoa đã duyệt",
-      approved_by_rector: "Trường đã duyệt",
+      approved_by_rector: "Phòng NCKH duyệt",
       pending: "Chờ duyệt",
       draft: "Nháp"
     };

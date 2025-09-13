@@ -51,7 +51,7 @@ export class ProjectService {
     createOrUpdateProjectDto: CreateProjectDto | UpdateProjectDto,
   ): void {
     if (!createOrUpdateProjectDto.termId) {
-      throw new BadRequestException('Vui lòng chọn sự kiện');
+      throw new BadRequestException('Vui lòng chọn kế hoạch NCKH');
     }
 
     if (!createOrUpdateProjectDto.facultyId) {
@@ -71,9 +71,49 @@ export class ProjectService {
     }
 
     if (!createOrUpdateProjectDto.termId) {
-      throw new BadRequestException('Vui lòng chọn sự kiện');
+      throw new BadRequestException('Vui lòng chọn kế hoạch NCKH');
     }
   }
+
+  /**
+   * Generate a unique 8-digit code for new users
+   * Format: 00000001, 00000002, etc.
+   */
+  private async generateUniqueCode(): Promise<string> {
+    let code = '';
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 100; // Prevent infinite loop
+
+    while (!isUnique && attempts < maxAttempts) {
+      // Get the next available ID
+      const lastProject = await this.projectRepository.findOne({
+        order: { id: 'DESC' },
+        where: {},
+      });
+
+      const nextId = lastProject ? lastProject.id + 1 : 1;
+      code = nextId.toString().padStart(8, '0');
+
+      // Check if code already exists (in case of manual insert or data migration)
+      const existingProject = await this.projectRepository.findOne({
+        where: { code },
+      });
+
+      if (!existingProject) {
+        isUnique = true;
+      } else {
+        attempts++;
+      }
+    }
+
+    if (!isUnique) {
+      throw new Error('Không thể sinh mã đề tài sau số lần thử tối đa');
+    }
+
+    return code;
+  }
+
   /**
    * Create a new project with notifications
    * - Notifies supervisor about new project assignment
@@ -115,7 +155,7 @@ export class ProjectService {
           where: { id: createProjectDto.termId },
         });
         if (!term) {
-          throw new BadRequestException('Sự kiện không được tìm thấy');
+          throw new BadRequestException('Kế hoạch NCKH không được tìm thấy');
         }
 
         const now = new Date();
@@ -126,16 +166,19 @@ export class ProjectService {
 
         if (startDate > now || endDate < now) {
           throw new BadRequestException(
-            'Không thể đăng ký đề tài ngoài thời gian sự kiện',
+            'Không thể đăng ký đề tài ngoài thời gian kế hoạch NCKH',
           );
         } else if (term.status === TermStatus.CLOSED) {
           throw new BadRequestException(
-            'Không thể đăng ký đề tài trong sự kiện đã đóng',
+            'Không thể đăng ký đề tài trong kế hoạch NCKH đã đóng',
           );
         }
 
+        const code = createProjectDto.code || (await this.generateUniqueCode());
+
         const project = projectRepo.create({
           ...createProjectDto,
+          code,
           members: undefined, // Remove members from project entity
         });
         const savedProject = await projectRepo.save(project);
@@ -556,7 +599,7 @@ export class ProjectService {
         pending: 'Chờ duyệt',
         approved_by_lecturer: 'Giảng viên đã duyệt',
         approved_by_faculty_dean: 'Trưởng khoa đã duyệt',
-        approved_by_rector: 'Trường đã duyệt',
+        approved_by_rector: 'Phòng NCKH duyệt',
         in_progress: 'Đang thực hiện',
         completed: 'Hoàn thành',
         cancelled: 'Hủy',
@@ -1181,7 +1224,7 @@ export class ProjectService {
             where: { id: updateProjectDto.termId },
           });
           if (!term) {
-            throw new BadRequestException('Sự kiện không được tìm thấy');
+            throw new BadRequestException('Kế hoạch NCKH không được tìm thấy');
           }
 
           const now = new Date();
@@ -1192,11 +1235,11 @@ export class ProjectService {
 
           if (startDate > now || endDate < now) {
             throw new BadRequestException(
-              'Không thể cập nhật đề tài ngoài thời gian sự kiện',
+              'Không thể cập nhật đề tài ngoài thời gian kế hoạch NCKH',
             );
           } else if (term.status === TermStatus.CLOSED) {
             throw new BadRequestException(
-              'Không thể cập nhật đề tài trong sự kiện đã đóng',
+              'Không thể cập nhật đề tài trong kế hoạch NCKH đã đóng',
             );
           }
         }

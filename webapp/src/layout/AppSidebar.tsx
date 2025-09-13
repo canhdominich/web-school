@@ -108,16 +108,16 @@ const AppSidebar: React.FC = () => {
     requiredRole: [UserRole.Admin],
   },
   {
+    icon: <PaperPlaneIcon />,
+    name: "Quản lý kế hoạch NCKH",
+    path: "/term",
+    requiredRole: [UserRole.Admin, UserRole.Rector],
+  },
+  {
     icon: <CalenderIcon />,
     name: "Quản lý đề tài",
     path: "/project",
     requiredRole: [UserRole.Admin, UserRole.Student, UserRole.Lecturer, UserRole.DepartmentHead, UserRole.FacultyDean, UserRole.Council, UserRole.Rector],
-  },
-  {
-    icon: <PaperPlaneIcon />,
-    name: "Quản lý sự kiện",
-    path: "/term",
-    requiredRole: [UserRole.Admin, UserRole.Rector],
   },
   {
     icon: <TableIcon />,
@@ -130,7 +130,7 @@ const AppSidebar: React.FC = () => {
       },
       {
         icon: <CalenderIcon />,
-        name: "Đăng ký lịch bảo vệ",
+        name: "Đăng ký bảo vệ đề tài",
         path: "/booking",
         requiredRole: [UserRole.Admin, UserRole.Rector, UserRole.FacultyDean, UserRole.DepartmentHead, UserRole.Lecturer, UserRole.Student, UserRole.Council],
       },

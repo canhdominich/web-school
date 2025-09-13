@@ -6,7 +6,7 @@ export function getProjectStatusLabel(status: ProjectStatus): string {
     [ProjectStatus.PENDING]: 'Chờ duyệt',
     [ProjectStatus.APPROVED_BY_LECTURER]: 'Giảng viên đã duyệt',
     [ProjectStatus.APPROVED_BY_FACULTY_DEAN]: 'Trưởng khoa đã duyệt',
-    [ProjectStatus.APPROVED_BY_RECTOR]: 'Trường đã duyệt',
+    [ProjectStatus.APPROVED_BY_RECTOR]: 'Phòng NCKH duyệt',
     [ProjectStatus.IN_PROGRESS]: 'Đang thực hiện',
     [ProjectStatus.COMPLETED]: 'Hoàn thành',
     [ProjectStatus.CANCELLED]: 'Đã hủy',

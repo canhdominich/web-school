@@ -12,8 +12,8 @@ import { usePagination } from "@/hooks/usePagination";
 
 export default function TermPage() {
   const headers = [
-    { key: "name", title: "Tên sự kiện" },
-    { key: "code", title: "Mã sự kiện" },
+    { key: "name", title: "Tên kế hoạch NCKH" },
+    { key: "code", title: "Mã kế hoạch NCKH" },
     { key: "description", title: "Mô tả" },
     { key: "academicYear", title: "Năm học" },
     { key: "dateRange", title: "Thời gian" },
@@ -62,7 +62,7 @@ export default function TermPage() {
       setTotalItems(data.total);
       setTotalPages(data.totalPages);
     } catch (e) {
-      toast.error(getErrorMessage(e, "Không thể tải danh sách sự kiện"));
+      toast.error(getErrorMessage(e, "Không thể tải danh sách kế hoạch NCKH"));
     } finally {
       if (isSearch) {
         setIsSearching(false);
@@ -111,7 +111,7 @@ export default function TermPage() {
 
   return (
     <div>
-      <PageBreadcrumb pageTitle="Quản lý sự kiện" />
+      <PageBreadcrumb pageTitle="Quản lý kế hoạch NCKH" />
       <div className="space-y-6">
         <ComponentCard title="">
           {isLoading ? (

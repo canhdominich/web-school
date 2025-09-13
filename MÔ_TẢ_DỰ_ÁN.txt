@@ -12,7 +12,7 @@ MỤC TIÊU DỰ ÁN
 - Hỗ trợ quy trình chấm điểm và đánh giá đề tài
 - Quản lý hội đồng chấm điểm và thành viên
 - Cung cấp giao diện quản trị cho các vai trò khác nhau
-- Tích hợp hệ thống thông báo và theo dõi sự kiện
+- Tích hợp hệ thống thông báo và theo dõi kế hoạch NCKH
 
 KIẾN TRÚC HỆ THỐNG
 --------------------
@@ -60,7 +60,7 @@ CÁC MODULE CHÍNH
 5. PROJECT MANAGEMENT
    - Tạo và quản lý đề tài học tập
    - Quản lý thành viên đề tài
-   - Theo dõi sự kiện và trạng thái
+   - Theo dõi kế hoạch NCKH và trạng thái
    - Quản lý milestone và deadline
 
 6. COUNCIL SYSTEM
@@ -95,7 +95,7 @@ CÁC VAI TRÒ VÀ QUYỀN HẠN
 2. STUDENT (Sinh viên)
    - Tạo và quản lý đề tài của mình
    - Nộp bài theo milestone
-   - Xem thông tin đề tài và sự kiện
+   - Xem thông tin đề tài và kế hoạch NCKH
    - Chỉnh sửa đề tài khi ở trạng thái draft/pending
 
 3. LECTURER (Giảng viên)
@@ -124,7 +124,7 @@ TÍNH NĂNG NỔI BẬT
 
 1. QUẢN LÝ DỰ ÁN THÔNG MINH
    - Hệ thống milestone tự động
-   - Theo dõi sự kiện real-time
+   - Theo dõi kế hoạch NCKH real-time
    - Quản lý deadline và nhắc nhở
 
 2. HỆ THỐNG HỘI ĐỒNG LINH HOẠT
@@ -218,7 +218,7 @@ TÍNH NĂNG ĐẶC BIỆT
 
 4. BÁO CÁO VÀ THỐNG KÊ
    - Dashboard tổng quan
-   - Biểu đồ sự kiện
+   - Biểu đồ kế hoạch NCKH
    - Export dữ liệu
 
 HƯỚNG PHÁT TRIỂN TƯƠNG LAI
@@ -235,7 +235,7 @@ KẾT LUẬN
 ----------
 Web-School là một hệ thống quản lý đề tài học tập toàn diện, được thiết kế với kiến trúc hiện đại 
 và khả năng mở rộng cao. Hệ thống cung cấp giải pháp hoàn chỉnh cho việc quản lý đề tài, 
-hội đồng chấm điểm và theo dõi sự kiện học tập của sinh viên trong môi trường giáo dục đại học.
+hội đồng chấm điểm và theo dõi kế hoạch NCKH học tập của sinh viên trong môi trường giáo dục đại học.
 
 Với giao diện thân thiện, tính năng phong phú và bảo mật cao, Web-School giúp nâng cao hiệu quả 
 quản lý giáo dục và tạo môi trường học tập tốt hơn cho sinh viên và giảng viên.

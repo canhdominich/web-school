@@ -176,7 +176,7 @@ export class UserService {
         const userRoleRepo = manager.getRepository(UserRoleEntity);
 
         // If the code is empty then generate unique code for new user
-        const code = createUserDto.code || await this.generateUniqueCode();
+        const code = createUserDto.code || (await this.generateUniqueCode());
 
         const user = userRepo.create({
           ...createUserDto,

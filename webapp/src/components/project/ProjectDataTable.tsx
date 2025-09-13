@@ -238,7 +238,7 @@ export default function ProjectDataTable({
         { value: "pending", label: "Chờ duyệt" },
         { value: "approved_by_lecturer", label: "Giảng viên đã duyệt" },
         { value: "approved_by_faculty_dean", label: "Trưởng khoa đã duyệt" },
-        { value: "approved_by_rector", label: "Trường đã duyệt" },
+        { value: "approved_by_rector", label: "Phòng NCKH duyệt" },
         { value: "in_progress", label: "Đang thực hiện" },
         { value: "completed", label: "Hoàn thành" },
         { value: "cancelled", label: "Hủy" },
@@ -253,7 +253,7 @@ export default function ProjectDataTable({
       return [
         { value: "approved_by_lecturer", label: "Giảng viên đã duyệt" },
         { value: "approved_by_faculty_dean", label: "Trưởng khoa đã duyệt" },
-        { value: "approved_by_rector", label: "Trường đã duyệt" },
+        { value: "approved_by_rector", label: "Phòng NCKH duyệt" },
         ...(selectedProject && selectedProject.status === ProjectStatusEnum.APPROVED_BY_RECTOR ? [{ value: "cancelled", label: "Hủy" }] : []),
       ];
     }
@@ -655,7 +655,7 @@ export default function ProjectDataTable({
       cancelled: "Đã hủy",
       approved_by_lecturer: "Giảng viên đã duyệt",
       approved_by_faculty_dean: "Trưởng khoa đã duyệt",
-      approved_by_rector: "Trường đã duyệt",
+      approved_by_rector: "Phòng NCKH duyệt",
       pending: "Chờ duyệt",
       draft: "Nháp"
     };
@@ -930,6 +930,7 @@ export default function ProjectDataTable({
                     onChange={(e) => setFormData({ ...formData, abstract: e.target.value })}
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     placeholder="Nhập tóm tắt đề tài"
+                    disabled={!canEditProject(selectedProject)}
                   />
                 </div>
                 <div className="mb-3">
@@ -941,6 +942,7 @@ export default function ProjectDataTable({
                     onChange={(e) => setFormData({ ...formData, objectives: e.target.value })}
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     placeholder="Nhập mục tiêu"
+                    disabled={!canEditProject(selectedProject)}
                   />
                 </div>
                 <div className="mb-3">
@@ -952,6 +954,7 @@ export default function ProjectDataTable({
                     onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     placeholder="Nhập phạm vi"
+                    disabled={!canEditProject(selectedProject)}
                   />
                 </div>
                 <div className="mb-3">
@@ -963,6 +966,7 @@ export default function ProjectDataTable({
                     onChange={(e) => setFormData({ ...formData, method: e.target.value })}
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     placeholder="Nhập phương pháp"
+                    disabled={!canEditProject(selectedProject)}
                   />
                 </div>
                 <div className="mb-3">
@@ -974,6 +978,7 @@ export default function ProjectDataTable({
                     onChange={(e) => setFormData({ ...formData, expectedOutputs: e.target.value })}
                     className="dark:bg-dark-900 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                     placeholder="Nhập kết quả kỳ vọng"
+                    disabled={!canEditProject(selectedProject)}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4 col-span-2">
@@ -985,6 +990,7 @@ export default function ProjectDataTable({
                       value={formData?.startDate || ""}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                      disabled={!canEditProject(selectedProject)}
                     />
                   </div>
                   <div className="mb-3">
@@ -995,6 +1001,7 @@ export default function ProjectDataTable({
                       value={formData?.endDate || ""}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                       className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                      disabled={!canEditProject(selectedProject)}
                     />
                   </div>
                 </div>
@@ -1029,11 +1036,11 @@ export default function ProjectDataTable({
                 </div>
                 <div className="grid grid-cols-3 gap-4 col-span-2">
                   <div className="mb-3">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Sự kiện</label>
+                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Kế hoạch NCKH</label>
                     <Select
                       value={formData?.termId?.toString() || "0"}
                       onChange={(v) => setFormData({ ...formData, termId: parseInt(v, 10) })}
-                      options={[{ value: "0", label: "Chọn sự kiện" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
+                      options={[{ value: "0", label: "Chọn kế hoạch NCKH" }, ...terms.map(t => ({ value: t.id.toString(), label: t.name }))]}
                       disabled={!canChangeProjectStatus()}
                     />
                   </div>
