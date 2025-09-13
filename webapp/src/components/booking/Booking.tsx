@@ -35,10 +35,10 @@ import {
   getNextApprovalStep
 } from "@/constants/booking.constant";
 import moment from "moment";
-import axios from "axios";
 import { getRolesObject } from "@/utils/user.utils";
 import { ChevronDownIcon } from "@/icons";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 interface CalendarEvent extends EventInput {
   id: string;
@@ -210,7 +210,7 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
       onRefresh();
     } catch (error) {
       console.error(error);
-      toast.error(selectedBooking?.id ? "Không thể cập nhật lịch bảo vệ" : "Không thể đăng ký lịch bảo vệ");
+      toast.error(getErrorMessage(error, selectedBooking?.id ? "Không thể cập nhật lịch bảo vệ" : "Không thể đăng ký lịch bảo vệ"));
     } finally {
       setIsSubmitting(false);
     }
@@ -234,7 +234,7 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
       onRefresh();
     } catch (error) {
       console.error(error);
-      toast.error("Không thể duyệt lịch bảo vệ");
+      toast.error(getErrorMessage(error, "Không thể duyệt lịch bảo vệ"));
     } finally {
       setIsSubmitting(false);
     }
@@ -254,12 +254,7 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
       closeModal();
       onRefresh();
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.data) {
-        const serverError = error.response.data;
-        toast.error(serverError.message || "Không thể xóa lịch bảo vệ");
-      } else {
-        toast.error("Không thể xóa lịch bảo vệ");
-      }
+      toast.error(getErrorMessage(error, "Không thể xóa lịch bảo vệ"));
     } finally {
       setIsSubmitting(false);
     }
@@ -283,7 +278,7 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
       }
     } catch (error) {
       console.log("error", error);
-      toast.error("Không thể lấy thông tin lịch bảo vệ");
+      toast.error(getErrorMessage(error, "Không thể lấy thông tin lịch bảo vệ"));
     }
   };
 
@@ -531,7 +526,7 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
               }`}>
                 <div className="flex items-center mb-4">
                   <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full mr-3"></div>
-                  <h6 className="text-lg font-semibold text-gray-800 dark:text-white">Ngày và giờ bảo vệ</h6>
+                  <h6 className="text-lg font-semibold text-gray-800 dark:text-white">Ngày bảo vệ</h6>
                   <div className="ml-auto">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                       Bắt buộc
@@ -541,7 +536,8 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
                 <div className="relative">
                   <DatePicker
                     id="date-picker"
-                    placeholder="Chọn ngày và giờ bảo vệ"
+                    placeholder="Chọn ngày bảo vệ"
+                    enableTime={false}
                     onChange={(dates, currentDateString) => {
                       console.log({ dates, currentDateString });
                       if (dates && dates[0]) {
@@ -549,22 +545,21 @@ export default function BookingDataTable({ onRefresh, bookings, projects }: Book
                         const year = date.getFullYear();
                         const month = String(date.getMonth() + 1).padStart(2, '0');
                         const day = String(date.getDate()).padStart(2, '0');
-                        const hours = String(date.getHours()).padStart(2, '0');
-                        const minutes = String(date.getMinutes()).padStart(2, '0');
-                        const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:00.000Z`;
+                        // Set default time to 09:00 AM
+                        const formattedDate = `${year}-${month}-${day}T09:00:00.000Z`;
                         setFormData(prev => ({
                           ...prev,
                           time: formattedDate
                         }));
                       }
                     }}
-                    defaultDate={formData.time ? moment(formData.time).format("YYYY-MM-DD HH:mm") : undefined}
+                    defaultDate={formData.time ? moment(formData.time).format("YYYY-MM-DD") : undefined}
                   />
                 </div>
                 {formData.time && (
                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <div className="text-sm text-blue-800 dark:text-blue-200">
-                      <span className="font-medium">Thời gian đã chọn:</span> {moment(formData.time).format("DD/MM/YYYY HH:mm")}
+                      <span className="font-medium">Ngày đã chọn:</span> {moment(formData.time).format("DD/MM/YYYY")}
                     </div>
                   </div>
                 )}

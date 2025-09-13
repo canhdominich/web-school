@@ -81,10 +81,10 @@ export class BookingService {
       .createQueryBuilder('project')
       .leftJoin('project.members', 'member')
       .where('project.id = :projectId', {
-        projectId: createBookingDto.projectId,
+        projectId: +createBookingDto.projectId,
       })
       .andWhere('member.studentId = :studentId', {
-        studentId: createBookingDto.studentId,
+        studentId: +createBookingDto.studentId,
       })
       .getOne();
 
