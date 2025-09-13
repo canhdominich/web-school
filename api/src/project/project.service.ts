@@ -861,7 +861,9 @@ export class ProjectService {
         }
 
         // FacultyDean: Return projects in user's faculty + projects in councils where user is member
+        console.log("user ", user)
         if (roles.includes(UserRole.FacultyDean)) {
+          console.log('user?.facultyId', user?.facultyId);
           if (user?.facultyId) {
             queryBuilder.andWhere(
               '(project.facultyId = :facultyId OR EXISTS (SELECT 1 FROM council_projects cp INNER JOIN council_members cm ON cp.councilId = cm.councilId WHERE cp.projectId = project.id AND cm.userId = :userId))',
