@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TableCell, TableRow } from "../ui/table";
 import { BasicTableProps, Header, Term, TermMilestone, TermStatus, TermMilestoneStatus, AcademicYear } from "@/types/common";
 import { Modal } from "../ui/modal";
@@ -22,6 +22,8 @@ interface TermDataTableProps extends BasicTableProps {
   pagination?: PaginationInfo;
   onPageChange?: (page: number) => void;
   onItemsPerPageChange?: (limit: number) => void;
+  onFilterChange?: (filters: { academicYearId?: number }) => void;
+  academicYearId?: number;
 }
 
 export default function TermDataTable({ 
@@ -34,12 +36,16 @@ export default function TermDataTable({
   isSearching = false,
   pagination,
   onPageChange,
-  onItemsPerPageChange
+  onItemsPerPageChange,
+  onFilterChange,
+  academicYearId
 }: TermDataTableProps) {
   const [selectedTerm, setSelectedTerm] = useState<Term | null>(null);
   const [selectedMilestone, setSelectedMilestone] = useState<TermMilestone | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  // Filter state
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<string>("");
   const [formData, setFormData] = useState<CreateTermDto | UpdateTermDto>({
     name: "",
     code: "",
@@ -59,6 +65,35 @@ export default function TermDataTable({
     status: 'active',
   });
   const { isOpen, openModal, closeModal } = useModal();
+
+  // Sync internal state from controlled props
+  useEffect(() => {
+    if (academicYearId !== undefined && academicYearId !== null) {
+      setSelectedAcademicYearId(String(academicYearId));
+    }
+  }, [academicYearId]);
+
+  // Keep latest onFilterChange in a ref and emit only on real changes
+  const onFilterChangeRef = useRef(onFilterChange);
+  useEffect(() => {
+    onFilterChangeRef.current = onFilterChange;
+  }, [onFilterChange]);
+
+  const lastEmittedFiltersRef = useRef<{ academicYearId?: number }>({});
+  useEffect(() => {
+    const payload: { academicYearId?: number } = {};
+    if (selectedAcademicYearId) payload.academicYearId = Number(selectedAcademicYearId);
+
+    // Do not emit if nothing selected (avoid refresh loop on initial render)
+    if (Object.keys(payload).length === 0) return;
+
+    const last = lastEmittedFiltersRef.current || {};
+    const isSame = last.academicYearId === payload.academicYearId;
+    if (isSame) return;
+
+    lastEmittedFiltersRef.current = payload;
+    onFilterChangeRef.current?.(payload);
+  }, [selectedAcademicYearId]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -351,13 +386,43 @@ export default function TermDataTable({
 
   // Action button
   const actionButton = (
-    <button
-      onClick={openModal}
-      type="button"
-      className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
-    >
-      Thêm kế hoạch NCKH
-    </button>
+    <div className="flex items-center gap-3">
+      <div>
+        <label className="sr-only">Năm học</label>
+        <select
+          value={selectedAcademicYearId}
+          onChange={(e) => setSelectedAcademicYearId(e.target.value)}
+          className="dark:bg-dark-900 h-10 rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+        >
+          <option value="">Tất cả năm học</option>
+          {academicYears.map(y => (
+            <option key={y.id} value={y.id}>{y.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <button
+          type="button"
+          onClick={() => { 
+            setSelectedAcademicYearId(""); 
+            // Gọi ngay để refresh dữ liệu toàn trang khi xóa bộ lọc
+            onFilterChangeRef.current?.({});
+          }}
+          disabled={!selectedAcademicYearId}
+          className="inline-flex items-center h-10 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+          title="Xóa bộ lọc"
+        >
+          Xóa bộ lọc
+        </button>
+      </div>
+      <button
+        onClick={openModal}
+        type="button"
+        className="btn btn-success btn-update-event flex justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+      >
+        Thêm kế hoạch NCKH
+      </button>
+    </div>
   );
 
   return (

@@ -27,6 +27,7 @@ export default function TermPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [academicYearId, setAcademicYearId] = useState<number | undefined>(undefined);
   
   // Use pagination hook
   const {
@@ -86,22 +87,44 @@ export default function TermPage() {
     setSearchTerm(trimmedQuery);
     resetToFirstPage(); // Reset to first page when searching
     
+    const searchParams: SearchTermDto = {};
     if (trimmedQuery) {
-      fetchTerms({ name: trimmedQuery }, true);
-    } else {
-      // If no search term, fetch all terms
-      fetchTerms({}, true);
+      searchParams.name = trimmedQuery;
     }
-  }, [fetchTerms, resetToFirstPage]);
+    if (academicYearId) {
+      searchParams.academicYearId = academicYearId;
+    }
+    
+    fetchTerms(searchParams, true);
+  }, [fetchTerms, resetToFirstPage, academicYearId]);
+
+  const handleFilterChange = useCallback((filters: { academicYearId?: number }) => {
+    setAcademicYearId(filters.academicYearId);
+    resetToFirstPage(); // Reset to first page when filtering
+    
+    const searchParams: SearchTermDto = {};
+    if (searchTerm.trim()) {
+      searchParams.name = searchTerm.trim();
+    }
+    if (filters.academicYearId) {
+      searchParams.academicYearId = filters.academicYearId;
+    }
+    
+    fetchTerms(searchParams, true);
+  }, [searchTerm, fetchTerms, resetToFirstPage]);
 
   const handleRefresh = useCallback(() => {
-    // Refresh with current search term and pagination
+    // Refresh with current search term, filter and pagination
+    const searchParams: SearchTermDto = {};
     if (searchTerm.trim()) {
-      fetchTerms({ name: searchTerm.trim() }, true);
-    } else {
-      fetchTerms({}, true);
+      searchParams.name = searchTerm.trim();
     }
-  }, [searchTerm, fetchTerms]);
+    if (academicYearId) {
+      searchParams.academicYearId = academicYearId;
+    }
+    
+    fetchTerms(searchParams, true);
+  }, [searchTerm, academicYearId, fetchTerms]);
 
   // Initial load and fetch data when pagination changes
   useEffect(() => {
@@ -132,6 +155,8 @@ export default function TermPage() {
               pagination={paginationInfo}
               onPageChange={handlePageChange}
               onItemsPerPageChange={handleItemsPerPageChange}
+              onFilterChange={handleFilterChange}
+              academicYearId={academicYearId}
             />
           )}
         </ComponentCard>

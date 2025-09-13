@@ -61,6 +61,7 @@ export class TermService {
       name,
       description,
       academicYear,
+      academicYearId,
       status,
       page,
       limit,
@@ -86,6 +87,12 @@ export class TermService {
     if (academicYear) {
       queryBuilder.andWhere('academicYear.name LIKE :academicYear', {
         academicYear: `%${academicYear}%`,
+      });
+    }
+
+    if (academicYearId) {
+      queryBuilder.andWhere('term.academicYearId = :academicYearId', {
+        academicYearId: Number(academicYearId),
       });
     }
 

@@ -28,6 +28,15 @@ export class SearchTermDto {
   academicYear?: string;
 
   @ApiPropertyOptional({
+    description: 'ID năm học để lọc chính xác',
+    example: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  academicYearId?: number;
+
+  @ApiPropertyOptional({
     description: 'Trạng thái học kỳ',
     example: 'open',
   })
